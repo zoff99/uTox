@@ -674,8 +674,8 @@ static void button_copyid_on_mup(void) {
 static void button_qr_on_mup(void) {
     // (int)self.id_str_length, self.id_str
     // qrencode -s 8 -o - 'tox:ABC09384902848329048902348023408329480' | pqiv -i  -
-    char *cmd = "qrencode";
     if (!fork()) {
+        const char *cmd = "qrencode";
         char *tox_url_str = malloc(4 + (int)self.id_str_length);
         snprintf(tox_url_str, (size_t)(4 + (int)self.id_str_length), "tox:%s", self.id_str);
         execlp(cmd, cmd, "-s", "8", "-o", "-", tox_url_str, "|", "pqiv", "-i", "-", (char *)0);
