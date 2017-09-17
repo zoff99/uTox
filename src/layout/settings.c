@@ -672,19 +672,22 @@ static void button_copyid_on_mup(void) {
     edit_setfocus(&edit_toxid);
     copy(0);
 }
+
 static void button_qr_on_mup(void) {
     // (int)self.id_str_length, self.id_str
-    // qrencode -s 8 -o - 'tox:ABC09384902848329048902348023408329480' | pqiv -i  -
+    // qrencode -s 8 -o - 'tox:ABC09384902848329048902348023408329480' | pqiv -i -
     if (!fork()) {
-        const char *cmd = "qrencode";
-        char *tox_url_str = malloc(4 + (int)self.id_str_length);
-        snprintf(tox_url_str, (size_t)(4 + (int)self.id_str_length), "tox:%s", self.id_str);
-        execlp(cmd, cmd, "-s", "8", "-o", "-", tox_url_str, "|", "pqiv", "-i", "-", (char *)0);
-        if (tox_url_str)
-        {
-             free(tox_url_str);
-             tox_url_str = NULL;
-        }
+        // const char *cmd = "qrencode";
+        // char *tox_url_str = malloc(4 + (int)self.id_str_length);
+        // snprintf(tox_url_str, (size_t)(4 + (int)self.id_str_length), "tox:%s", self.id_str);
+        // execlp(cmd, cmd, "-s", "8", "-o", "-", tox_url_str, "|", "pqiv", "-i", "-", (char *)0);
+
+        char *cmd2_str = malloc(2000);
+        snprintf(cmd2_str, (size_t)(2000), "qrencode -s 8 -o - 'tox:%.*s' | pqiv -i -", (int)self.id_str_length, self.id_str);
+        execl("/bin/sh", "/bin/sh", "-c", cmd2_str, NULL);
+        free(cmd2_str);
+
+        // free(tox_url_str);
         exit(127);
     }
 }
