@@ -535,6 +535,9 @@ msgstr("Save Location")
 msgid(LANGUAGE)
 msgstr("Language")
 
+msgid(QR)
+msgstr("Something about QR codes.")
+
 msgid(NETWORK)
 msgstr("Network")
 

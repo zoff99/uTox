@@ -186,6 +186,7 @@ typedef enum {
     STR_DPI,
     STR_SAVELOCATION,
     STR_LANGUAGE,
+    STR_QR,
     STR_NETWORK,
     STR_IPV6,
     STR_UDP,

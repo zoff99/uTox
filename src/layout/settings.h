@@ -33,6 +33,7 @@ extern BUTTON   button_add_new_device_to_self;
 extern BUTTON   button_callpreview,
                 button_videopreview,
                 button_copyid,
+                button_qr,
                 button_lock_uTox,
                 button_show_password_settings,
                 button_change_nospam,

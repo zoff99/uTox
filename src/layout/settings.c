@@ -146,6 +146,7 @@ static void draw_settings_text_profile(int x, int y, int UNUSED(w), int UNUSED(h
     drawstr(x + SCALE(10), y + SCALE(65), STATUSMESSAGE);
     drawstr(x + SCALE(10), y + SCALE(120), TOXID);
     drawstr(x + SCALE(10), y + SCALE(175), LANGUAGE);
+    drawstr(x + SCALE(10), y + SCALE(230), QR);
 }
 
 // Devices settings page
@@ -367,6 +368,7 @@ panel_settings_master = {
             // Text: Tox ID
             (PANEL*)&edit_toxid,
             (PANEL*)&button_copyid,
+            (PANEL*)&button_qr,
             (PANEL*)&dropdown_language,
             NULL
         }
@@ -670,6 +672,10 @@ static void button_copyid_on_mup(void) {
     copy(0);
 }
 
+static void button_qr_on_mup(void) {
+    // do qr things
+}
+
 #include "../settings.h"
 #include "../av/utox_av.h"
 static void button_audiopreview_on_mup(void) {
@@ -713,6 +719,14 @@ BUTTON button_copyid = {
     .on_mup   = button_copyid_on_mup,
     .disabled = false,
     .button_text = {.i18nal = STR_COPY_TOX_ID },
+};
+
+BUTTON button_qr = {
+    .bm_fill  = BM_SBUTTON,
+    .update   = button_setcolors_success,
+    .on_mup   = button_qr_on_mup,
+    .disabled = false,
+    .button_text = {.i18nal = STR_QR },
 };
 
 BUTTON button_callpreview = {
