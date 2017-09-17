@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 /* Top bar for user settings */
 static void draw_settings_header(int x, int y, int w, int UNUSED(height)) {
