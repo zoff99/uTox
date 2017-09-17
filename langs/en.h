@@ -535,6 +535,9 @@ msgstr("Save Location")
 msgid(LANGUAGE)
 msgstr("Language")
 
+msgid(QR)
+msgstr("Show ToxID as QR code")
+
 msgid(NETWORK)
 msgstr("Network")
 
