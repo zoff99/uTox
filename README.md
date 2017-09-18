@@ -20,7 +20,6 @@ and you will need the libraries as well
 then run on the PI:
 ```
 sudo apt-get install qrencode pqiv libz1
-sudo apt-get install 
 ```
 
 if you want to connect via Tor:
