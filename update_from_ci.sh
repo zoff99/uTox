@@ -1,12 +1,12 @@
 #! /bin/bash
 
 #####################################################
-# update utox binary from Circle CI (raspi branch)
+# update utox binary from Circle CI (zoff99/raspi branch)
 #####################################################
 
 cd $(dirname "$0")
 
-pkill toxcam_static # will stop toxcam
-cp -av toxcam_static toxcam_static__BACKUP
-wget -O toxcam_static 'https://circleci.com/api/v1/project/zoff99/ToxCam/latest/artifacts/0/$CIRCLE_ARTIFACTS/RASPI/toxcam_static?filter=successful&branch=master'
-chmod u+rwx toxcam_static
+pkill utox # will stop utox
+cp -av utox utox__BACKUP
+wget -O utox 'https://circleci.com/api/v1/project/zoff99/uTox/latest/artifacts/0/$CIRCLE_ARTIFACTS/RASPI/utox?filter=successful&branch=zoff99%2Fraspi'
+chmod u+rwx utox
