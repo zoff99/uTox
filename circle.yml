@@ -349,6 +349,18 @@ dependencies:
       -lpthread
       -lm
       -Wl,-Bstatic -lopus -Wl,-Bdynamic
+      -Wl,-Bstatic $_SYSROOT_/usr/lib/libtoxcore.a -Wl,-Bdynamic
+      -Wl,-Bstatic $_SYSROOT_/usr/lib/libtoxav.a -Wl,-Bdynamic
+      -Wl,-Bstatic $_SYSROOT_/usr/lib/libtoxcore.a -Wl,-Bdynamic
+      -Wl,-Bstatic $_SYSROOT_/usr/lib/libtoxgroup.a -Wl,-Bdynamic
+      -Wl,-Bstatic $_SYSROOT_/usr/lib/libtoxmessenger.a -Wl,-Bdynamic
+      -Wl,-Bstatic $_SYSROOT_/usr/lib/libtoxfriends.a -Wl,-Bdynamic
+      -Wl,-Bstatic $_SYSROOT_/usr/lib/libtoxnetcrypto.a -Wl,-Bdynamic
+      -Wl,-Bstatic $_SYSROOT_/usr/lib/libtoxdht.a -Wl,-Bdynamic
+      -Wl,-Bstatic $_SYSROOT_/usr/lib/libtoxnetwork.a -Wl,-Bdynamic
+      -Wl,-Bstatic $_SYSROOT_/usr/lib/libtoxcrypto.a -Wl,-Bdynamic
+      -Wl,-Bstatic $_SYSROOT_/usr/lib/libtoxencryptsave.a -Wl,-Bdynamic
+      -Wl,-Bstatic $_SYSROOT_/usr/lib/libtoxdns.a -Wl,-Bdynamic
       "$_SYSROOT_"/usr/lib/arm-linux-gnueabihf/libopenal.so.1.15.1 $_SYSROOT_/usr/lib/arm-linux-gnueabihf/libaudio.so.2.4
       src/xlib/libicon.a
       /home/ubuntu/cc/tools/arm-bcm2708/arm-rpi-4.9.3-linux-gnueabihf/arm-linux-gnueabihf/sysroot/usr/lib/arm-linux-gnueabihf/libv4lconvert.a
@@ -370,10 +382,6 @@ dependencies:
       $_SYSROOT_/lib/arm-linux-gnueabihf/libz.so.1.2.8
       $_SYSROOT_/lib/arm-linux-gnueabihf/libpng12.so.0.50.0
       $_SYSROOT_/usr/lib/arm-linux-gnueabihf/libjpeg.so.62.1.0
-      $_SYSROOT_/usr/lib/libtoxav.so
-      $_SYSROOT_/usr/lib/libtoxcore.so
-      $_SYSROOT_/usr/lib/libtoxdns.so
-      $_SYSROOT_/usr/lib/libtoxencryptsave.so
       -lresolv
       -ldl
       src/layout/libutoxLAYOUT.a
