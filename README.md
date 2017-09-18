@@ -13,8 +13,9 @@ and you will need the libraries as well
 
 [c-toxcore](https://circleci.com/api/v1/project/zoff99/uTox/latest/artifacts/0/$CIRCLE_ARTIFACTS/RASPI/pkg_c-toxcore.tar.gz?filter=successful&branch=zoff99%2Fraspi)
 
+<!--
 [libsodium](https://circleci.com/api/v1/project/zoff99/uTox/latest/artifacts/0/$CIRCLE_ARTIFACTS/RASPI/pkg_libsodium.tar.gz?filter=successful&branch=zoff99%2Fraspi)
-
+-->
 
 Linux Version
 =
