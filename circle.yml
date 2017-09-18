@@ -3,6 +3,7 @@ machine:
     Europe/Berlin
   environment:
     MAKEFLAGS: ""
+    WGET_FLAGS: --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 0
 ## ----------- RASPI cross compile ----------------
     RASPI_PATH: "/home/ubuntu/cc/tools/arm-bcm2708/arm-rpi-4.9.3-linux-gnueabihf/bin:$PATH"
     RASPI_SYSROOT_: "/home/ubuntu/cc/tools/arm-bcm2708/arm-rpi-4.9.3-linux-gnueabihf/arm-linux-gnueabihf/sysroot"
@@ -172,102 +173,102 @@ dependencies:
 
 
     # install raspi binary pkgs -------------------------
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libv4l-dev.tgz' -O ~/pkg2.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libv4l-dev.tgz' -O ~/pkg2.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg2.tgz
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libv4lconvert0.tgz' -O ~/pkg3.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libv4lconvert0.tgz' -O ~/pkg3.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg3.tgz
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libjpeg62-turbo.tgz' -O ~/pkg4.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libjpeg62-turbo.tgz' -O ~/pkg4.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg4.tgz
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libjpeg62-turbo-dev.tgz' -O ~/pkg1.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libjpeg62-turbo-dev.tgz' -O ~/pkg1.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg1.tgz
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libconfig-dev.tgz' -O ~/pkg1.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libconfig-dev.tgz' -O ~/pkg1.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg1.tgz
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libfreetype6-dev.tgz' -O ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libfreetype6-dev.tgz' -O ~/pkg__.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libasan1.tgz' -O ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libasan1.tgz' -O ~/pkg__.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libexpat1-dev.tgz' -O ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libexpat1-dev.tgz' -O ~/pkg__.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libfontconfig1-dev.tgz' -O ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libfontconfig1-dev.tgz' -O ~/pkg__.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libopenal-dev.tgz' -O ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libopenal-dev.tgz' -O ~/pkg__.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/zlib1g-dev.tgz' -O ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/zlib1g-dev.tgz' -O ~/pkg__.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxdmcp-dev.tgz' -O ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxdmcp-dev.tgz' -O ~/pkg__.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxcb1-dev.tgz' -O ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxcb1-dev.tgz' -O ~/pkg__.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxau-dev.tgz' -O ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxau-dev.tgz' -O ~/pkg__.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libx11-dev.tgz' -O ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libx11-dev.tgz' -O ~/pkg__.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxrender-dev.tgz' -O ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxrender-dev.tgz' -O ~/pkg__.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxext-dev.tgz' -O ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxext-dev.tgz' -O ~/pkg__.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/x11proto-core-dev.tgz' -O ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/x11proto-core-dev.tgz' -O ~/pkg__.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/x11proto-input-dev.tgz' -O ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/x11proto-input-dev.tgz' -O ~/pkg__.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/x11proto-kb-dev.tgz' -O ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/x11proto-kb-dev.tgz' -O ~/pkg__.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/x11proto-render-dev.tgz' -O ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/x11proto-render-dev.tgz' -O ~/pkg__.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/x11proto-xext-dev.tgz' -O ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/x11proto-xext-dev.tgz' -O ~/pkg__.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libopenal1.tgz' -O ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libopenal1.tgz' -O ~/pkg__.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxrender1.tgz' -O ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxrender1.tgz' -O ~/pkg__.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxext6.tgz' -O ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxext6.tgz' -O ~/pkg__.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libx11-6.tgz' -O ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libx11-6.tgz' -O ~/pkg__.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libfreetype6.tgz' -O ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libfreetype6.tgz' -O ~/pkg__.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libaudio-dev.tgz' -O ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libaudio-dev.tgz' -O ~/pkg__.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libaudio2.tgz' -O ~/pkg__.tgz
-    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
-
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxt-dev.tgz' -O ~/pkg__.tgz
-    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxt6.tgz' -O ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libaudio2.tgz' -O ~/pkg__.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
 
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxau6.tgz' -O ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxt-dev.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxt6.tgz' -O ~/pkg__.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
 
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libsm6.tgz' -O ~/pkg__.tgz
-    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libice6.tgz' -O ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxau6.tgz' -O ~/pkg__.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
 
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libuuid1.tgz' -O ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libsm6.tgz' -O ~/pkg__.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxcb1.tgz' -O ~/pkg__.tgz
-    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
-
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxdmcp6.tgz' -O ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libice6.tgz' -O ~/pkg__.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
 
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libfontconfig1.tgz' -O ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libuuid1.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxcb1.tgz' -O ~/pkg__.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
 
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/zlib1g.tgz' -O ~/pkg__.tgz
-    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libexpat1.tgz' -O ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxdmcp6.tgz' -O ~/pkg__.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
 
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libpng12-0.tgz' -O ~/pkg__.tgz
-    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libpng12-dev.tgz' -O ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libfontconfig1.tgz' -O ~/pkg__.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
 
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libjpeg62-turbo.tgz' -O ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/zlib1g.tgz' -O ~/pkg__.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
-    - wget 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libjpeg62-turbo-dev.tgz' -O ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libexpat1.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libpng12-0.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libpng12-dev.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libjpeg62-turbo.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libjpeg62-turbo-dev.tgz' -O ~/pkg__.tgz
     - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
 
 
