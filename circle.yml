@@ -384,6 +384,10 @@ dependencies:
 
     - cd ../ ; cd build_raspi/ ; ls -al
     - cd ../ ; cd build_raspi/ ; ls -al utox
+    # -- move some lib files for ldd to correctly show output --
+    - cd ../ ; cd build_raspi/ ; . ~/pp ; sed -i -e 's#ld_library_path="/lib:/usr/lib"#ld_library_path="/lib:/usr/lib:/lib/arm-linux-gnueabihf"#' /home/ubuntu/cc/tools/arm-bcm2708/arm-rpi-4.9.3-linux-gnueabihf/bin/arm-linux-gnueabihf-ldd ; exit 0
+    - cd ../ ; cd build_raspi/ ; . ~/pp ; export CT_XLDD_VERBOSE=""; arm-linux-gnueabihf-ldd -s --root $_SYSROOT_ utox ; exit 0
+    # -- move some lib files for ldd to correctly show output --
 
     - . ~/pp;cd ../ ; cd build_raspi/ ; cp -av utox $CIRCLE_ARTIFACTS/"${CUR_ARCH_}"/
 ## ----------- RASPI cross compile ----------------
