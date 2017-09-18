@@ -314,6 +314,8 @@ dependencies:
 
     - cd /home/ubuntu/cc/tools/arm-bcm2708/arm-rpi-4.9.3-linux-gnueabihf/bin/ ; ln -s arm-linux-gnueabihf-ld ld
 
+    - find "$_SYSROOT_"/usr -name '*tox*.a' ; exit 0
+
     - cd ../ ; cd build_raspi/ ; . ~/pp ; export RPI_ROOT_PATH="$_SYSROOT_" ;
       export X11_INCLUDE_DIR=$_SYSROOT_/usr/include/X11/
       export X11_LIBRARIES=$_SYSROOT_/usr/lib/arm-linux-gnueabihf/
@@ -351,14 +353,6 @@ dependencies:
       -Wl,-Bstatic -lopus -Wl,-Bdynamic
       -Wl,-Bstatic $_SYSROOT_/usr/lib/libtoxcore.a -Wl,-Bdynamic
       -Wl,-Bstatic $_SYSROOT_/usr/lib/libtoxav.a -Wl,-Bdynamic
-      -Wl,-Bstatic $_SYSROOT_/usr/lib/libtoxcore.a -Wl,-Bdynamic
-      -Wl,-Bstatic $_SYSROOT_/usr/lib/libtoxgroup.a -Wl,-Bdynamic
-      -Wl,-Bstatic $_SYSROOT_/usr/lib/libtoxmessenger.a -Wl,-Bdynamic
-      -Wl,-Bstatic $_SYSROOT_/usr/lib/libtoxfriends.a -Wl,-Bdynamic
-      -Wl,-Bstatic $_SYSROOT_/usr/lib/libtoxnetcrypto.a -Wl,-Bdynamic
-      -Wl,-Bstatic $_SYSROOT_/usr/lib/libtoxdht.a -Wl,-Bdynamic
-      -Wl,-Bstatic $_SYSROOT_/usr/lib/libtoxnetwork.a -Wl,-Bdynamic
-      -Wl,-Bstatic $_SYSROOT_/usr/lib/libtoxcrypto.a -Wl,-Bdynamic
       -Wl,-Bstatic $_SYSROOT_/usr/lib/libtoxencryptsave.a -Wl,-Bdynamic
       -Wl,-Bstatic $_SYSROOT_/usr/lib/libtoxdns.a -Wl,-Bdynamic
       "$_SYSROOT_"/usr/lib/arm-linux-gnueabihf/libopenal.so.1.15.1 $_SYSROOT_/usr/lib/arm-linux-gnueabihf/libaudio.so.2.4
