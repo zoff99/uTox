@@ -3,7 +3,7 @@ machine:
     Europe/Berlin
   environment:
     MAKEFLAGS: ""
-    WGET_FLAGS: --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 10
+    WGET_FLAGS: --retry-connrefused --waitretry=5 --read-timeout=30 --timeout=30 -t 10
 ## ----------- RASPI cross compile ----------------
     RASPI_PATH: "/home/ubuntu/cc/tools/arm-bcm2708/arm-rpi-4.9.3-linux-gnueabihf/bin:$PATH"
     RASPI_SYSROOT_: "/home/ubuntu/cc/tools/arm-bcm2708/arm-rpi-4.9.3-linux-gnueabihf/arm-linux-gnueabihf/sysroot"
