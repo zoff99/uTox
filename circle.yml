@@ -393,8 +393,31 @@ test:
     #- cp -av CMakeLists_orig.txt CMakeLists.txt # use the original for linux
     - cd ../ ; mkdir build2
     - cd ../build2/ ; cmake -DTOXCORE_STATIC=ON -DUTOX_STATIC=ON ../uTox
-    - cd ../build2/ ; make -j 8 ; exit 0
-    - cd ../build2/ ; /usr/bin/cc -Wall -Wextra -Wpointer-arith -Werror=implicit-function-declaration -Wformat=0 -Wno-misleading-indentation -fno-strict-aliasing -fPIC -flto -fsanitize=address -fno-omit-frame-pointer   -Wl,-z,noexecstack CMakeFiles/utox.dir/src/avatar.c.o CMakeFiles/utox.dir/src/chatlog.c.o CMakeFiles/utox.dir/src/chrono.c.o CMakeFiles/utox.dir/src/command_funcs.c.o CMakeFiles/utox.dir/src/commands.c.o CMakeFiles/utox.dir/src/devices.c.o CMakeFiles/utox.dir/src/file_transfers.c.o CMakeFiles/utox.dir/src/filesys.c.o CMakeFiles/utox.dir/src/flist.c.o CMakeFiles/utox.dir/src/friend.c.o CMakeFiles/utox.dir/src/groups.c.o CMakeFiles/utox.dir/src/inline_video.c.o CMakeFiles/utox.dir/src/logging.c.o CMakeFiles/utox.dir/src/main.c.o CMakeFiles/utox.dir/src/messages.c.o CMakeFiles/utox.dir/src/notify.c.o CMakeFiles/utox.dir/src/screen_grab.c.o CMakeFiles/utox.dir/src/self.c.o CMakeFiles/utox.dir/src/settings.c.o CMakeFiles/utox.dir/src/stb.c.o CMakeFiles/utox.dir/src/text.c.o CMakeFiles/utox.dir/src/theme.c.o CMakeFiles/utox.dir/src/tox.c.o CMakeFiles/utox.dir/src/tox_callbacks.c.o CMakeFiles/utox.dir/src/ui.c.o CMakeFiles/utox.dir/src/ui_i18n.c.o CMakeFiles/utox.dir/src/updater.c.o CMakeFiles/utox.dir/src/utox.c.o CMakeFiles/utox.dir/src/window.c.o  -o utox -rdynamic src/av/libutoxAV.a src/xlib/libutoxNATIVE.a src/ui/libutoxUI.a /usr/local/lib/libsodium.a /usr/local/lib/libtoxav.a /usr/local/lib/libtoxcore.a /usr/local/lib/libtoxdns.a /usr/local/lib/libtoxencryptsave.a /usr/local/lib/libtoxav.a -lrt -lpthread -lm -lopenal /usr/local/lib/libfilteraudio.so src/xlib/libicon.a -lv4lconvert -lSM -lICE -lX11 -lXext -lXrender -lfontconfig -lfreetype -lresolv -ldl -ldbus-1 src/layout/libutoxLAYOUT.a -Wl,-rpath,/usr/local/lib
+    - cd ../build2/ ; make VERBOSE=1 -j 8 ; exit 0
+    - cd ../build2/ ; /usr/bin/cc    -Wall -Wextra -Wpointer-arith -Werror=implicit-function-declaration
+    -Wformat=0 -Wno-misleading-indentation -fno-strict-aliasing -fPIC -flto -fsanitize=address
+    -fno-omit-frame-pointer   -Wl,-z,noexecstack CMakeFiles/utox.dir/src/avatar.c.o
+    CMakeFiles/utox.dir/src/chatlog.c.o CMakeFiles/utox.dir/src/chrono.c.o CMakeFiles/utox.dir/src/command_funcs.c.o
+    CMakeFiles/utox.dir/src/commands.c.o CMakeFiles/utox.dir/src/devices.c.o CMakeFiles/utox.dir/src/file_transfers.c.o
+    CMakeFiles/utox.dir/src/filesys.c.o CMakeFiles/utox.dir/src/flist.c.o CMakeFiles/utox.dir/src/friend.c.o
+    CMakeFiles/utox.dir/src/groups.c.o CMakeFiles/utox.dir/src/inline_video.c.o CMakeFiles/utox.dir/src/logging.c.o
+    CMakeFiles/utox.dir/src/main.c.o CMakeFiles/utox.dir/src/messages.c.o CMakeFiles/utox.dir/src/notify.c.o
+    CMakeFiles/utox.dir/src/screen_grab.c.o CMakeFiles/utox.dir/src/self.c.o
+    CMakeFiles/utox.dir/src/settings.c.o CMakeFiles/utox.dir/src/stb.c.o CMakeFiles/utox.dir/src/text.c.o
+    CMakeFiles/utox.dir/src/theme.c.o CMakeFiles/utox.dir/src/tox.c.o CMakeFiles/utox.dir/src/tox_callbacks.c.o
+    CMakeFiles/utox.dir/src/ui.c.o CMakeFiles/utox.dir/src/ui_i18n.c.o CMakeFiles/utox.dir/src/updater.c.o
+    CMakeFiles/utox.dir/src/utox.c.o CMakeFiles/utox.dir/src/window.c.o
+    -o utox
+    -rdynamic
+    src/av/libutoxAV.a src/xlib/libutoxNATIVE.a src/ui/libutoxUI.a /usr/local/lib/libsodium.a
+    /usr/local/lib/libtoxav.a /usr/local/lib/libtoxcore.a /usr/local/lib/libtoxdns.a
+    /usr/local/lib/libtoxencryptsave.a /usr/lib/x86_64-linux-gnu/libopus.a
+    /usr/lib/x86_64-linux-gnu/libvpx.a
+    -lrt -lpthread -lm -lopenal
+    /usr/local/lib/libfilteraudio.so src/xlib/libicon.a
+    -lv4lconvert -lSM -lICE -lX11 -lXext -lXrender -lfontconfig -lfreetype -lresolv -ldl -ldbus-1
+    src/layout/libutoxLAYOUT.a
+    -Wl,-rpath,/usr/local/lib
 
     - cd ../build2/ ; ls -al utox ; ldd utox ; exit 0
     - cd ../build2/ ; cp -av utox $CIRCLE_ARTIFACTS/ubuntu_14_04_binaries/
