@@ -390,7 +390,7 @@ test:
   override:
     - echo "-- compile linux --"
     #- sudo apt-get install cmake3
-    - cp -av CMakeLists_orig.txt CMakeLists.txt # use the original for linux
+    #- cp -av CMakeLists_orig.txt CMakeLists.txt # use the original for linux
     - cd ../ ; mkdir build2
     - cd ../build2/ ; cmake -DTOXCORE_STATIC=ON -DUTOX_STATIC=ON ../uTox
     - cd ../build2/ ; make -j 8
