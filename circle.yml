@@ -82,8 +82,8 @@ dependencies:
     - cd libsodium/ ; make -j 8 check
 
     - cd libsodium/ ; sudo bash -c "printf 'y\naa\n\n' | checkinstall --install --pkgname libsodium --pkgversion 1.0.0 --nodoc --deldesc=no --pkglicense='GPL2'"
-    - cd libsodium/ ; sudo ldconfig
-    - cd libsodium ; sudo ldconfig -v 2>/dev/null | grep sodium
+    - cd libsodium/ ; sudo ldconfig ; exit 0
+    - cd libsodium ; sudo ldconfig -v 2>/dev/null | grep sodium ; exit 0
     ## --- now again to save the artefact ---
     - cd libsodium ; export INSTALL_DEST=/home/ubuntu/installdest_linux/ ; rm -Rf "$INSTALL_DEST"
     - cd libsodium ; export INSTALL_DEST=/home/ubuntu/installdest_linux/ ; mkdir -p  "$INSTALL_DEST"/usr ; ./configure --prefix="$INSTALL_DEST"/usr
