@@ -78,7 +78,7 @@ dependencies:
     ### ------- compile and install libsodium -------
     - cd libsodium/ ; ./autogen.sh
     #- cd libsodium/ ; ./configure && make check
-    - cd libsodium/ ; ./configure --disable-shared --disable-soname-versions # --disable-pie
+    - cd libsodium/ ; ./configure --disable-shared --disable-soname-versions --disable-pie
     - cd libsodium/ ; make -j 8 check
 
     - cd libsodium/ ; sudo bash -c "printf 'y\naa\n\n' | checkinstall --install --pkgname libsodium --pkgversion 1.0.0 --nodoc --deldesc=no --pkglicense='GPL2'"
