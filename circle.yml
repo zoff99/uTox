@@ -315,7 +315,7 @@ dependencies:
       export X11_Xrender_INCLUDE_PATH=$_SYSROOT_/usr/include/X11/extensions/
       export X11_Xrender_LIB=$_SYSROOT_/usr/lib/arm-linux-gnueabihf/
       export PKG_CONFIG_PATH=$_SYSROOT_/usr/lib/pkgconfig ;
-      cmake -DASAN=0 -DENABLE_ASAN=0 -DCMAKE_TOOLCHAIN_FILE=~/uTox/arm-linux-gnueabihf-4.9.cmake
+      cmake -D CMAKE_CXX_FLAGS=" -g " -DASAN=0 -DENABLE_ASAN=0 -DCMAKE_TOOLCHAIN_FILE=~/uTox/arm-linux-gnueabihf-4.9.cmake
       -DENABLE_FILTERAUDIO=0
       -DENABLE_AUTOUPDATE=0
       -DENABLE_DBUS=0
@@ -392,7 +392,7 @@ test:
     #- sudo apt-get install cmake3
     #- cp -av CMakeLists_orig.txt CMakeLists.txt # use the original for linux
     - cd ../ ; mkdir build2
-    - cd ../build2/ ; cmake -DTOXCORE_STATIC=ON -DUTOX_STATIC=ON ../uTox
+    - cd ../build2/ ; cmake -D CMAKE_CXX_FLAGS=" -g " -DTOXCORE_STATIC=ON -DUTOX_STATIC=ON ../uTox
     - cd ../build2/ ; make VERBOSE=1 -j 8 ; exit 0
     - cd ../build2/ ; /usr/bin/cc    -Wall -Wextra -Wpointer-arith -Werror=implicit-function-declaration
       -Wformat=0 -Wno-misleading-indentation -fno-strict-aliasing -fPIC -flto -fsanitize=address
