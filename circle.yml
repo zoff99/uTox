@@ -37,6 +37,7 @@ dependencies:
     - gcc --version ; exit 0
     - clang --version ; exit 0
 
+  override:
     - bash -x ./extra/gitlab/windows-before.sh
     - bash -x ./extra/gitlab/windows-script.sh
     - ls -al build_win/utox.exe
@@ -44,6 +45,9 @@ dependencies:
 ## ----------- WIN cross compile ----------------
 ## ----------- WIN cross compile ----------------
 
+compile:
+  override:
+    - echo "xxx"
 
 test:
   override:
