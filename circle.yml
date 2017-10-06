@@ -4,9 +4,9 @@ machine:
   environment:
     MAKEFLAGS: ""
 ## ----------- WIN cross compile ----------------
-    TARGET_HOST="--host=x86_64-w64-mingw32"
-    TARGET_TRGT="--target=x86_64-win32-gcc"
-    CROSS="x86_64-w64-mingw32-"
+    TARGET_HOST: "--host=x86_64-w64-mingw32"
+    TARGET_TRGT: "--target=x86_64-win32-gcc"
+    CROSS: "x86_64-w64-mingw32-"
     TOXCORE_REPO: "TokTok/c-toxcore"
     GL_BUILD: "win64"
 ## ----------- WIN cross compile ----------------
