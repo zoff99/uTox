@@ -26,6 +26,7 @@ dependencies:
     - sudo apt-get install libasound2-dev
     - sudo apt-get install mingw-w64 mingw-w64-tools gobjc++-mingw-w64 gobjc-mingw-w64 mingw32-binutils mingw32-runtime gcc-mingw-w64
     - sudo apt-get install g++-mingw-w64 binutils-mingw-w64 binutils-mingw-w64-x86-64
+    - sudo apt-get install mingw32 mingw32-binutils mingw32-runtime 
     - sudo apt-get install linux-generic
     - sudo apt-get install libjpeg-dev
     - sudo apt-get install libpulse-dev
