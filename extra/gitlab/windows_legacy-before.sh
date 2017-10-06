@@ -13,8 +13,10 @@ export CROSS="i686-w64-mingw32-"
 
 # install toxcore
 rm -rf toxcore
-git clone --depth=1 --branch=$TOXCORE_REPO_BRANCH $TOXCORE_REPO_URI toxcore
+# git clone --depth=1 --branch=$TOXCORE_REPO_BRANCH $TOXCORE_REPO_URI toxcore
+git clone $TOXCORE_REPO_URI toxcore
 cd toxcore
+git checkout $CTOXCORE_VERSION_HASH
 git rev-parse HEAD > toxcore.sha
 if ! ([ -f "$CACHE_DIR/toxcore.sha" ] && diff "$CACHE_DIR/toxcore.sha" toxcore.sha); then
   rm -rf _build || true
