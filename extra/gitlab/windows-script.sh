@@ -5,6 +5,9 @@ set -eux
 
 export CFLAGS="-I$CACHE_DIR/usr/include -I/usr/share/mingw-w64/include/ "
 
+# CMake 3.2 or higher is required. for c-toxcore :-(
+# sudo apt-get install cmake3
+
 mkdir build_win
 cd build_win
 cmake .. \
