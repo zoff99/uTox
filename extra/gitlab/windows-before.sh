@@ -7,9 +7,31 @@ export TARGET_HOST="--host=x86_64-w64-mingw32"
 export TARGET_TRGT="--target=x86_64-win32-gcc"
 export CROSS="x86_64-w64-mingw32-"
 
+echo "==============================="
+echo "==============================="
+echo "==============================="
+
+
 . ./extra/common/build_nacl.sh
+
+
+echo "==============================="
+echo "==============================="
+echo "==============================="
+
 . ./extra/common/build_opus.sh
+
+
+echo "==============================="
+echo "==============================="
+echo "==============================="
+
 . ./extra/common/build_vpx.sh
+
+echo "==============================="
+echo "==============================="
+echo "==============================="
+
 
 # CMake 3.2 or higher is required. for c-toxcore :-(
 # sudo apt-get install cmake3
@@ -50,6 +72,11 @@ fi
 cd ..
 # rm -rf toxcore
 
+echo "==============================="
+echo "==============================="
+echo "==============================="
+
+
 if ! [ -d openal ]; then
   git clone --depth=1 https://github.com/irungentoo/openal-soft-tox.git openal
 fi
@@ -77,17 +104,29 @@ set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)" > ./Toolchain-x86_64-w64-mingw32.cm
   make
   make install
   cd ..
-  mv openal.sha "$CACHE_DIR/openal.sha"
+  mv -v openal.sha "$CACHE_DIR/openal.sha"
 fi
+
 cd ..
 rm -rf openal
+
+echo "==============================="
+echo "==============================="
+echo "==============================="
+
+pwd
+
+echo "==============================="
+echo "==============================="
+echo "==============================="
+
 
 export CC=x86_64-w64-mingw32-gcc
 . ./extra/common/filter_audio.sh
 x86_64-w64-mingw32-ranlib $CACHE_DIR/usr/lib/libfilteraudio.a
 unset CC
 
-cp $CACHE_DIR/usr/lib/libOpenAL32.a $CACHE_DIR/usr/lib/libopenal.a || true
+cp -av $CACHE_DIR/usr/lib/libOpenAL32.a $CACHE_DIR/usr/lib/libopenal.a || true
 if [ ! -f "$CACHE_DIR/usr/lib/libshell32.a" ] then;
     curl https://cmdline.org/travis/64/shell32.a > "$CACHE_DIR/usr/lib/libshell32.a"
 fi
