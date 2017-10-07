@@ -24,6 +24,9 @@ if ! ([ -f "$CACHE_DIR/toxcore.sha" ] && diff "$CACHE_DIR/toxcore.sha" toxcore.s
   mkdir _build
   ./autogen.sh
   cd _build
+  export PKG_CONFIG_PATH="$CACHE_DIR/usr/lib/pkgconfig/"
+  export LIBSODIUM_CFLAGS="-I$CACHE_DIR/usr/include/"
+  export LIBSODIUM_LIBS="-L$CACHE_DIR/usr/lib/"
   CROSS=x86_64-w64-mingw32- ../configure --prefix=$CACHE_DIR/usr --enable-logging \
   --disable-soname-versions --host="x86_64-w64-mingw32" \
   --with-sysroot="$CACHE_DIR/" --disable-testing \
