@@ -56,6 +56,7 @@ if ! ([ -f "$CACHE_DIR/toxcore.sha" ] && diff "$CACHE_DIR/toxcore.sha" toxcore.s
  
  make -j8
  make install
+ cd ..
  
 #  cmake -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc \
 #        -DCMAKE_SYSTEM_NAME=Windows \
