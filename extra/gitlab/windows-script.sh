@@ -13,6 +13,8 @@ cd build_win
 cmake .. \
     -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchain-win64.cmake \
     -DCMAKE_INCLUDE_PATH="$CACHE_DIR/usr/include" \
+    -DLIBTOX_INCLUDE_DIRS="$CACHE_DIR/usr/include" \
+    -DLIBTOX_LIBRARIES="toxXXXXXXXXXX" \
     -DCMAKE_LIBRARY_PATH="$CACHE_DIR/usr/lib" \
     -DENABLE_TESTS=OFF \
     -DTOXCORE_STATIC=ON \
