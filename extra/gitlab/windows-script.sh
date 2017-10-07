@@ -16,4 +16,5 @@ cmake .. \
     -DCMAKE_LIBRARY_PATH="$CACHE_DIR/usr/lib" \
     -DENABLE_TESTS=OFF \
     -DENABLE_WERROR=ON
-make || make VERBOSE=1
+
+make VERBOSE=1
