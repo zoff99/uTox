@@ -11,9 +11,14 @@ export CROSS="x86_64-w64-mingw32-"
 . ./extra/common/build_opus.sh
 . ./extra/common/build_vpx.sh
 
+# CMake 3.2 or higher is required. for c-toxcore :-(
+sudo apt-get install cmake3
+
 # install toxcore
-git clone --depth=1 --branch=$TOXCORE_REPO_BRANCH $TOXCORE_REPO_URI toxcore
+# git clone --depth=1 --branch=$TOXCORE_REPO_BRANCH $TOXCORE_REPO_URI toxcore
+git clone $TOXCORE_REPO_URI toxcore
 cd toxcore
+git checkout "$CTOXCORE_VERSION_HASH"
 git rev-parse HEAD > toxcore.sha
 if ! ([ -f "$CACHE_DIR/toxcore.sha" ] && diff "$CACHE_DIR/toxcore.sha" toxcore.sha); then
   mkdir _build
