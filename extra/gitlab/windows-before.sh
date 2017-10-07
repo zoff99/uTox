@@ -12,7 +12,7 @@ export CROSS="x86_64-w64-mingw32-"
 . ./extra/common/build_vpx.sh
 
 # CMake 3.2 or higher is required. for c-toxcore :-(
-sudo apt-get install cmake3
+# sudo apt-get install cmake3
 
 # install toxcore
 # git clone --depth=1 --branch=$TOXCORE_REPO_BRANCH $TOXCORE_REPO_URI toxcore
@@ -22,16 +22,23 @@ git checkout "$CTOXCORE_VERSION_HASH"
 git rev-parse HEAD > toxcore.sha
 if ! ([ -f "$CACHE_DIR/toxcore.sha" ] && diff "$CACHE_DIR/toxcore.sha" toxcore.sha); then
   mkdir _build
-  cmake -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc \
-        -DCMAKE_SYSTEM_NAME=Windows \
-        -DCMAKE_CROSSCOMPILING=1 \
-        -B_build \
-        -H. \
-        -DCMAKE_INSTALL_PREFIX:PATH=$CACHE_DIR/usr \
-        -DENABLE_SHARED=OFF \
-        -DENABLE_STATIC=ON
-  make -C_build -j`nproc`
-  make -C_build install
+  ./autogen.sh
+  cd _build
+  CROSS=x86_64-w64-mingw32- ../configure --prefix=$CACHE_DIR/usr --enable-logging \
+  --disable-soname-versions --host="x86_64-w64-mingw32" \
+  --with-sysroot="$CACHE_DIR/" --disable-testing \
+  --disable-rt --disable-shared
+  
+#  cmake -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc \
+#        -DCMAKE_SYSTEM_NAME=Windows \
+#        -DCMAKE_CROSSCOMPILING=1 \
+#        -B_build \
+#        -H. \
+#        -DCMAKE_INSTALL_PREFIX:PATH=$CACHE_DIR/usr \
+#        -DENABLE_SHARED=OFF \
+#        -DENABLE_STATIC=ON
+#  make -C_build -j`nproc`
+#  make -C_build install
   mv toxcore.sha "$CACHE_DIR/toxcore.sha"
 fi
 cd ..
