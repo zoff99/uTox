@@ -19,7 +19,7 @@ export CROSS="x86_64-w64-mingw32-"
 git clone $TOXCORE_REPO_URI toxcore
 cd toxcore
 git checkout "$CTOXCORE_VERSION_HASH"
-git rev-parse HEAD > toxcore.sha
+# git rev-parse HEAD > toxcore.sha
 if ! ([ -f "$CACHE_DIR/toxcore.sha" ] && diff "$CACHE_DIR/toxcore.sha" toxcore.sha); then
   mkdir _build
   ./autogen.sh
@@ -31,7 +31,10 @@ if ! ([ -f "$CACHE_DIR/toxcore.sha" ] && diff "$CACHE_DIR/toxcore.sha" toxcore.s
   --disable-soname-versions --host="x86_64-w64-mingw32" \
   --with-sysroot="$CACHE_DIR/" --disable-testing \
   --disable-rt --disable-shared
-  
+ 
+ make -j8
+ make install
+ 
 #  cmake -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc \
 #        -DCMAKE_SYSTEM_NAME=Windows \
 #        -DCMAKE_CROSSCOMPILING=1 \
@@ -42,10 +45,10 @@ if ! ([ -f "$CACHE_DIR/toxcore.sha" ] && diff "$CACHE_DIR/toxcore.sha" toxcore.s
 #        -DENABLE_STATIC=ON
 #  make -C_build -j`nproc`
 #  make -C_build install
-  mv toxcore.sha "$CACHE_DIR/toxcore.sha"
+#  mv toxcore.sha "$CACHE_DIR/toxcore.sha"
 fi
 cd ..
-rm -rf toxcore
+# rm -rf toxcore
 
 if ! [ -d openal ]; then
   git clone --depth=1 https://github.com/irungentoo/openal-soft-tox.git openal
