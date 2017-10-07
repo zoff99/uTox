@@ -16,7 +16,7 @@ export CROSS="x86_64-w64-mingw32-"
 
 # install toxcore
 # git clone --depth=1 --branch=$TOXCORE_REPO_BRANCH $TOXCORE_REPO_URI toxcore
-git clone $TOXCORE_REPO_URI toxcore
+git clone $CTOXCORE_URL toxcore
 cd toxcore
 git checkout "$CTOXCORE_VERSION_HASH"
 # git rev-parse HEAD > toxcore.sha
