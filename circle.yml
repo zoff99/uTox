@@ -35,19 +35,12 @@ dependencies:
     # -----------------------------------
     - sudo apt-get update
     - sudo apt-get install cmake
-    - aptitude search 4l|grep -i convert ; exit 0
-    - aptitude search 4l|grep -i v4l ; exit 0
     - sudo apt-get install build-essential libtool autotools-dev automake checkinstall check git yasm libv4lconvert0 libv4l-dev
     - sudo apt-get install libopus-dev libvpx-dev pkg-config
     - sudo apt-get install libasound2-dev
     - sudo apt-get install mingw-w64 mingw-w64-tools gobjc++-mingw-w64 gobjc-mingw-w64 mingw32-binutils mingw32-runtime gcc-mingw-w64
     - sudo apt-get install g++-mingw-w64 binutils-mingw-w64 binutils-mingw-w64-x86-64
     - sudo apt-get install mingw32 mingw32-binutils mingw32-runtime 
-    - sudo apt-get install linux-generic
-    - sudo apt-get install libjpeg-dev
-    - sudo apt-get install libpulse-dev
-    - sudo apt-get install libconfig-dev
-    - sudo apt-get install libfontconfig1-dev libdbus-1-dev libxrender-dev libopenal-dev libxext-dev
 
     - sudo bash -c "echo '::1             localhost ipv6-localhost ipv6-loopback' >> /etc/hosts" # ipv6 localhost entry
 
@@ -57,6 +50,13 @@ dependencies:
     - bash -x ./extra/gitlab/windows-before.sh
     - bash -x ./extra/gitlab/windows-script.sh
     - ls -al build_win/utox.exe
+    - file build_win/utox.exe ; exit 0
+    - ls -al cache/win64/usr/bin/*dll
+
+    - mkdir -p $CIRCLE_ARTIFACTS/win_binaries/
+    - cp -av build_win/utox.exe $CIRCLE_ARTIFACTS/win_binaries/
+    - cp -av cache/win64/usr/bin/libopus-0.dll $CIRCLE_ARTIFACTS/win_binaries/
+    - cp -av cache/win64/usr/bin/libsodium-23.dll $CIRCLE_ARTIFACTS/win_binaries/
 
 ## ----------- WIN cross compile ----------------
 ## ----------- WIN cross compile ----------------
