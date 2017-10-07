@@ -18,6 +18,8 @@ git rev-parse HEAD > toxcore.sha
 if ! ([ -f "$CACHE_DIR/toxcore.sha" ] && diff "$CACHE_DIR/toxcore.sha" toxcore.sha); then
   mkdir _build
   cmake -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc \
+        -DCMAKE_SYSTEM_NAME=Windows \
+        -DCMAKE_CROSSCOMPILING=1 \
         -B_build \
         -H. \
         -DCMAKE_INSTALL_PREFIX:PATH=$CACHE_DIR/usr \
