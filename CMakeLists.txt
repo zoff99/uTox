@@ -262,23 +262,26 @@ if(ENABLE_AUTOUPDATE)
     add_cflag("-DENABLE_AUTOUPDATE=1")
 endif()
 
-if(TOXCORE_STATIC AND WIN32)
-    # The static windows libs need all of these... because REASONS!
-    find_package(libtox REQUIRED COMPONENTS
-        toxencryptsave
-        toxav
-        toxcore
-        toxgroup
-        toxmessenger
-        toxfriends
-        toxdht
-        toxnetcrypto
-        toxcrypto
-        toxnetwork
-    )
-else()
-    find_package(libtox REQUIRED COMPONENTS toxencryptsave toxav toxcore)
-endif()
+#if(TOXCORE_STATIC AND WIN32)
+#    # The static windows libs need all of these... because REASONS!
+#    find_package(libtox REQUIRED COMPONENTS
+#        toxencryptsave
+#        toxav
+#        toxcore
+#        toxgroup
+#        toxmessenger
+#        toxfriends
+#        toxdht
+#        toxnetcrypto
+#        toxcrypto
+#        toxnetwork
+#    )
+#else()
+#    find_package(libtox REQUIRED COMPONENTS toxencryptsave toxav toxcore)
+#endif()
+
+
+
 include_directories(${LIBTOX_INCLUDE_DIRS})
 set(TOX_LIBS ${LIBTOX_LIBRARIES})
 
