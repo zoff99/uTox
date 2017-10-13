@@ -421,11 +421,13 @@ test:
       CMakeFiles/utox.dir/src/utox.c.o CMakeFiles/utox.dir/src/window.c.o
       -o utox
       -rdynamic
-      src/av/libutoxAV.a src/xlib/libutoxNATIVE.a src/ui/libutoxUI.a /usr/local/lib/libsodium.a
+      src/av/libutoxAV.a src/xlib/libutoxNATIVE.a src/ui/libutoxUI.a
+      /usr/local/lib/libsodium.a
       /usr/local/lib/libtoxav.a /usr/local/lib/libtoxcore.a /usr/local/lib/libtoxdns.a
       /usr/local/lib/libtoxencryptsave.a /usr/lib/x86_64-linux-gnu/libopus.a
       /usr/lib/x86_64-linux-gnu/libvpx.a
-      -lrt -lpthread -lm -lopenal
+      -lrt -lpthread -lm
+      -Wl,-Bstatic -lopenal -Wl,-Bdynamic
       /usr/local/lib/libfilteraudio.so
       src/xlib/libicon.a
       -lv4lconvert -lSM -lICE -lX11 -lXext -lXrender -lfontconfig -lfreetype -lresolv -ldl -ldbus-1
