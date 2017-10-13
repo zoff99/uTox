@@ -329,7 +329,7 @@ dependencies:
       -g
       -O3
       -fno-omit-frame-pointer
-      -fno-strict-aliasing -fPIC -fno-lto   -Wl,-z,noexecstack CMakeFiles/utox.dir/src/avatar.c.o
+      -fno-strict-aliasing -fPIC -flto   -Wl,-z,noexecstack CMakeFiles/utox.dir/src/avatar.c.o
       CMakeFiles/utox.dir/src/chatlog.c.o CMakeFiles/utox.dir/src/chrono.c.o CMakeFiles/utox.dir/src/command_funcs.c.o
       CMakeFiles/utox.dir/src/commands.c.o CMakeFiles/utox.dir/src/devices.c.o CMakeFiles/utox.dir/src/file_transfers.c.o
       CMakeFiles/utox.dir/src/filesys.c.o CMakeFiles/utox.dir/src/flist.c.o CMakeFiles/utox.dir/src/friend.c.o CMakeFiles/utox.dir/src/groups.c.o
@@ -407,7 +407,7 @@ test:
     - cd ../build2/ ; make VERBOSE=1 -j 8 ; exit 0
     - cd ../build2/ ; /usr/bin/cc -g -O3
       -Wall -Wextra -Wpointer-arith -Werror=implicit-function-declaration
-      -Wformat=0 -Wno-misleading-indentation -fno-strict-aliasing -fPIC -fno-lto
+      -Wformat=0 -Wno-misleading-indentation -fno-strict-aliasing -fPIC -flto
       -fno-omit-frame-pointer   -Wl,-z,noexecstack CMakeFiles/utox.dir/src/avatar.c.o
       CMakeFiles/utox.dir/src/chatlog.c.o CMakeFiles/utox.dir/src/chrono.c.o CMakeFiles/utox.dir/src/command_funcs.c.o
       CMakeFiles/utox.dir/src/commands.c.o CMakeFiles/utox.dir/src/devices.c.o CMakeFiles/utox.dir/src/file_transfers.c.o
