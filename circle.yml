@@ -316,10 +316,10 @@ dependencies:
       export X11_Xrender_LIB=$_SYSROOT_/usr/lib/arm-linux-gnueabihf/
       export PKG_CONFIG_PATH=$_SYSROOT_/usr/lib/pkgconfig ;
       export CFLAGS=" -g -fno-omit-frame-pointer " ;
-      cmake -DASAN=0 -DENABLE_ASAN=0 -DCMAKE_TOOLCHAIN_FILE=~/uTox/arm-linux-gnueabihf-4.9.cmake
-      -DENABLE_FILTERAUDIO=0
-      -DENABLE_AUTOUPDATE=0
-      -DENABLE_DBUS=0
+      cmake -DASAN=OFF -DENABLE_ASAN=OFF -DCMAKE_TOOLCHAIN_FILE=~/uTox/arm-linux-gnueabihf-4.9.cmake
+      -DENABLE_FILTERAUDIO=OFF
+      -DENABLE_AUTOUPDATE=OFF
+      -DENABLE_DBUS=OFF
       -DRPI_ROOT_PATH="$_SYSROOT_" -DTOXCORE_STATIC=ON ../uTox
     - cd ../ ; cd build_raspi/ ; . ~/pp ; make VERBOSE=1 -j8 ; exit 0
 
@@ -329,7 +329,7 @@ dependencies:
       -g
       -O3
       -fno-omit-frame-pointer
-      -fno-strict-aliasing -fPIC -flto   -Wl,-z,noexecstack CMakeFiles/utox.dir/src/avatar.c.o
+      -fno-strict-aliasing -fPIC -fno-lto   -Wl,-z,noexecstack CMakeFiles/utox.dir/src/avatar.c.o
       CMakeFiles/utox.dir/src/chatlog.c.o CMakeFiles/utox.dir/src/chrono.c.o CMakeFiles/utox.dir/src/command_funcs.c.o
       CMakeFiles/utox.dir/src/commands.c.o CMakeFiles/utox.dir/src/devices.c.o CMakeFiles/utox.dir/src/file_transfers.c.o
       CMakeFiles/utox.dir/src/filesys.c.o CMakeFiles/utox.dir/src/flist.c.o CMakeFiles/utox.dir/src/friend.c.o CMakeFiles/utox.dir/src/groups.c.o
@@ -397,17 +397,17 @@ test:
     #- cp -av CMakeLists_orig.txt CMakeLists.txt # use the original for linux
     - cd ../ ; mkdir build2
     - cd ../build2/ ; export CFLAGS=" -g " ; cmake
-      -DENABLE_AUTOUPDATE=0
-      -DENABLE_DBUS=0
-      -DASAN=0
-      -DENABLE_ASAN=0
+      -DENABLE_AUTOUPDATE=OFF
+      -DENABLE_DBUS=OFF
+      -DASAN=OFF
+      -DENABLE_ASAN=OFF
       -DTOXCORE_STATIC=ON
       -DUTOX_STATIC=ON
       ../uTox
     - cd ../build2/ ; make VERBOSE=1 -j 8 ; exit 0
     - cd ../build2/ ; /usr/bin/cc -g -O3
       -Wall -Wextra -Wpointer-arith -Werror=implicit-function-declaration
-      -Wformat=0 -Wno-misleading-indentation -fno-strict-aliasing -fPIC -flto -fsanitize=address
+      -Wformat=0 -Wno-misleading-indentation -fno-strict-aliasing -fPIC -fno-lto
       -fno-omit-frame-pointer   -Wl,-z,noexecstack CMakeFiles/utox.dir/src/avatar.c.o
       CMakeFiles/utox.dir/src/chatlog.c.o CMakeFiles/utox.dir/src/chrono.c.o CMakeFiles/utox.dir/src/command_funcs.c.o
       CMakeFiles/utox.dir/src/commands.c.o CMakeFiles/utox.dir/src/devices.c.o CMakeFiles/utox.dir/src/file_transfers.c.o
@@ -427,7 +427,7 @@ test:
       /usr/local/lib/libtoxencryptsave.a /usr/lib/x86_64-linux-gnu/libopus.a
       /usr/lib/x86_64-linux-gnu/libvpx.a
       -lrt -lpthread -lm
-      -Wl,-Bstatic -lopenal -Wl,-Bdynamic
+      -lopenal
       /usr/local/lib/libfilteraudio.so
       src/xlib/libicon.a
       -lv4lconvert -lSM -lICE -lX11 -lXext -lXrender -lfontconfig -lfreetype -lresolv -ldl -ldbus-1
