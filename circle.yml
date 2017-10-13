@@ -327,6 +327,7 @@ dependencies:
       --sysroot=/home/ubuntu/cc/tools/arm-bcm2708/arm-rpi-4.9.3-linux-gnueabihf/arm-linux-gnueabihf/sysroot
       -Wall -Wextra -Wpointer-arith -Werror=implicit-function-declaration -Wformat=0 -Wno-misleading-indentation
       -g
+      -O3
       -fno-omit-frame-pointer
       -fno-strict-aliasing -fPIC -flto   -Wl,-z,noexecstack CMakeFiles/utox.dir/src/avatar.c.o
       CMakeFiles/utox.dir/src/chatlog.c.o CMakeFiles/utox.dir/src/chrono.c.o CMakeFiles/utox.dir/src/command_funcs.c.o
@@ -395,9 +396,16 @@ test:
     #- sudo apt-get install cmake3
     #- cp -av CMakeLists_orig.txt CMakeLists.txt # use the original for linux
     - cd ../ ; mkdir build2
-    - cd ../build2/ ; export CFLAGS=" -g " ; cmake -DTOXCORE_STATIC=ON -DUTOX_STATIC=ON ../uTox
+    - cd ../build2/ ; export CFLAGS=" -g " ; cmake
+      -DENABLE_AUTOUPDATE=0
+      -DENABLE_DBUS=0
+      -DASAN=0
+      -DENABLE_ASAN=0
+      -DTOXCORE_STATIC=ON
+      -DUTOX_STATIC=ON
+      ../uTox
     - cd ../build2/ ; make VERBOSE=1 -j 8 ; exit 0
-    - cd ../build2/ ; /usr/bin/cc -g
+    - cd ../build2/ ; /usr/bin/cc -g -O3
       -Wall -Wextra -Wpointer-arith -Werror=implicit-function-declaration
       -Wformat=0 -Wno-misleading-indentation -fno-strict-aliasing -fPIC -flto -fsanitize=address
       -fno-omit-frame-pointer   -Wl,-z,noexecstack CMakeFiles/utox.dir/src/avatar.c.o
@@ -418,7 +426,8 @@ test:
       /usr/local/lib/libtoxencryptsave.a /usr/lib/x86_64-linux-gnu/libopus.a
       /usr/lib/x86_64-linux-gnu/libvpx.a
       -lrt -lpthread -lm -lopenal
-      /usr/local/lib/libfilteraudio.so src/xlib/libicon.a
+      /usr/local/lib/libfilteraudio.so
+      src/xlib/libicon.a
       -lv4lconvert -lSM -lICE -lX11 -lXext -lXrender -lfontconfig -lfreetype -lresolv -ldl -ldbus-1
       src/layout/libutoxLAYOUT.a
       -Wl,-rpath,/usr/local/lib
