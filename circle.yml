@@ -59,7 +59,7 @@ dependencies:
     - mkdir -p $CIRCLE_ARTIFACTS/win_binaries/
     - cp -av build_win/utox.exe $CIRCLE_ARTIFACTS/win_binaries/
     - cp -av cache/win64/usr/bin/libopus-0.dll $CIRCLE_ARTIFACTS/win_binaries/
-    - cp -av cache/win64/usr/bin/libsodium-23.dll $CIRCLE_ARTIFACTS/win_binaries/
+    - cp -av cache/win64/usr/bin/libsodium-18.dll $CIRCLE_ARTIFACTS/win_binaries/
 
 ## ----------- WIN cross compile ----------------
 ## ----------- WIN cross compile ----------------
