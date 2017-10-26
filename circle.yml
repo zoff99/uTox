@@ -10,7 +10,7 @@ machine:
     GL_BUILD: "win64"
 ## ----------- WIN cross compile ----------------
     # ---------------------------------------------------
-    # v0.1.10 vpx tweaks                       1d2663ab283f653afc06a842debd3d3caa40c863
+    # v0.1.10 vpx tweaks                       cba9dd58f38ad28823b8e8a10e7c111fdf2064a6
     # MAX_CRYPTO_PACKET_SIZE 1400 -> 1000      4e096ac87135ef15bc9b738006a91f9b455b9f54
     # jitterbuffer  capacity 3 -> 10           8317821ed02f549380bbb05f2b80c44693a7bcb0
     # v0.1.10 onlyKF    74dc53cf180e32f92ebb3cb5e8542e919cc3b343
@@ -25,7 +25,7 @@ machine:
     # c-toxcore v0.1.2 a096c71db867ac83fc3e01e0fbe98573d20f9286
     # ---------------------------------------------------
     # c-toxcore version used
-    CTOXCORE_VERSION_HASH: 1d2663ab283f653afc06a842debd3d3caa40c863
+    CTOXCORE_VERSION_HASH: cba9dd58f38ad28823b8e8a10e7c111fdf2064a6
     # c-toxcore repo used
     # CTOXCORE_URL: "https://github.com/TokTok/c-toxcore"
     CTOXCORE_URL: "https://github.com/zoff99/c-toxcore"
