@@ -4,7 +4,7 @@ OPUS_VERSION="1.2.1"
 
 # install libopus, needed for audio encoding/decoding
 if ! [ -f "$CACHE_DIR/usr/lib/pkgconfig/opus.pc" ]; then
-  wget 'https://github.com/xiph/opus/releases/download/v1.1.2/opus-1.1.2.tar.gz' -O opus.tar.gz
+  wget 'https://github.com/xiph/opus/archive/v1.2.1.tar.gz' -O opus.tar.gz
   # curl https://ftp.osuosl.org/pub/xiph/releases/opus/opus-${OPUS_VERSION}.tar.gz -o opus.tar.gz
   ls -al opus.tar.gz
   tar -xzvf opus.tar.gz
