@@ -8,11 +8,15 @@ if ! [ -f "$CACHE_DIR/usr/lib/pkgconfig/opus.pc" ]; then
   # curl https://ftp.osuosl.org/pub/xiph/releases/opus/opus-${OPUS_VERSION}.tar.gz -o opus.tar.gz
   ls -al opus.tar.gz
   tar -xzvf opus.tar.gz
+
   cd opus-${OPUS_VERSION}
+
+  ./autogen.sh
   ./configure "$TARGET_HOST" \
               --prefix="$CACHE_DIR/usr" \
               --disable-extra-programs \
               --disable-doc
+
   make -j`nproc`
   make install
   cd ..
