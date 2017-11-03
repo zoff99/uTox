@@ -10,9 +10,7 @@ machine:
     GL_BUILD: "win64"
 ## ----------- WIN cross compile ----------------
     # ---------------------------------------------------
-    # v0.1.10 VPX_DL_GOOD_QUALITY              9fabeaee6f8e556233334be6e076d863a6ab949c
-    #          + VPX_CODEC_USE_POSTPROC
-    #
+    # v0.1.10 VPX_DL_GOOD_QUALITY              bef1c7667fed6761e87dbde5e7fd65ccb8487ee0
     # v0.1.10 vpx tweaks2                      eab6e81ec9ed5b88aa712093ea53c802ff81d611
     # v0.1.10 vpx tweaks                       cba9dd58f38ad28823b8e8a10e7c111fdf2064a6
     # MAX_CRYPTO_PACKET_SIZE 1400 -> 1000      4e096ac87135ef15bc9b738006a91f9b455b9f54
@@ -29,7 +27,7 @@ machine:
     # c-toxcore v0.1.2 a096c71db867ac83fc3e01e0fbe98573d20f9286
     # ---------------------------------------------------
     # c-toxcore version used
-    CTOXCORE_VERSION_HASH: 9fabeaee6f8e556233334be6e076d863a6ab949c
+    CTOXCORE_VERSION_HASH: bef1c7667fed6761e87dbde5e7fd65ccb8487ee0
     # c-toxcore repo used
     # CTOXCORE_URL: "https://github.com/TokTok/c-toxcore"
     CTOXCORE_URL: "https://github.com/zoff99/c-toxcore"
