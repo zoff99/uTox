@@ -10,6 +10,7 @@ machine:
     GL_BUILD: "win64"
 ## ----------- WIN cross compile ----------------
     # ---------------------------------------------------
+    #         tweaks5                          31e91cf25dd6f4128e16359af176ba6348fd58da
     # v0.1.10 only key frames                  67ed796d49496531ef28c3b096914cf9f6cf0fb8
     # v0.1.10 tweaks4                          adbf2386071801a8f70cba3d165ce1d5b87809fb
     # v0.1.10 tweaks3                          48f0231a1e5f80a4f3b362fb7ac46bc3c9dbe3e2
@@ -35,7 +36,7 @@ machine:
     # c-toxcore v0.1.2 a096c71db867ac83fc3e01e0fbe98573d20f9286
     # ---------------------------------------------------
     # c-toxcore version used
-    CTOXCORE_VERSION_HASH: 67ed796d49496531ef28c3b096914cf9f6cf0fb8
+    CTOXCORE_VERSION_HASH: 31e91cf25dd6f4128e16359af176ba6348fd58da
     # c-toxcore repo used
     # CTOXCORE_URL: "https://github.com/TokTok/c-toxcore"
     CTOXCORE_URL: "https://github.com/zoff99/c-toxcore"
