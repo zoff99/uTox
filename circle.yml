@@ -10,6 +10,7 @@ machine:
     GL_BUILD: "win64"
 ## ----------- WIN cross compile ----------------
     # ---------------------------------------------------
+    # v0.1.10 more tweaks                      719da091470cf88518c297517f267c92c0a91f49
     # v0.1.10 cpuused = 0                      5533939bbe405de20d698a17c7b4b7bbba0693aa
     # v0.1.10 VP8E_SET_NOISE_SENSITIVITY = 2   cc4b9ef643d116933d0f1bab6778b78bfba08eb1
     # v0.1.10 higher quality enc. 001          acd150ba78a68aa9de7283917e8b22db2d297517
@@ -31,7 +32,7 @@ machine:
     # c-toxcore v0.1.2 a096c71db867ac83fc3e01e0fbe98573d20f9286
     # ---------------------------------------------------
     # c-toxcore version used
-    CTOXCORE_VERSION_HASH: 5533939bbe405de20d698a17c7b4b7bbba0693aa
+    CTOXCORE_VERSION_HASH: 719da091470cf88518c297517f267c92c0a91f49
     # c-toxcore repo used
     # CTOXCORE_URL: "https://github.com/TokTok/c-toxcore"
     CTOXCORE_URL: "https://github.com/zoff99/c-toxcore"
