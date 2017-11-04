@@ -10,6 +10,7 @@ machine:
     GL_BUILD: "win64"
 ## ----------- WIN cross compile ----------------
     # ---------------------------------------------------
+    #         tweaks7                          17d722a654c3dcace15c4fab7cb3cf0aed609122
     #         tweaks6                          452cce6b6262f12b3383141caf4f10087a20862f
     #         tweaks5                          31e91cf25dd6f4128e16359af176ba6348fd58da
     # v0.1.10 only key frames                  67ed796d49496531ef28c3b096914cf9f6cf0fb8
