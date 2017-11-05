@@ -287,7 +287,7 @@ void utox_init(void) {
 #else
 // high quality ---
 	global__MAX_DECODE_TIME_US = 1;
-	global__VP8E_SET_CPUUSED_VALUE = 6;
+	global__VP8E_SET_CPUUSED_VALUE = 2;
 	global__VPX_END_USAGE = 3;
 // high quality ---
 #endif
