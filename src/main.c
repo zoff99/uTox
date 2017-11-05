@@ -289,7 +289,7 @@ void utox_init(void) {
 #else
 // high quality ---
 	global__MAX_DECODE_TIME_US = 1;
-	global__VP8E_SET_CPUUSED_VALUE = 2;
+	global__VP8E_SET_CPUUSED_VALUE = 8;
 	global__VPX_END_USAGE = 3;
 	global__VPX_KF_MAX_DIST = 48;
 	global__VPX_G_LAG_IN_FRAMES = 3;
