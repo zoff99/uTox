@@ -9,32 +9,6 @@ uint16_t video_width, video_height, max_video_width, max_video_height;
 
 extern bool utox_video_thread_init;
 
-// ---------- dirty hack ----------
-// ---------- dirty hack ----------
-// ---------- dirty hack ----------
-extern int global__MAX_DECODE_TIME_US;
-extern int global__VP8E_SET_CPUUSED_VALUE;
-extern int global__VPX_END_USAGE;
-
-#if 0
-// low quality ---
-    #define UTOX_DEFAULT_BITRATE_V 2500
-	global__MAX_DECODE_TIME_US = 1;
-	global__VP8E_SET_CPUUSED_VALUE = 16;
-	global__VPX_END_USAGE = 2;
-// low quality ---
-#else
-// high quality ---
-	#define UTOX_DEFAULT_BITRATE_V 10000
-	global__MAX_DECODE_TIME_US = 1;
-	global__VP8E_SET_CPUUSED_VALUE = 6;
-	global__VPX_END_USAGE = 3;
-// high quality ---
-#endif
-// ---------- dirty hack ----------
-// ---------- dirty hack ----------
-// ---------- dirty hack ----------
-
 
 #define UTOX_MIN_BITRATE_VIDEO 350
 // UTOX_DEFAULT_VID_WIDTH, HEIGHT are unused.
