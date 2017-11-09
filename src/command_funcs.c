@@ -104,9 +104,18 @@ bool slash_vbr(void *object, char *arg, int arg_length)
 		TOXAV_ERR_BIT_RATE_SET error = 0;
 		LOG_ERR("slash_vbr", "toxav_bit_rate_set: global_toxav=%p fnum=%d", global_toxav, (int)f->number);
 		toxav_bit_rate_set(global_toxav, f->number, 64, UTOX_DEFAULT_BITRATE_V, &error);
+
+        if (error)
+		{
+            LOG_ERR("slash_vbr", "Setting new Video bitrate has failed with error #%u" , error);
+        }
+		else
+		{
+			LOG_ERR("slash_vbr", "vbr new:%d", (int)UTOX_DEFAULT_BITRATE_V);
+		}
+
 	}
 
-	LOG_ERR("slash_vbr", "vbr new:%d", (int)UTOX_DEFAULT_BITRATE_V);
 	return true;
 }
 
@@ -128,9 +137,17 @@ bool slash_maxdist(void *object, char *arg, int arg_length)
 		global__VPX_KF_MAX_DIST = num_new;
 		TOXAV_ERR_BIT_RATE_SET error = 0;
 		toxav_bit_rate_set(global_toxav, f->number, 64, UTOX_DEFAULT_BITRATE_V, &error);
+
+        if (error)
+		{
+            LOG_ERR("slash_maxdist", "Setting new Video bitrate has failed with error #%u" , error);
+        }
+		else
+		{
+			LOG_ERR("slash_maxdist", "maxdist new:%d", (int)global__VPX_KF_MAX_DIST);
+		}
 	}
 
-	LOG_ERR("slash_maxdist", "maxdist new:%d", (int)global__VPX_KF_MAX_DIST);
 	return true;
 }
 
