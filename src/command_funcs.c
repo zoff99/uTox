@@ -9,6 +9,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+// ---------------------
+#include <stdio.h>
+extern int UTOX_DEFAULT_BITRATE_V;
+extern inr global__VPX_KF_MAX_DIST;
+// ---------------------
+
 bool slash_send_file(void *object, char *filepath, int UNUSED(arg_length)) {
     if (filepath) {
         FRIEND *f = object;
@@ -87,13 +93,14 @@ static int get_number_in_string(const char *str, int default_value)
     return default_value; 
 }
 
+
 bool slash_vbr(void *object, char *arg, int arg_length)
 {
 	FRIEND *f = object;
 
 	int num_new = get_number_in_string(arg, (int)UTOX_DEFAULT_BITRATE_V);
 
-	if ((num_new >= UTOX_MIN_BITRATE_VIDEO) && (num_new <= 500000))
+	if ((num_new >= 350) && (num_new <= 500000))
 	{
 		UTOX_DEFAULT_BITRATE_V = num_new;
 		TOXAV_ERR_BIT_RATE_SET error = 0;
