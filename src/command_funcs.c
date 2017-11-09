@@ -102,6 +102,7 @@ bool slash_vbr(void *object, char *arg, int arg_length)
 	{
 		UTOX_DEFAULT_BITRATE_V = num_new;
 		TOXAV_ERR_BIT_RATE_SET error = 0;
+		LOG_ERR("slash_vbr", "toxav_bit_rate_set: global_toxav=%p fnum=%d", global_toxav, (int)f->number);
 		toxav_bit_rate_set(global_toxav, f->number, 64, UTOX_DEFAULT_BITRATE_V, &error);
 	}
 
