@@ -441,6 +441,11 @@ static int init_toxcore(Tox **tox) {
  */
 void toxcore_thread(void *UNUSED(args)) {
     ToxAV *av               = NULL;
+
+// hack ----------------------
+	global_toxav = av;
+// hack ----------------------
+
     bool   reconfig         = 1;
     int    toxcore_init_err = 0;
 

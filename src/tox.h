@@ -14,6 +14,10 @@ before the main thread receives the message for the old one?
 #include <stddef.h>
 #include <stdint.h>
 
+// hack ----------------------
+ToxAV *global_toxav;
+// hack ----------------------
+
 typedef uint8_t *UTOX_IMAGE;
 
 typedef struct {

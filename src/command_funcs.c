@@ -70,3 +70,54 @@ bool slash_topic(void *object, char *arg, int arg_length) {
     LOG_ERR("slash_topic", " Could not allocate memory.");
     return false;
 }
+
+
+static int get_number_in_string(const char *str, int default_value)
+{
+    int number;
+
+    while (!(*str >= '0' && *str <= '9') && (*str != '-') && (*str != '+')) str++;
+
+    if (sscanf(str, "%d", &number) == 1)
+    {
+        return number;
+    }
+
+    // no int found, return default value
+    return default_value; 
+}
+
+bool slash_vbr(void *object, char *arg, int arg_length)
+{
+	FRIEND *f = object;
+
+	int num_new = get_number_in_string(arg, (int)UTOX_DEFAULT_BITRATE_V);
+
+	if ((num_new >= UTOX_MIN_BITRATE_VIDEO) && (num_new <= 500000))
+	{
+		UTOX_DEFAULT_BITRATE_V = num_new;
+		TOXAV_ERR_BIT_RATE_SET error = 0;
+		toxav_bit_rate_set(global_toxav, f->number, 64, UTOX_DEFAULT_BITRATE_V, &error);
+	}
+
+	LOG_ERR("slash_vbr", "vbr new:%d", (int)UTOX_DEFAULT_BITRATE_V);
+}
+
+bool slash_fps(void *object, char *arg, int arg_length)
+{
+	// TODO: dummy for now
+}
+
+bool slash_maxdist(void *object, char *arg, int arg_length)
+{
+	int num_new = get_number_in_string(arg, (int)global__VPX_KF_MAX_DIST);
+
+	if ((num_new >= 1) && (num_new <= 200))
+	{
+		global__VPX_KF_MAX_DIST = num_new;
+		toxav_bit_rate_set(global_toxav, f->number, 64, UTOX_DEFAULT_BITRATE_V, &error);
+	}
+
+	LOG_ERR("slash_maxdist", "maxdist new:%d", (int)global__VPX_KF_MAX_DIST);
+}
+
