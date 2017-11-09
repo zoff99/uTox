@@ -177,3 +177,28 @@ bool slash_vpxcpu(void *object, char *arg, int arg_length)
 	return true;
 }
 
+
+bool slash_vpxusage(void *object, char *arg, int arg_length)
+{
+	FRIEND *f = object;
+
+	int num_new = get_number_in_string(arg, (int)global__VPX_END_USAGE);
+
+	if ((num_new >= 0) && (num_new <= 3))
+	{
+		global__VPX_END_USAGE = num_new;
+		TOXAV_ERR_BIT_RATE_SET error = 0;
+		toxav_bit_rate_set(global_toxav, f->number, 64, UTOX_DEFAULT_BITRATE_V, &error);
+
+        if (error)
+		{
+            LOG_ERR("slash_vpxusage", "Setting new Video bitrate has failed with error #%u" , error);
+        }
+		else
+		{
+			LOG_ERR("slash_vpxusage", "maxdist new:%d", (int)global__VPX_END_USAGE);
+		}
+	}
+
+	return true;
+}
