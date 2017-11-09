@@ -25,6 +25,8 @@ extern int global__VP8E_SET_CPUUSED_VALUE;
 extern int global__VPX_END_USAGE;
 extern int global__VPX_KF_MAX_DIST;
 extern int global__VPX_G_LAG_IN_FRAMES;
+
+extern int UTOX_DEFAULT_BITRATE_V;
 // ---------- dirty hack ----------
 // ---------- dirty hack ----------
 // ---------- dirty hack ----------
