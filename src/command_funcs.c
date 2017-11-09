@@ -96,6 +96,8 @@ bool slash_vbr(void *object, char *arg, int arg_length)
 {
 	FRIEND *f = object;
 
+	LOG_ERR("slash_vbr", "arg=%s" , arg);
+
 	int num_new = get_number_in_string(arg, (int)UTOX_DEFAULT_BITRATE_V);
 
 	if ((num_new >= 350) && (num_new <= 500000))
@@ -130,6 +132,8 @@ bool slash_maxdist(void *object, char *arg, int arg_length)
 {
 	FRIEND *f = object;
 
+	LOG_ERR("slash_maxdist", "arg=%s" , arg);
+
 	int num_new = get_number_in_string(arg, (int)global__VPX_KF_MAX_DIST);
 
 	if ((num_new >= 1) && (num_new <= 200))
@@ -156,6 +160,8 @@ bool slash_vpxcpu(void *object, char *arg, int arg_length)
 {
 	FRIEND *f = object;
 
+	LOG_ERR("slash_vpxcpu", "arg=%s" , arg);
+
 	int num_new = get_number_in_string(arg, (int)global__VP8E_SET_CPUUSED_VALUE);
 
 	if ((num_new >= -16) && (num_new <= 16))
@@ -181,6 +187,8 @@ bool slash_vpxcpu(void *object, char *arg, int arg_length)
 bool slash_vpxusage(void *object, char *arg, int arg_length)
 {
 	FRIEND *f = object;
+
+	LOG_ERR("slash_vpxusage", "arg=%s" , arg);
 
 	int num_new = get_number_in_string(arg, (int)global__VPX_END_USAGE);
 
