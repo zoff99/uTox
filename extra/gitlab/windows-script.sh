@@ -17,6 +17,8 @@ cmake .. \
     -DLIBTOX_LIBRARIES="toxcore -ltoxencryptsave -ltoxav -ltoxdns" \
     -DCMAKE_LIBRARY_PATH="$CACHE_DIR/usr/lib" \
     -DENABLE_TESTS=OFF \
+    -DENABLE_FILTERAUDIO=OFF \
+    -DCMAKE_BUILD_TYPE=Debug \
     -DTOXCORE_STATIC=ON \
     -DENABLE_WERROR=OFF
 
