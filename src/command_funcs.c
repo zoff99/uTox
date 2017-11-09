@@ -12,7 +12,7 @@
 // ---------------------
 #include <stdio.h>
 extern int UTOX_DEFAULT_BITRATE_V;
-extern inr global__VPX_KF_MAX_DIST;
+extern int global__VPX_KF_MAX_DIST;
 // ---------------------
 
 bool slash_send_file(void *object, char *filepath, int UNUSED(arg_length)) {
@@ -117,11 +117,14 @@ bool slash_fps(void *object, char *arg, int arg_length)
 
 bool slash_maxdist(void *object, char *arg, int arg_length)
 {
+	FRIEND *f = object;
+
 	int num_new = get_number_in_string(arg, (int)global__VPX_KF_MAX_DIST);
 
 	if ((num_new >= 1) && (num_new <= 200))
 	{
 		global__VPX_KF_MAX_DIST = num_new;
+		TOXAV_ERR_BIT_RATE_SET error = 0;
 		toxav_bit_rate_set(global_toxav, f->number, 64, UTOX_DEFAULT_BITRATE_V, &error);
 	}
 
