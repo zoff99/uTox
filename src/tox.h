@@ -15,6 +15,7 @@ before the main thread receives the message for the old one?
 #include <stdint.h>
 
 // hack ----------------------
+#include <tox/toxav.h>
 ToxAV *global_toxav;
 // hack ----------------------
 
