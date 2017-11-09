@@ -11,8 +11,6 @@
 
 // ---------------------
 #include <stdio.h>
-extern int UTOX_DEFAULT_BITRATE_V;
-extern int global__VPX_KF_MAX_DIST;
 // ---------------------
 
 bool slash_send_file(void *object, char *filepath, int UNUSED(arg_length)) {
