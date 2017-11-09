@@ -106,11 +106,14 @@ bool slash_vbr(void *object, char *arg, int arg_length)
 	}
 
 	LOG_ERR("slash_vbr", "vbr new:%d", (int)UTOX_DEFAULT_BITRATE_V);
+	return true;
 }
 
 bool slash_fps(void *object, char *arg, int arg_length)
 {
 	// TODO: dummy for now
+	LOG_ERR("slash_fps", "dummy");
+	return true;
 }
 
 bool slash_maxdist(void *object, char *arg, int arg_length)
@@ -127,5 +130,6 @@ bool slash_maxdist(void *object, char *arg, int arg_length)
 	}
 
 	LOG_ERR("slash_maxdist", "maxdist new:%d", (int)global__VPX_KF_MAX_DIST);
+	return true;
 }
 
