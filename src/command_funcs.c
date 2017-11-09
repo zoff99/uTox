@@ -151,3 +151,29 @@ bool slash_maxdist(void *object, char *arg, int arg_length)
 	return true;
 }
 
+
+bool slash_vpxcpu(void *object, char *arg, int arg_length)
+{
+	FRIEND *f = object;
+
+	int num_new = get_number_in_string(arg, (int)global__VP8E_SET_CPUUSED_VALUE);
+
+	if ((num_new >= -16) && (num_new <= 16))
+	{
+		global__VP8E_SET_CPUUSED_VALUE = num_new;
+		TOXAV_ERR_BIT_RATE_SET error = 0;
+		toxav_bit_rate_set(global_toxav, f->number, 64, UTOX_DEFAULT_BITRATE_V, &error);
+
+        if (error)
+		{
+            LOG_ERR("slash_vpxcpu", "Setting new Video bitrate has failed with error #%u" , error);
+        }
+		else
+		{
+			LOG_ERR("slash_vpxcpu", "maxdist new:%d", (int)global__VP8E_SET_CPUUSED_VALUE);
+		}
+	}
+
+	return true;
+}
+

@@ -18,6 +18,7 @@ before the main thread receives the message for the old one?
 #include <tox/toxav.h>
 ToxAV *global_toxav;
 extern int UTOX_DEFAULT_BITRATE_V;
+extern int global__VP8E_SET_CPUUSED_VALUE;
 extern int global__VPX_KF_MAX_DIST;
 // hack ----------------------
 
