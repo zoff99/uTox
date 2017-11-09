@@ -287,6 +287,7 @@ void utox_init(void) {
 	global__VPX_END_USAGE = 2;
 	global__VPX_KF_MAX_DIST = 12;
 	global__VPX_G_LAG_IN_FRAMES = 0;
+	UTOX_DEFAULT_BITRATE_V = 30000;
 // low quality ---
 #else
 // high quality ---
@@ -295,6 +296,7 @@ void utox_init(void) {
 	global__VPX_END_USAGE = 1; // constant bitrate
 	global__VPX_KF_MAX_DIST = 18;
 	global__VPX_G_LAG_IN_FRAMES = 0;
+	UTOX_DEFAULT_BITRATE_V = 2500;
 // high quality ---
 #endif
 

@@ -12,12 +12,12 @@ extern bool utox_video_thread_init;
 #if 0
 // low quality ---
 //    #define UTOX_DEFAULT_BITRATE_V 2500
-	int UTOX_DEFAULT_BITRATE_V = 2500;
+	int UTOX_DEFAULT_BITRATE_V; // = 2500;
 // low quality ---
 #else
 // high quality ---
 //	#define UTOX_DEFAULT_BITRATE_V 30000
-	int UTOX_DEFAULT_BITRATE_V = 30000;
+	int UTOX_DEFAULT_BITRATE_V; // = 30000;
 // high quality ---
 #endif
 
