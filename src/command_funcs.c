@@ -11,6 +11,7 @@
 
 // ---------------------
 #include <stdio.h>
+#define CLEAR(x) memset(&(x), 0, sizeof(x))
 // ---------------------
 
 bool slash_send_file(void *object, char *filepath, int UNUSED(arg_length)) {
@@ -96,9 +97,13 @@ bool slash_vbr(void *object, char *arg, int arg_length)
 {
 	FRIEND *f = object;
 
-	LOG_ERR("slash_vbr", "arg=%s" , arg);
+	char arg1[300];
+	CLEAR(arg1);
+    snprintf(arg1, arg_length, "%s", arg);
 
-	int num_new = get_number_in_string(arg, (int)UTOX_DEFAULT_BITRATE_V);
+	LOG_ERR("slash_vbr", "arg=%s" , arg1);
+
+	int num_new = get_number_in_string(arg1, (int)UTOX_DEFAULT_BITRATE_V);
 
 	if ((num_new >= 350) && (num_new <= 500000))
 	{
@@ -132,9 +137,13 @@ bool slash_maxdist(void *object, char *arg, int arg_length)
 {
 	FRIEND *f = object;
 
-	LOG_ERR("slash_maxdist", "arg=%s" , arg);
+	char arg1[300];
+	CLEAR(arg1);
+    snprintf(arg1, arg_length, "%s", arg);
 
-	int num_new = get_number_in_string(arg, (int)global__VPX_KF_MAX_DIST);
+	LOG_ERR("slash_maxdist", "arg=%s" , arg1);
+
+	int num_new = get_number_in_string(arg1, (int)global__VPX_KF_MAX_DIST);
 
 	if ((num_new >= 1) && (num_new <= 200))
 	{
@@ -160,9 +169,13 @@ bool slash_vpxcpu(void *object, char *arg, int arg_length)
 {
 	FRIEND *f = object;
 
-	LOG_ERR("slash_vpxcpu", "arg=%s" , arg);
+	char arg1[300];
+	CLEAR(arg1);
+    snprintf(arg1, arg_length, "%s", arg);
 
-	int num_new = get_number_in_string(arg, (int)global__VP8E_SET_CPUUSED_VALUE);
+	LOG_ERR("slash_vpxcpu", "arg=%s" , arg1);
+
+	int num_new = get_number_in_string(arg1, (int)global__VP8E_SET_CPUUSED_VALUE);
 
 	if ((num_new >= -16) && (num_new <= 16))
 	{
@@ -188,9 +201,13 @@ bool slash_vpxusage(void *object, char *arg, int arg_length)
 {
 	FRIEND *f = object;
 
-	LOG_ERR("slash_vpxusage", "arg=%s" , arg);
+	char arg1[300];
+	CLEAR(arg1);
+    snprintf(arg1, arg_length, "%s", arg);
 
-	int num_new = get_number_in_string(arg, (int)global__VPX_END_USAGE);
+	LOG_ERR("slash_vpxusage", "arg=%s" , arg1);
+
+	int num_new = get_number_in_string(arg1, (int)global__VPX_END_USAGE);
 
 	if ((num_new >= 0) && (num_new <= 3))
 	{
