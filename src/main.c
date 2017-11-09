@@ -292,8 +292,8 @@ void utox_init(void) {
 // high quality ---
 	global__MAX_DECODE_TIME_US = 1;
 	global__VP8E_SET_CPUUSED_VALUE = -10;
-	global__VPX_END_USAGE = 3;
-	global__VPX_KF_MAX_DIST = 12;
+	global__VPX_END_USAGE = 1; // constant bitrate
+	global__VPX_KF_MAX_DIST = 18;
 	global__VPX_G_LAG_IN_FRAMES = 0;
 // high quality ---
 #endif
