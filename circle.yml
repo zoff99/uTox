@@ -10,6 +10,7 @@ machine:
     GL_BUILD: "win64"
 ## ----------- WIN cross compile ----------------
     # ---------------------------------------------------
+    # v0.1.10 opus tweaks            ebe62c84a9d2e7e88be831bfbafcc3b47aa3a0c6
     # v0.1.10 on the fly tweaks      07f32b34a61f982784a87c33068b62dd0a28ddce
     # v0.1.10 runtime value change hack        2fe9bcb55ca44ea391d2b5fc1f747d326e5f443b
     #         tweaks7                          17d722a654c3dcace15c4fab7cb3cf0aed609122
@@ -40,7 +41,7 @@ machine:
     # c-toxcore v0.1.2 a096c71db867ac83fc3e01e0fbe98573d20f9286
     # ---------------------------------------------------
     # c-toxcore version used
-    CTOXCORE_VERSION_HASH: 07f32b34a61f982784a87c33068b62dd0a28ddce
+    CTOXCORE_VERSION_HASH: ebe62c84a9d2e7e88be831bfbafcc3b47aa3a0c6
     # c-toxcore repo used
     # CTOXCORE_URL: "https://github.com/TokTok/c-toxcore"
     CTOXCORE_URL: "https://github.com/zoff99/c-toxcore"
