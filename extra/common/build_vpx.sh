@@ -2,8 +2,8 @@
 
 # install libvpx, needed for video encoding/decoding
 if ! [ -d libvpx ]; then
-  git clone --depth=1 --branch=v1.5.0 https://github.com/webmproject/libvpx.git
-  # git clone --depth=1 --branch=v1.6.1 https://github.com/webmproject/libvpx.git
+  # git clone --depth=1 --branch=v1.5.0 https://github.com/webmproject/libvpx.git
+  git clone --depth=1 --branch=v1.6.1 https://github.com/webmproject/libvpx.git
   # git clone --depth=1 --branch=master https://github.com/webmproject/libvpx.git
 fi
 cd libvpx
@@ -15,8 +15,15 @@ if ! ([ -f "${CACHE_DIR}/libvpx.sha" ] && diff "${CACHE_DIR}/libvpx.sha" libvpx.
               --prefix="${CACHE_DIR}/usr" \
               --enable-static \
               --disable-examples \
+              --size-limit=16384x16384 \
               --disable-unit-tests \
-              --disable-shared
+              --disable-shared \
+              --enable-postproc \
+              --enable-multi-res-encoding \
+              --enable-temporal-denoising \
+              --enable-vp9-temporal-denoising \
+              --enable-vp9-postproc
+
   make -j8
   make install
   mv libvpx.sha "${CACHE_DIR}/libvpx.sha"
