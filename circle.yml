@@ -37,7 +37,7 @@ machine:
     # c-toxcore v0.1.2 a096c71db867ac83fc3e01e0fbe98573d20f9286
     # ---------------------------------------------------
     # c-toxcore version used
-    CTOXCORE_VERSION_HASH: 042b34fd808e28d2f2ee1694fecd337a15c6b029
+    CTOXCORE_VERSION_HASH: fc6c1d84ca02d702d5d3af89228c135597923719
     # c-toxcore repo used
     # CTOXCORE_URL: "https://github.com/TokTok/c-toxcore"
     CTOXCORE_URL: "https://github.com/zoff99/c-toxcore"
@@ -160,7 +160,8 @@ dependencies:
     - . ~/pp;cd $_s_/yasm/;autoreconf -fi
     - . ~/pp;~/do_compile.sh "yasm" --prefix="$_SYSROOT_"/usr --disable-shared --disable-soname-versions --with-sysroot="$_SYSROOT_" --host="$_HOST_" --target="$_TARGET_"
 
-    - . ~/pp;cd $_s_;git clone --depth=1 --branch=v1.6.1 https://github.com/webmproject/libvpx.git
+    #- . ~/pp;cd $_s_;git clone --depth=1 --branch=v1.6.1 https://github.com/webmproject/libvpx.git
+    - . ~/pp;cd $_s_;git clone --depth=1 --branch=master https://github.com/webmproject/libvpx.git
     - . ~/pp;export CROSS="arm-linux-gnueabihf-" ; ~/do_compile.sh "libvpx" --prefix="$_SYSROOT_"/usr --disable-examples --disable-unit-tests --target=generic-gnu --extra-cflags="--sysroot=$_SYSROOT_"
     - . ~/pp;export CROSS="arm-linux-gnueabihf-" ; ~/do_package.sh "libvpx" --prefix="$INSTALL_DEST"/usr --disable-examples --disable-unit-tests --target=generic-gnu --extra-cflags="--sysroot=$_SYSROOT_"
 
