@@ -2,8 +2,9 @@
 
 # install libvpx, needed for video encoding/decoding
 if ! [ -d libvpx ]; then
+  git clone --depth=1 --branch=v1.5.0 https://github.com/webmproject/libvpx.git
   # git clone --depth=1 --branch=v1.6.1 https://github.com/webmproject/libvpx.git
-  git clone --depth=1 --branch=master https://github.com/webmproject/libvpx.git
+  # git clone --depth=1 --branch=master https://github.com/webmproject/libvpx.git
 fi
 cd libvpx
 git rev-parse HEAD > libvpx.sha
