@@ -269,8 +269,7 @@ void parse_args(int argc, char *argv[],
                 LOG_NORM("  --silent                 Set the verbosity level to 0, disable all debugging output.\n");
                 LOG_NORM("  --debug                  Set a file for utox to log errors to.\n");
                 exit(EXIT_SUCCESS);
-                break;
-            }
+                break;            }
 
             case '?': LOG_TRACE("uTox", "%c", (char)optopt ); break;
         }
@@ -282,25 +281,16 @@ void parse_args(int argc, char *argv[],
  * it's expect this will be called AFTER you parse argc/v and will act accordingly. */
 void utox_init(void) {
 
-#if 0
-// low quality ---
-	global__MAX_DECODE_TIME_US = 1;
-	global__VP8E_SET_CPUUSED_VALUE = 16;
-	global__VPX_END_USAGE = 2;
-	global__VPX_KF_MAX_DIST = 12;
-	global__VPX_G_LAG_IN_FRAMES = 0;
-	UTOX_DEFAULT_BITRATE_V = 30000;
-// low quality ---
-#else
-// high quality ---
-	global__MAX_DECODE_TIME_US = 1;
-	global__VP8E_SET_CPUUSED_VALUE = 3;
-	global__VPX_END_USAGE = 3; // constant bitrate
-	global__VPX_KF_MAX_DIST = 8;
-	global__VPX_G_LAG_IN_FRAMES = 0;
-	UTOX_DEFAULT_BITRATE_V = 2500;
-// high quality ---
-#endif
+// -------- values for best operations --------
+// -------- values for best operations --------
+    global__MAX_DECODE_TIME_US = 1;
+    global__VP8E_SET_CPUUSED_VALUE = 3;
+    global__VPX_END_USAGE = 0; // VBR=0
+    global__VPX_KF_MAX_DIST = 10;
+    global__VPX_G_LAG_IN_FRAMES = 0;
+    UTOX_DEFAULT_BITRATE_V = 2500;
+// -------- values for best operations --------
+// -------- values for best operations --------
 
     atexit(utox_raze);
 
