@@ -286,29 +286,11 @@ void parse_args(int argc, char *argv[],
  * it's expect this will be called AFTER you parse argc/v and will act accordingly. */
 void utox_init(void) {
 
-#if 0
-// low quality ---
-	global__MAX_DECODE_TIME_US = 1;
-	global__VP8E_SET_CPUUSED_VALUE = 16;
-	global__VPX_END_USAGE = 2;
-	global__VPX_KF_MAX_DIST = 12;
-	global__VPX_G_LAG_IN_FRAMES = 0;
-	UTOX_DEFAULT_BITRATE_V = 2500;
-// low quality ---
-#else
-// high quality ---
-	global__MAX_DECODE_TIME_US = 1;
-	global__VP8E_SET_CPUUSED_VALUE = 5;
-	global__VPX_END_USAGE = 3; // constant bitrate
-	global__VPX_KF_MAX_DIST = 8;
-	global__VPX_G_LAG_IN_FRAMES = 0;
-	UTOX_DEFAULT_BITRATE_V = 2500;
 
-    global__VPX_ENCODER_USED = 0; // 0 -> VP8, 1 -> VP9
-    global__VPX_DECODER_USED = 0; // 0 -> VP8, 1 -> VP9
-    global__SEND_VIDEO_VP9_LOSSLESS_QUALITY = 0; // 0 -> NO, 1 -> YES
-// high quality ---
-#endif
+
+    UTOX_DEFAULT_BITRATE_V = 2500;
+
+
 
     atexit(utox_raze);
 
