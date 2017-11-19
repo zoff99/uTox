@@ -31,6 +31,7 @@ extern int UTOX_DEFAULT_BITRATE_V;
 extern int global__VPX_ENCODER_USED;
 extern int global__VPX_DECODER_USED;
 extern int global__SEND_VIDEO_VP9_LOSSLESS_QUALITY;
+extern int global__SEND_VIDEO_LOSSLESS;
 // ---------- dirty hack ----------
 // ---------- dirty hack ----------
 // ---------- dirty hack ----------
