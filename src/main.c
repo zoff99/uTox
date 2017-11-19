@@ -15,6 +15,20 @@
 #include <stdlib.h>
 #include <string.h>
 
+// ---------- dirty hack ----------
+// ---------- dirty hack ----------
+// ---------- dirty hack ----------
+extern int global__MAX_DECODE_TIME_US;
+extern int global__VP8E_SET_CPUUSED_VALUE;
+extern int global__VPX_END_USAGE;
+extern int global__VPX_KF_MAX_DIST;
+extern int global__VPX_G_LAG_IN_FRAMES;
+
+extern int UTOX_DEFAULT_BITRATE_V;
+// ---------- dirty hack ----------
+// ---------- dirty hack ----------
+// ---------- dirty hack ----------
+
 
 /* The utox_ functions contained in src/main.c are wrappers for the platform native_ functions
  * if you need to localize them to a specific platform, move them from here, to each
@@ -265,6 +279,27 @@ void parse_args(int argc, char *argv[],
  *
  * it's expect this will be called AFTER you parse argc/v and will act accordingly. */
 void utox_init(void) {
+
+#if 0
+// low quality ---
+	global__MAX_DECODE_TIME_US = 1;
+	global__VP8E_SET_CPUUSED_VALUE = 16;
+	global__VPX_END_USAGE = 2;
+	global__VPX_KF_MAX_DIST = 12;
+	global__VPX_G_LAG_IN_FRAMES = 0;
+	UTOX_DEFAULT_BITRATE_V = 30000;
+// low quality ---
+#else
+// high quality ---
+	global__MAX_DECODE_TIME_US = 1;
+	global__VP8E_SET_CPUUSED_VALUE = 3;
+	global__VPX_END_USAGE = 3; // constant bitrate
+	global__VPX_KF_MAX_DIST = 8;
+	global__VPX_G_LAG_IN_FRAMES = 0;
+	UTOX_DEFAULT_BITRATE_V = 2500;
+// high quality ---
+#endif
+
     atexit(utox_raze);
 
     if (settings.debug_file == NULL) {
