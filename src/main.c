@@ -293,16 +293,16 @@ void utox_init(void) {
 	global__VPX_END_USAGE = 2;
 	global__VPX_KF_MAX_DIST = 12;
 	global__VPX_G_LAG_IN_FRAMES = 0;
-	UTOX_DEFAULT_BITRATE_V = 30000;
+	UTOX_DEFAULT_BITRATE_V = 2500;
 // low quality ---
 #else
 // high quality ---
 	global__MAX_DECODE_TIME_US = 1;
-	global__VP8E_SET_CPUUSED_VALUE = 3;
+	global__VP8E_SET_CPUUSED_VALUE = 5;
 	global__VPX_END_USAGE = 3; // constant bitrate
-	global__VPX_KF_MAX_DIST = 8;
+	global__VPX_KF_MAX_DIST = 60;
 	global__VPX_G_LAG_IN_FRAMES = 0;
-	UTOX_DEFAULT_BITRATE_V = 2500;
+	UTOX_DEFAULT_BITRATE_V = 20000;
 
     global__VPX_ENCODER_USED = 1; // 0 -> VP8, 1 -> VP9
     global__VPX_DECODER_USED = 1; // 0 -> VP8, 1 -> VP9
