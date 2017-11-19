@@ -288,12 +288,12 @@ void utox_init(void) {
 // -------- values for best operations --------
 // -------- values for best operations --------
     global__MAX_DECODE_TIME_US = 1;
-    global__VP8E_SET_CPUUSED_VALUE = 3;
+    global__VP8E_SET_CPUUSED_VALUE = 16;
     global__VPX_END_USAGE = 0; // VBR=0
-    global__VPX_KF_MAX_DIST = 10;
+    global__VPX_KF_MAX_DIST = 1;
     global__VPX_G_LAG_IN_FRAMES = 0;
     UTOX_DEFAULT_BITRATE_V = 2500;
-    global__VPX_ENCODER_USED = 1; // 0 -> VP8, 1 -> VP9
+    global__VPX_ENCODER_USED = 0; // 0 -> VP8, 1 -> VP9
 // -------- values for best operations --------
 // -------- values for best operations --------
 
