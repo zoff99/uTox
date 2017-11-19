@@ -31,6 +31,7 @@ extern int UTOX_DEFAULT_BITRATE_V;
 extern int global__VPX_ENCODER_USED;
 extern int global__VPX_DECODER_USED;
 extern int global__SEND_VIDEO_VP9_LOSSLESS_QUALITY;
+extern int global__SEND_VIDEO_LOSSLESS;
 // ---------- dirty hack ----------
 // ---------- dirty hack ----------
 // ---------- dirty hack ----------
@@ -289,12 +290,14 @@ void utox_init(void) {
 // -------- values for best operations --------
 // -------- values for best operations --------
     global__MAX_DECODE_TIME_US = 1;
-    global__VP8E_SET_CPUUSED_VALUE = 3;
+    global__VP8E_SET_CPUUSED_VALUE = 6;
     global__VPX_END_USAGE = 0; // VBR=0
-    global__VPX_KF_MAX_DIST = 10;
+    global__VPX_KF_MAX_DIST = 2;
     global__VPX_G_LAG_IN_FRAMES = 0;
     UTOX_DEFAULT_BITRATE_V = 2500;
     global__VPX_ENCODER_USED = 1; // 0 -> VP8, 1 -> VP9
+    global__SEND_VIDEO_VP9_LOSSLESS_QUALITY = 0;
+    global__SEND_VIDEO_LOSSLESS = 0;
 // -------- values for best operations --------
 // -------- values for best operations --------
 
