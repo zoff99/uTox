@@ -294,6 +294,7 @@ void utox_init(void) {
     global__VPX_KF_MAX_DIST = 10;
     global__VPX_G_LAG_IN_FRAMES = 0;
     UTOX_DEFAULT_BITRATE_V = 2500;
+    global__VPX_ENCODER_USED = 1; // 0 -> VP8, 1 -> VP9
 // -------- values for best operations --------
 // -------- values for best operations --------
 
