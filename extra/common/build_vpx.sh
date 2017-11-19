@@ -16,7 +16,7 @@ if ! ([ -f "${CACHE_DIR}/libvpx.sha" ] && diff "${CACHE_DIR}/libvpx.sha" libvpx.
               --enable-static \
               --size-limit=16384x16384 \
               --disable-shared \
-              --enable-unit-tests \
+              --disable-unit-tests \
               --enable-postproc \
               --enable-multi-res-encoding \
               --enable-temporal-denoising \
@@ -24,7 +24,7 @@ if ! ([ -f "${CACHE_DIR}/libvpx.sha" ] && diff "${CACHE_DIR}/libvpx.sha" libvpx.
               --enable-vp9-postproc
 
   mkdir ../libvpx-test-data
-  LIBVPX_TEST_DATA_PATH=../libvpx-test-data make testdata
+  # LIBVPX_TEST_DATA_PATH=../libvpx-test-data make testdata
 
   make -j8
   make install
