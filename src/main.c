@@ -305,8 +305,8 @@ void utox_init(void) {
 	UTOX_DEFAULT_BITRATE_V = 20000;
 
     global__VPX_ENCODER_USED = 1; // 0 -> VP8, 1 -> VP9
-    global__VPX_DECODER_USED = 1; // 0 -> VP8, 1 -> VP9
-    global__SEND_VIDEO_VP9_LOSSLESS_QUALITY = 1; // 0 -> NO, 1 -> YES
+    global__VPX_DECODER_USED = 0; // 0 -> VP8, 1 -> VP9
+    global__SEND_VIDEO_VP9_LOSSLESS_QUALITY = 0; // 0 -> NO, 1 -> YES
 // high quality ---
 #endif
 
