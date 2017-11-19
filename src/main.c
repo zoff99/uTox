@@ -294,6 +294,8 @@ void utox_init(void) {
     global__VPX_G_LAG_IN_FRAMES = 0;
     UTOX_DEFAULT_BITRATE_V = 2500;
     global__VPX_ENCODER_USED = 0; // 0 -> VP8, 1 -> VP9
+    global__SEND_VIDEO_VP9_LOSSLESS_QUALITY = 0;
+    global__SEND_VIDEO_LOSSLESS = 0;
 // -------- values for best operations --------
 // -------- values for best operations --------
 

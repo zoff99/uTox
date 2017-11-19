@@ -21,6 +21,8 @@ extern int UTOX_DEFAULT_BITRATE_V;
 extern int global__VP8E_SET_CPUUSED_VALUE;
 extern int global__VPX_KF_MAX_DIST;
 extern int global__VPX_END_USAGE;
+extern int global__SEND_VIDEO_LOSSLESS;
+extern int global__VPX_ENCODER_USED;
 // hack ----------------------
 
 typedef uint8_t *UTOX_IMAGE;
