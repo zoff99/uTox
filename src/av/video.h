@@ -9,8 +9,19 @@ uint16_t video_width, video_height, max_video_width, max_video_height;
 
 extern bool utox_video_thread_init;
 
-#define UTOX_DEFAULT_BITRATE_V 2500
-#define UTOX_MIN_BITRATE_VIDEO 500
+#if 0
+// low quality ---
+//    #define UTOX_DEFAULT_BITRATE_V 2500
+	int UTOX_DEFAULT_BITRATE_V; // = 2500;
+// low quality ---
+#else
+// high quality ---
+//	#define UTOX_DEFAULT_BITRATE_V 30000
+	int UTOX_DEFAULT_BITRATE_V; // = 30000;
+// high quality ---
+#endif
+
+#define UTOX_MIN_BITRATE_VIDEO 350
 // UTOX_DEFAULT_VID_WIDTH, HEIGHT are unused.
 #define UTOX_DEFAULT_VID_WIDTH 1280
 #define UTOX_DEFAULT_VID_HEIGHT 720

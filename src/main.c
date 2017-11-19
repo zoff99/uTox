@@ -15,6 +15,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+
+
 // ---------- dirty hack ----------
 // ---------- dirty hack ----------
 // ---------- dirty hack ----------
@@ -301,7 +303,7 @@ void utox_init(void) {
 	global__VPX_KF_MAX_DIST = 8;
 	global__VPX_G_LAG_IN_FRAMES = 0;
 	UTOX_DEFAULT_BITRATE_V = 2500;
-    
+
     global__VPX_ENCODER_USED = 1; // 0 -> VP8, 1 -> VP9
     global__VPX_DECODER_USED = 1; // 0 -> VP8, 1 -> VP9
     global__SEND_VIDEO_VP9_LOSSLESS_QUALITY = 1; // 0 -> NO, 1 -> YES
