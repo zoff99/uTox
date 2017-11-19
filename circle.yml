@@ -54,7 +54,7 @@ dependencies:
     - sudo /etc/init.d/postgresql stop ; exit 0
     # -----------------------------------
     - sudo apt-get update
-    - sudo apt-get install cmake
+    - sudo apt-get install cmake curl
     - sudo apt-get install build-essential libtool autotools-dev automake checkinstall check git yasm libv4lconvert0 libv4l-dev
     - sudo apt-get install libopus-dev libvpx-dev pkg-config
     - sudo apt-get install libasound2-dev
