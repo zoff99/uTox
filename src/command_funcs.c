@@ -227,3 +227,69 @@ bool slash_vpxusage(void *object, char *arg, int arg_length)
 
 	return true;
 }
+
+
+bool slash_vpxenc(void *object, char *arg, int arg_length)
+{
+	FRIEND *f = object;
+
+	char arg1[300];
+	CLEAR(arg1);
+    snprintf(arg1, arg_length+1, "%s", arg);
+
+	LOG_ERR("slash_vpxenc", "arg=%s" , arg1);
+
+	int num_new = get_number_in_string(arg1, (int)global__VPX_ENCODER_USED);
+
+	if ((num_new >= 0) && (num_new <= 1))
+	{
+		global__VPX_ENCODER_USED = num_new;
+		TOXAV_ERR_BIT_RATE_SET error = 0;
+		toxav_bit_rate_set(global_toxav, f->number, 64, UTOX_DEFAULT_BITRATE_V, &error);
+
+        if (error)
+		{
+            LOG_ERR("slash_vpxenc", "Setting new Video encoder has failed with error #%u" , error);
+        }
+		else
+		{
+			LOG_ERR("slash_vpxenc", "vpxenc new:%d", (int)global__VPX_ENCODER_USED);
+		}
+	}
+
+	return true;
+}
+
+bool slash_vpxloss(void *object, char *arg, int arg_length)
+{
+	FRIEND *f = object;
+
+	char arg1[300];
+	CLEAR(arg1);
+    snprintf(arg1, arg_length+1, "%s", arg);
+
+	LOG_ERR("slash_vpxloss", "arg=%s" , arg1);
+
+	int num_new = get_number_in_string(arg1, (int)global__SEND_VIDEO_LOSSLESS);
+
+	if ((num_new >= 0) && (num_new <= 1))
+	{
+		global__SEND_VIDEO_LOSSLESS = num_new;
+		TOXAV_ERR_BIT_RATE_SET error = 0;
+		toxav_bit_rate_set(global_toxav, f->number, 64, UTOX_DEFAULT_BITRATE_V, &error);
+
+        if (error)
+		{
+            LOG_ERR("slash_vpxloss", "Setting Video lossy/lossless has failed with error #%u" , error);
+        }
+		else
+		{
+			LOG_ERR("slash_vpxloss", "vpxloss new:%d", (int)global__SEND_VIDEO_LOSSLESS);
+		}
+	}
+
+	return true;
+}
+
+
+

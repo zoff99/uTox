@@ -23,6 +23,9 @@ struct Command commands[MAX_NUM_CMDS] = {
     { "vpxcpu",   6, slash_vpxcpu    },
     { "vpxusage", 8, slash_vpxusage  },
 
+    { "vpxenc",   6, slash_vpxenc    },
+    { "vpxloss",  7, slash_vpxloss   },
+
     { NULL,       0, NULL            },
 };
 
