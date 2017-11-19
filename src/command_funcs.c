@@ -99,7 +99,7 @@ bool slash_vbr(void *object, char *arg, int arg_length)
 
 	char arg1[300];
 	CLEAR(arg1);
-    snprintf(arg1, arg_length, "%s", arg);
+    snprintf(arg1, arg_length+1, "%s", arg);
 
 	LOG_ERR("slash_vbr", "arg=%s" , arg1);
 
@@ -139,7 +139,7 @@ bool slash_maxdist(void *object, char *arg, int arg_length)
 
 	char arg1[300];
 	CLEAR(arg1);
-    snprintf(arg1, arg_length, "%s", arg);
+    snprintf(arg1, arg_length+1, "%s", arg);
 
 	LOG_ERR("slash_maxdist", "arg=%s" , arg1);
 
@@ -171,7 +171,7 @@ bool slash_vpxcpu(void *object, char *arg, int arg_length)
 
 	char arg1[300];
 	CLEAR(arg1);
-    snprintf(arg1, arg_length, "%s", arg);
+    snprintf(arg1, arg_length+1, "%s", arg);
 
 	LOG_ERR("slash_vpxcpu", "arg=%s" , arg1);
 
@@ -189,7 +189,7 @@ bool slash_vpxcpu(void *object, char *arg, int arg_length)
         }
 		else
 		{
-			LOG_ERR("slash_vpxcpu", "maxdist new:%d", (int)global__VP8E_SET_CPUUSED_VALUE);
+			LOG_ERR("slash_vpxcpu", "vpxcpu new:%d", (int)global__VP8E_SET_CPUUSED_VALUE);
 		}
 	}
 
@@ -203,7 +203,7 @@ bool slash_vpxusage(void *object, char *arg, int arg_length)
 
 	char arg1[300];
 	CLEAR(arg1);
-    snprintf(arg1, arg_length, "%s", arg);
+    snprintf(arg1, arg_length+1, "%s", arg);
 
 	LOG_ERR("slash_vpxusage", "arg=%s" , arg1);
 
@@ -221,7 +221,7 @@ bool slash_vpxusage(void *object, char *arg, int arg_length)
         }
 		else
 		{
-			LOG_ERR("slash_vpxusage", "maxdist new:%d", (int)global__VPX_END_USAGE);
+			LOG_ERR("slash_vpxusage", "vpxusage new:%d", (int)global__VPX_END_USAGE);
 		}
 	}
 
