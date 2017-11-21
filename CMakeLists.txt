@@ -80,7 +80,7 @@ endif()
 option(UTOX_STATIC        "Link uTox statically"                                 ${STATIC_DEFAULT} )
 option(TOXCORE_STATIC     "Build uTox with the static version of Toxcore"        ${STATIC_DEFAULT} )
 option(ENABLE_ASAN        "Enable Address Sanitizer on debug builds"               ${ASAN_DEFAULT} )
-option(ENABLE_TESTS       "Whether to build test binaries (currently linux only)"               ON )
+option(ENABLE_TESTS       "Whether to build test binaries (currently linux only)"               OFF)
 option(ENABLE_WERROR      "Error on Warning, whether to put -Werror flag to the compiler"       OFF)
 option(ENABLE_FILTERAUDIO "Enable Filter Audio"                                                 ON )
 option(ENABLE_AUTOUPDATE  "Enable Auto-updater"                                                 OFF)
@@ -262,25 +262,20 @@ if(ENABLE_AUTOUPDATE)
     add_cflag("-DENABLE_AUTOUPDATE=1")
 endif()
 
-if(TOXCORE_STATIC AND WIN32)
-    # The static windows libs need all of these... because REASONS!
-    find_package(libtox REQUIRED COMPONENTS
-        toxencryptsave
-        toxav
-        toxcore
-        toxgroup
-        toxmessenger
-        toxfriends
-        toxdht
-        toxnetcrypto
-        toxcrypto
-        toxnetwork
-    )
-else()
-    find_package(libtox REQUIRED COMPONENTS toxencryptsave toxav toxcore)
-endif()
+#find_package(libtox REQUIRED COMPONENTS
+#    toxencryptsave
+#    toxav
+#    toxcore
+#    toxgroup
+#    toxmessenger
+#    toxfriends
+#    toxdht
+#    toxnetcrypto
+#    toxcrypto
+#    toxnetwork
+#)
+
 include_directories(${LIBTOX_INCLUDE_DIRS})
-set(TOX_LIBS ${LIBTOX_LIBRARIES})
 
 find_package(libsodium REQUIRED)
 include_directories(${LIBSODIUM_INCLUDE_DIRS})
@@ -293,19 +288,10 @@ if(WIN32)
     if (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
         set(GUI_TYPE WIN32)
     endif()
-    ############################################################
-    ## This is a hack, that we can remove once we have better
-    ## separation of the sections of uTox, until then, this
-    ## makes everything work.
-    ############################################################
-    include_directories( libs/toktok/include libs/windows-x64/include/ )
-    if(WIN64)
-        link_directories( libs/toktok/lib /usr/x86_64-w64-mingw32/lib/ libs/windows-x64/lib )
-    else()
-        link_directories( libs/toktok_32/lib /usr/i686-w64-mingw32/lib/ libs/windows-x32/lib )
-    endif()
 
-    ## Needed to build the widows icon
+    link_directories(${CMAKE_PREFIX_PATH}/lib)
+
+    # Windows icons
     enable_language(RC)
     set(WINDOWS_ICON src/windows/utox.rc)
 
@@ -368,13 +354,18 @@ add_executable(utox ${GUI_TYPE}
 
     ${WINDOWS_ICON}
     ${APPLE_FILES}
-
-    )
+)
 
 target_link_libraries(utox
-        utoxAV        utoxNATIVE      utoxUI
-        ${TOX_LIBS}   ${LIBRARIES}
-        vpx           pthread         m )
+    utoxAV
+    utoxNATIVE
+    utoxUI
+    ${LIBTOX_LIBRARIES}
+    ${LIBRARIES}
+    vpx
+    pthread
+    m
+)
 
 set_property(TARGET utox PROPERTY C_STANDARD 11)
 
