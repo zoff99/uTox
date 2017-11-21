@@ -130,8 +130,6 @@ static void settings_PROFILE(void) {
     CREATE_BUTTON(copyid, 66, 117, _BM_SBUTTON_WIDTH, _BM_SBUTTON_HEIGHT);
 
     CREATE_DROPDOWN(language, 10, 195, 24, -10);
-
-    CREATE_BUTTON(qr, 10, 250, _BM_SBUTTON_WIDTH, _BM_SBUTTON_HEIGHT);
 }
 
 static void settings_UI(void) {

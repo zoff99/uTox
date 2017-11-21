@@ -70,14 +70,14 @@ SETTINGS settings = {
     .use_mini_flist         = false,
     .magic_flist_enabled    = false,
 
-    .video_fps              = 5,
+    .video_fps              = 25,
 
     // Notifications / Alerts
     .ringtone_enabled       = true,
     .status_notifications   = true,
     .group_notifications    = GNOTIFY_ALWAYS,
 
-    .verbose = LOG_LVL_WARNING,
+    .verbose = LOG_LVL_ERROR,
     .debug_file = NULL,
 
     // .theme                       // included here to match the full struct
@@ -107,7 +107,6 @@ UTOX_SAVE *config_load(void) {
         save->enableipv6  = 1;
         save->disableudp  = 0;
         save->proxyenable = 0;
-        save->force_proxy = 0;
 
         save->audio_filtering_enabled       = 1;
         save->audible_notifications_enabled = 1;
@@ -138,18 +137,16 @@ UTOX_SAVE *config_load(void) {
     switch_mini_contacts.switch_on      = save->use_mini_flist;
     switch_magic_sidebar.switch_on      = save->magic_flist_enabled;
 
-    switch_ipv6.switch_on             = save->enableipv6;
-    switch_udp.switch_on              = !save->disableudp;
-    switch_udp.panel.disabled         = save->force_proxy;
-    switch_proxy.switch_on            = save->proxyenable;
-    switch_proxy_force.switch_on      = save->force_proxy;
-    switch_proxy_force.panel.disabled = !save->proxyenable;
+    switch_ipv6.switch_on        = save->enableipv6;
+    switch_udp.switch_on         = !save->disableudp;
+    switch_proxy.switch_on       = save->proxyenable;
+    switch_proxy_force.switch_on = false; // TODO, this is a bug. We really should be saving this data, but I don't want
+                                          // to touch this until we decide how we want to save uTox data in the future.
+                                          // -- Grayhatter, probably...
 
     switch_auto_startup.switch_on       = save->auto_startup;
     switch_auto_update.switch_on        = save->auto_update;
 
-    settings.group_notifications = dropdown_global_group_notifications.selected =
-        dropdown_global_group_notifications.over = save->group_notifications;
 
     switch_audible_notifications.switch_on = save->audible_notifications_enabled;
     switch_audio_filtering.switch_on       = save->audio_filtering_enabled;
@@ -167,7 +164,6 @@ UTOX_SAVE *config_load(void) {
     settings.enable_udp  = !save->disableudp;
     settings.use_proxy   = !!save->proxyenable;
     settings.proxy_port  = save->proxy_port;
-    settings.force_proxy = save->force_proxy;
 
     if (strlen((char *)save->proxy_ip) <= 256){
         strcpy((char *)proxy_address, (char *)save->proxy_ip);
@@ -197,6 +193,7 @@ UTOX_SAVE *config_load(void) {
     settings.audiofilter_enabled    = save->audio_filtering_enabled;
 
     settings.send_typing_status     = !save->no_typing_notifications;
+    settings.group_notifications    = save->group_notifications;
     settings.status_notifications   = save->status_notifications;
 
     settings.window_width           = save->window_width;
@@ -264,15 +261,14 @@ void config_save(UTOX_SAVE *save_in) {
     save->use_mini_flist                = settings.use_mini_flist;
     save->magic_flist_enabled           = settings.magic_flist_enabled;
 
-    save->video_fps                     = (settings.video_fps == 0) ? 5 : settings.video_fps;
+    save->video_fps                     = (settings.video_fps == 0) ? 25 : settings.video_fps;
 
     save->disableudp              = !settings.enable_udp;
     save->enableipv6              = settings.enable_ipv6;
     save->no_typing_notifications = !settings.send_typing_status;
 
-    save->filter      = flist_get_filter();
-    save->proxy_port  = settings.proxy_port;
-    save->force_proxy = settings.force_proxy;
+    save->filter     = flist_get_filter();
+    save->proxy_port = settings.proxy_port;
 
     save->audio_device_in  = dropdown_audio_in.selected;
     save->audio_device_out = dropdown_audio_out.selected;

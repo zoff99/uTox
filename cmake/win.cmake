@@ -15,8 +15,3 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DAL_LIBTYPE_STATIC")
 # Required for line numbers in gdb on Windows.
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g3" CACHE STRING "" FORCE)
 set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -g3" CACHE STRING "" FORCE)
-
-# Set default dependency path.
-if(NOT CMAKE_PREFIX_PATH)
-    set(CMAKE_PREFIX_PATH ${CMAKE_SOURCE_DIR}/libs/windows-x64)
-endif()

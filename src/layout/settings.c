@@ -26,7 +26,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
 /* Top bar for user settings */
 static void draw_settings_header(int x, int y, int w, int UNUSED(height)) {
@@ -147,7 +146,6 @@ static void draw_settings_text_profile(int x, int y, int UNUSED(w), int UNUSED(h
     drawstr(x + SCALE(10), y + SCALE(65), STATUSMESSAGE);
     drawstr(x + SCALE(10), y + SCALE(120), TOXID);
     drawstr(x + SCALE(10), y + SCALE(175), LANGUAGE);
-    drawstr(x + SCALE(10), y + SCALE(230), QR);
 }
 
 // Devices settings page
@@ -369,7 +367,6 @@ panel_settings_master = {
             // Text: Tox ID
             (PANEL*)&edit_toxid,
             (PANEL*)&button_copyid,
-            (PANEL*)&button_qr,
             (PANEL*)&dropdown_language,
             NULL
         }
@@ -673,25 +670,6 @@ static void button_copyid_on_mup(void) {
     copy(0);
 }
 
-static void button_qr_on_mup(void) {
-    // (int)self.id_str_length, self.id_str
-    // qrencode -s 8 -o - 'tox:ABC09384902848329048902348023408329480' | pqiv -i -
-    if (!fork()) {
-        // const char *cmd = "qrencode";
-        // char *tox_url_str = malloc(4 + (int)self.id_str_length);
-        // snprintf(tox_url_str, (size_t)(4 + (int)self.id_str_length), "tox:%s", self.id_str);
-        // execlp(cmd, cmd, "-s", "8", "-o", "-", tox_url_str, "|", "pqiv", "-i", "-", (char *)0);
-
-        char *cmd2_str = malloc(2000);
-        snprintf(cmd2_str, (size_t)(2000), "qrencode -s 8 -o - 'tox:%.*s' | pqiv -i -", (int)self.id_str_length, self.id_str);
-        execl("/bin/sh", "/bin/sh", "-c", cmd2_str, NULL);
-        free(cmd2_str);
-
-        // free(tox_url_str);
-        exit(127);
-    }
-}
-
 #include "../settings.h"
 #include "../av/utox_av.h"
 static void button_audiopreview_on_mup(void) {
@@ -735,14 +713,6 @@ BUTTON button_copyid = {
     .on_mup   = button_copyid_on_mup,
     .disabled = false,
     .button_text = {.i18nal = STR_COPY_TOX_ID },
-};
-
-BUTTON button_qr = {
-    .bm_fill  = BM_SBUTTON,
-    .update   = button_setcolors_success,
-    .on_mup   = button_qr_on_mup,
-    .disabled = false,
-    .button_text = {.i18nal = STR_QR },
 };
 
 BUTTON button_callpreview = {
@@ -1064,14 +1034,11 @@ UISWITCH switch_block_friend_requests = {
 
 static void switchfxn_proxy(void) {
     settings.use_proxy   = !settings.use_proxy;
-
     if (settings.use_proxy) {
+        settings.force_proxy = false;
         switch_proxy_force.panel.disabled = false;
     } else {
-        settings.force_proxy              = false;
-        switch_proxy_force.switch_on      = false;
         switch_proxy_force.panel.disabled = true;
-        switch_udp.panel.disabled         = false;
     }
 
     memcpy(proxy_address, edit_proxy_ip.data, edit_proxy_ip.length);
@@ -1087,11 +1054,8 @@ static void switchfxn_proxy_force(void) {
     settings.force_proxy = !settings.force_proxy;
 
     if (settings.force_proxy) {
-        switch_udp.switch_on      = false;
-        settings.enable_udp       = false;
+        switch_udp.disabled       = true;
         switch_udp.panel.disabled = true;
-    } else {
-        switch_udp.panel.disabled = false;
     }
 
     edit_proxy_port.data[edit_proxy_port.length] = 0;

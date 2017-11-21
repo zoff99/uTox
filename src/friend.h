@@ -88,7 +88,6 @@ typedef struct utox_friend {
     int32_t  call_state_self, call_state_friend;
     uint16_t video_width, video_height;
     ALuint   audio_dest;
-    time_t call_started;
 
     /* File transfers */
     bool ft_autoaccept;
@@ -120,8 +119,6 @@ uint8_t addfriend_status;
  * Gets the friend at position friend_number
  */
 FRIEND *get_friend(uint32_t friend_number);
-
-FRIEND *get_friend_by_id(const char *id_str);
 
 FREQUEST *get_frequest(uint16_t frequest_number);
 

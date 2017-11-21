@@ -37,7 +37,3 @@ set(WIN32 TRUE) # This is for cmake
 set(WIN64 TRUE) # This is for uTox lib dirs
 set(UNIX FALSE)
 set(CROSS_COMPILING TRUE)
-
-if(NOT CMAKE_PREFIX_PATH)
-    set(CMAKE_PREFIX_PATH ${CMAKE_SOURCE_DIR}/libs/windows-x64)
-endif()
