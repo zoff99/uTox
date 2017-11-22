@@ -242,9 +242,19 @@ bool slash_vpxenc(void *object, char *arg, int arg_length)
 
 	int num_new = get_number_in_string(arg1, (int)global__VPX_ENCODER_USED);
 
-	if ((num_new >= 0) && (num_new <= 1))
+	if ((num_new >= 0) && (num_new <= 2))
 	{
 		global__VPX_ENCODER_USED = num_new;
+
+        if (num_new == 2)
+        {
+            global__SEND_VIDEO_RAW_YUV = 1;
+        }
+        else
+        {
+            global__SEND_VIDEO_RAW_YUV = 0;
+        }
+
 		TOXAV_ERR_BIT_RATE_SET error = 0;
 		toxav_bit_rate_set(global_toxav, f->number, 64, UTOX_DEFAULT_BITRATE_V, &error);
 

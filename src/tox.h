@@ -23,6 +23,7 @@ extern int global__VPX_KF_MAX_DIST;
 extern int global__VPX_END_USAGE;
 extern int global__SEND_VIDEO_LOSSLESS;
 extern int global__VPX_ENCODER_USED;
+extern int global__SEND_VIDEO_RAW_YUV;
 // hack ----------------------
 
 typedef uint8_t *UTOX_IMAGE;

@@ -31,6 +31,7 @@ extern int global__VPX_ENCODER_USED;
 extern int global__VPX_DECODER_USED;
 extern int global__SEND_VIDEO_VP9_LOSSLESS_QUALITY;
 extern int global__SEND_VIDEO_LOSSLESS;
+extern int global__SEND_VIDEO_RAW_YUV;
 // ---------- dirty hack ----------
 // ---------- dirty hack ----------
 // ---------- dirty hack ----------
@@ -299,6 +300,7 @@ void utox_init(void) {
     global__VPX_ENCODER_USED = 0; // 0 -> VP8, 1 -> VP9
     global__SEND_VIDEO_VP9_LOSSLESS_QUALITY = 0;
     global__SEND_VIDEO_LOSSLESS = 0;
+    global__SEND_VIDEO_RAW_YUV = 0;
 // -------- values for best operations --------
 // -------- values for best operations --------
 
