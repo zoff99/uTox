@@ -19,6 +19,7 @@
 // ---------- dirty hack ----------
 // ---------- dirty hack ----------
 extern int global__MAX_DECODE_TIME_US;
+extern int global__MAX_ENCODE_TIME_US;
 extern int global__VP8E_SET_CPUUSED_VALUE;
 extern int global__VPX_END_USAGE;
 extern int global__VPX_KF_MAX_DIST;
@@ -288,7 +289,8 @@ void utox_init(void) {
 
 // -------- values for best operations --------
 // -------- values for best operations --------
-    global__MAX_DECODE_TIME_US = 1;
+    global__MAX_DECODE_TIME_US = 0;
+    global__MAX_ENCODE_TIME_US = 0;
     global__VP8E_SET_CPUUSED_VALUE = 6;
     global__VPX_END_USAGE = 0; // VBR=0
     global__VPX_KF_MAX_DIST = 2;
