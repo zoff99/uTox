@@ -444,6 +444,10 @@ void toxcore_thread(void *UNUSED(args)) {
     bool   reconfig         = 1;
     int    toxcore_init_err = 0;
 
+// hack ----------------------
+	global_toxav = NULL;
+// hack ----
+
     while (reconfig) {
         reconfig = 0;
 
@@ -489,6 +493,11 @@ void toxcore_thread(void *UNUSED(args)) {
             if (!av) {
                 LOG_ERR("Toxcore", "Unable to get ToxAV (%u)" , toxav_error);
             }
+
+			// hack ----------------------
+			global_toxav = av;
+			LOG_ERR("Toxcore", " global_toxav=%p av=%p" , global_toxav, av);
+			// hack ----------------------
 
             tox_thread_init = UTOX_TOX_THREAD_INIT_SUCCESS;
 
