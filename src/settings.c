@@ -70,14 +70,14 @@ SETTINGS settings = {
     .use_mini_flist         = false,
     .magic_flist_enabled    = false,
 
-    .video_fps              = 5,
+    .video_fps              = 25,
 
     // Notifications / Alerts
     .ringtone_enabled       = true,
     .status_notifications   = true,
     .group_notifications    = GNOTIFY_ALWAYS,
 
-    .verbose = LOG_LVL_INFO,
+    .verbose = LOG_LVL_NET_TRACE,
     .debug_file = NULL,
 
     // .theme                       // included here to match the full struct
@@ -261,7 +261,7 @@ void config_save(UTOX_SAVE *save_in) {
     save->use_mini_flist                = settings.use_mini_flist;
     save->magic_flist_enabled           = settings.magic_flist_enabled;
 
-    save->video_fps                     = (settings.video_fps == 0) ? 5 : settings.video_fps;
+    save->video_fps                     = (settings.video_fps == 0) ? 25 : settings.video_fps;
 
     save->disableudp              = !settings.enable_udp;
     save->enableipv6              = settings.enable_ipv6;

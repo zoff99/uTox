@@ -31,7 +31,6 @@ bool slash_invite(void *f, char *arg, int arg_length);
  */
 bool slash_topic(void *object, char *arg, int arg_length);
 
-
 bool slash_vbr(void *object, char *arg, int arg_length);
 bool slash_fps(void *object, char *arg, int arg_length);
 bool slash_maxdist(void *object, char *arg, int arg_length);
