@@ -293,10 +293,17 @@ void utox_init(void) {
     global__MAX_DECODE_TIME_US = 0;
     global__MAX_ENCODE_TIME_US = 0;
     global__VP8E_SET_CPUUSED_VALUE = 6;
-    global__VPX_END_USAGE = 0; // VBR=0
-    global__VPX_KF_MAX_DIST = 2;
+    global__VPX_END_USAGE = 3; // VBR=0
+	/*
+		0 -> VPX_VBR Variable Bit Rate (VBR) mode
+		1 -> VPX_CBR Constant Bit Rate (CBR) mode
+		2 -> VPX_CQ  Constrained Quality (CQ)  mode
+		3 -> VPX_Q   Constant Quality (Q) mode
+	*/
+
+    global__VPX_KF_MAX_DIST = 20;
     global__VPX_G_LAG_IN_FRAMES = 0;
-    UTOX_DEFAULT_BITRATE_V = 2500;
+    UTOX_DEFAULT_BITRATE_V = 4000;
     global__VPX_ENCODER_USED = 0; // 0 -> VP8, 1 -> VP9
     global__SEND_VIDEO_VP9_LOSSLESS_QUALITY = 0;
     global__SEND_VIDEO_LOSSLESS = 0;
