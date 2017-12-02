@@ -18,6 +18,7 @@
 // ---------- dirty hack ----------
 // ---------- dirty hack ----------
 // ---------- dirty hack ----------
+#if 0
 extern int global__MAX_DECODE_TIME_US;
 extern int global__MAX_ENCODE_TIME_US;
 extern int global__VP8E_SET_CPUUSED_VALUE;
@@ -32,6 +33,22 @@ extern int global__VPX_DECODER_USED;
 extern int global__SEND_VIDEO_VP9_LOSSLESS_QUALITY;
 extern int global__SEND_VIDEO_LOSSLESS;
 extern int global__SEND_VIDEO_RAW_YUV;
+#else
+int global__MAX_DECODE_TIME_US;
+int global__MAX_ENCODE_TIME_US;
+int global__VP8E_SET_CPUUSED_VALUE;
+int global__VPX_END_USAGE;
+int global__VPX_KF_MAX_DIST;
+int global__VPX_G_LAG_IN_FRAMES;
+
+int UTOX_DEFAULT_BITRATE_V;
+
+int global__VPX_ENCODER_USED;
+int global__VPX_DECODER_USED;
+int global__SEND_VIDEO_VP9_LOSSLESS_QUALITY;
+int global__SEND_VIDEO_LOSSLESS;
+int global__SEND_VIDEO_RAW_YUV;
+#endif
 // ---------- dirty hack ----------
 // ---------- dirty hack ----------
 // ---------- dirty hack ----------
