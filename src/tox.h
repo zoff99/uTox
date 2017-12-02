@@ -18,12 +18,22 @@ before the main thread receives the message for the old one?
 #include <tox/toxav.h>
 ToxAV *global_toxav;
 extern int UTOX_DEFAULT_BITRATE_V;
+
+#if 0
 extern int global__VP8E_SET_CPUUSED_VALUE;
 extern int global__VPX_KF_MAX_DIST;
 extern int global__VPX_END_USAGE;
 extern int global__SEND_VIDEO_LOSSLESS;
 extern int global__VPX_ENCODER_USED;
 extern int global__SEND_VIDEO_RAW_YUV;
+#else
+int global__VP8E_SET_CPUUSED_VALUE;
+int global__VPX_KF_MAX_DIST;
+int global__VPX_END_USAGE;
+int global__SEND_VIDEO_LOSSLESS;
+int global__VPX_ENCODER_USED;
+int global__SEND_VIDEO_RAW_YUV;
+#endif
 // hack ----------------------
 
 typedef uint8_t *UTOX_IMAGE;
