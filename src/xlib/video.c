@@ -267,9 +267,13 @@ int native_video_getframe(uint8_t *y, uint8_t *u, uint8_t *v, uint16_t width, ui
     if (utox_v4l_fd == -1) {
         static uint64_t lasttime;
         uint64_t        t = get_time();
-        if (t - lasttime >= (uint64_t)1000 * 1000 * 1000 / 24) {
+        if (1 == 1)
+        // if (t - lasttime >= (uint64_t)1000 * 1000 * 1000 / 24)
+        {
+            LOG_ERR("v4l","-capture-");
             XShmGetImage(deskdisplay, RootWindow(deskdisplay, deskscreen), screen_image, video_x, video_y, AllPlanes);
-            if (width != video_width || height != video_height) {
+            if (width != video_width || height != video_height)
+            {
                 LOG_ERR("v4l", "width/height mismatch %u %u != %u %u", width, height, screen_image->width,
                       screen_image->height);
                 return 0;
