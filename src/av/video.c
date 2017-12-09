@@ -40,6 +40,20 @@ static struct timeval tm_outgoing_video_frames;
 uint32_t global_video_out_fps;
 unsigned long long timspan_in_ms;
 uint32_t sleep_between_frames;
+
+static inline void __utimer_start(struct timeval* tm1)
+{
+    gettimeofday(tm1, NULL);
+}
+
+static inline unsigned long long __utimer_stop(struct timeval* tm1)
+{
+    struct timeval tm2;
+    gettimeofday(&tm2, NULL);
+
+    unsigned long long t = 1000 * (tm2.tv_sec - tm1->tv_sec) + (tm2.tv_usec - tm1->tv_usec) / 1000;
+	return t;
+}
 // --- FPS ---
 
 static bool video_device_init(void *handle) {
