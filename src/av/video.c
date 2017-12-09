@@ -34,6 +34,13 @@ static vpx_image_t input;
 
 static pthread_mutex_t video_thread_lock;
 
+// --- FPS ---
+#include <sys/time.h>
+static struct timeval tm_outgoing_video_frames;
+uint32_t global_video_out_fps;
+unsigned long long timspan_in_ms;
+uint32_t sleep_between_frames;
+// --- FPS ---
 
 static bool video_device_init(void *handle) {
     // initialize video (will populate video_width and video_height)
@@ -283,6 +290,9 @@ void utox_video_thread(void *args) {
                     postmessage_utox(AV_VIDEO_FRAME, UINT16_MAX, 1, (void *)frame);
                 }
 
+                // ----------- SEND to all friends -----------
+                // ----------- SEND to all friends -----------
+                // ----------- SEND to all friends -----------
                 size_t active_video_count = 0;
                 for (size_t i = 0; i < self.friend_list_count; i++) {
                     if (SEND_VIDEO_FRAME(i)) {
@@ -311,6 +321,31 @@ void utox_video_thread(void *args) {
                         }
                     }
                 }
+                // ----------- SEND to all friends -----------
+                // ----------- SEND to all friends -----------
+                // ----------- SEND to all friends -----------
+                // --- FPS ----
+                // --- FPS ----
+                // --- FPS ----
+                timspan_in_ms = 99999;
+                timspan_in_ms = __utimer_stop(&tm_outgoing_video_frames);
+
+                if ((timspan_in_ms > 0) && (timspan_in_ms < 99999))
+                {
+                    global_video_out_fps = (int)(1000 / timspan_in_ms);
+                }
+                else
+                {
+                    global_video_out_fps = 0;
+                }
+
+                LOG_TRACE("uToxVideo", "outgoing fps=%d" , global_video_out_fps);
+
+                __utimer_start(&tm_outgoing_video_frames);
+                // --- FPS ----
+                // --- FPS ----
+                // --- FPS ----
+
             } else if (r == -1) {
                 LOG_ERR("uToxVideo", "Err... something really bad happened trying to get this frame, I'm just going "
                             "to plots now!");
@@ -319,7 +354,39 @@ void utox_video_thread(void *args) {
             }
 
             pthread_mutex_unlock(&video_thread_lock);
-            yieldcpu(1000 / settings.video_fps); /* 60fps = 16.666ms || 25 fps = 40ms || the data quality is SO much better at 25... */
+
+            
+            // --- FPS ----
+            // --- FPS ----
+            // --- FPS ----
+            
+            // use fps+1 here to compensate for inaccurate delay values
+            sleep_between_frames = (1000 / (settings.video_fps + 1));
+
+            // LOG_TRACE("uToxVideo", "settings fps=%d sleep_between_frames=%d timspan_in_ms=%d" , (int)settings.video_fps, (int)sleep_between_frames, (int)timspan_in_ms);
+
+            if ((timspan_in_ms > 0) && (timspan_in_ms < 99999))
+            {
+                if (timspan_in_ms > sleep_between_frames)
+                {
+                    int32_t sleep_delay_corrected =
+                            (sleep_between_frames) - ( timspan_in_ms - (sleep_between_frames) );
+                    if (sleep_delay_corrected < 0)
+                    {
+                        sleep_delay_corrected = 0;
+                    }
+                    sleep_between_frames = (uint32_t)sleep_delay_corrected;
+                }
+            }
+
+            // LOG_TRACE("uToxVideo", "sleep corrected=%d" , (int)sleep_between_frames);
+            yieldcpu(sleep_between_frames); /* 60fps = 16.666ms || 25 fps = 40ms || the data quality is SO much better at 25... */
+            // --- FPS ----
+            // --- FPS ----
+            // --- FPS ----
+            
+            
+            
             continue;     /* We're running video, so don't sleep for an extra 100 ms */
         }
 
