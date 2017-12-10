@@ -270,7 +270,7 @@ int native_video_getframe(uint8_t *y, uint8_t *u, uint8_t *v, uint16_t width, ui
         if (1 == 1)
         // if (t - lasttime >= (uint64_t)1000 * 1000 * 1000 / 24)
         {
-            LOG_ERR("v4l","-capture-");
+            //LOG_ERR("v4l","-capture-");
             XShmGetImage(deskdisplay, RootWindow(deskdisplay, deskscreen), screen_image, video_x, video_y, AllPlanes);
             if (width != video_width || height != video_height)
             {

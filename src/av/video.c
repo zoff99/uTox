@@ -360,7 +360,7 @@ void utox_video_thread(void *args) {
                     global_video_out_fps = 0;
                 }
 
-                LOG_TRACE("uToxVideo", "outgoing fps=%d" , global_video_out_fps);
+                // LOG_TRACE("uToxVideo", "outgoing fps=%d" , global_video_out_fps);
 
 
                 __utimer_start(&tm_outgoing_video_frames);
@@ -380,7 +380,7 @@ void utox_video_thread(void *args) {
             // use fps+1 here to compensate for inaccurate delay values
             sleep_between_frames = (1000 / (settings.video_fps + 1));
 
-            LOG_TRACE("uToxVideo", "settings fps=%d sleep_between_frames=%d timspan_in_ms=%d" , (int)settings.video_fps, (int)sleep_between_frames, (int)timspan_in_ms);
+            // LOG_TRACE("uToxVideo", "settings fps=%d sleep_between_frames=%d timspan_in_ms=%d" , (int)settings.video_fps, (int)sleep_between_frames, (int)timspan_in_ms);
 
             if ((timspan_in_ms > 0) && (timspan_in_ms < 99999))
             {
@@ -396,7 +396,7 @@ void utox_video_thread(void *args) {
                 }
             }
 
-            LOG_TRACE("uToxVideo", "sleep corrected=%d" , (int)sleep_between_frames);
+            // LOG_TRACE("uToxVideo", "sleep corrected=%d" , (int)sleep_between_frames);
             yieldcpu(sleep_between_frames); /* 60fps = 16.666ms || 25 fps = 40ms || the data quality is SO much better at 25... */
             continue;     /* We're running video, so don't sleep for an extra 100 ms */
         }
