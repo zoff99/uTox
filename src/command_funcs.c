@@ -100,9 +100,9 @@ bool slash_vbr(void *object, char *arg, int arg_length)
 
 	char arg1[300];
 	CLEAR(arg1);
-    snprintf(arg1, arg_length+1, "%s", arg);
+    snprintf(arg1, arg_length, "%s", arg);
 
-	LOG_ERR("slash_vbr", "arg=%s" , arg1);
+	LOG_ERR("slash_vbr", "*arg=%s* len=%d" , arg1, arg_length);
 
 	int num_new = get_number_in_string(arg1, (int)UTOX_DEFAULT_BITRATE_V);
 
@@ -140,7 +140,7 @@ bool slash_maxdist(void *object, char *arg, int arg_length)
 
 	char arg1[300];
 	CLEAR(arg1);
-    snprintf(arg1, arg_length+1, "%s", arg);
+    snprintf(arg1, arg_length, "%s", arg);
 
 	LOG_ERR("slash_maxdist", "arg=%s" , arg1);
 
@@ -172,7 +172,7 @@ bool slash_vpxcpu(void *object, char *arg, int arg_length)
 
 	char arg1[300];
 	CLEAR(arg1);
-    snprintf(arg1, arg_length+1, "%s", arg);
+    snprintf(arg1, arg_length, "%s", arg);
 
 	LOG_ERR("slash_vpxcpu", "arg=%s" , arg1);
 
@@ -204,7 +204,7 @@ bool slash_vpxusage(void *object, char *arg, int arg_length)
 
 	char arg1[300];
 	CLEAR(arg1);
-    snprintf(arg1, arg_length+1, "%s", arg);
+    snprintf(arg1, arg_length, "%s", arg);
 
 	LOG_ERR("slash_vpxusage", "arg=%s" , arg1);
 
@@ -236,7 +236,7 @@ bool slash_vpxenc(void *object, char *arg, int arg_length)
 
 	char arg1[300];
 	CLEAR(arg1);
-    snprintf(arg1, arg_length+1, "%s", arg);
+    snprintf(arg1, arg_length, "%s", arg);
 
 	LOG_ERR("slash_vpxenc", "arg=%s" , arg1);
 
@@ -277,7 +277,7 @@ bool slash_vpxloss(void *object, char *arg, int arg_length)
 
 	char arg1[300];
 	CLEAR(arg1);
-    snprintf(arg1, arg_length+1, "%s", arg);
+    snprintf(arg1, arg_length, "%s", arg);
 
 	LOG_ERR("slash_vpxloss", "arg=%s" , arg1);
 
