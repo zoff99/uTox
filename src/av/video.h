@@ -11,7 +11,7 @@ extern bool utox_video_thread_init;
 
 int UTOX_DEFAULT_BITRATE_V; // = 2500;
 
-#define UTOX_MIN_BITRATE_VIDEO (350)
+#define UTOX_MIN_BITRATE_VIDEO (500)
 // UTOX_DEFAULT_VID_WIDTH, HEIGHT are unused.
 #define UTOX_DEFAULT_VID_WIDTH 1280
 #define UTOX_DEFAULT_VID_HEIGHT 720
