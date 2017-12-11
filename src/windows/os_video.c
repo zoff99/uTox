@@ -559,7 +559,9 @@ int native_video_getframe(uint8_t *y, uint8_t *u, uint8_t *v, uint16_t width, ui
     if (capturedesktop) {
         static uint64_t lasttime;
         uint64_t        t = get_time();
-        if (t - lasttime >= (uint64_t)1000 * 1000 * 1000 / 24) {
+        // if (t - lasttime >= (uint64_t)1000 * 1000 * 1000 / 24)
+        if (1 == 1)
+        {
             BITMAPINFO info = {.bmiHeader = {
                                    .biSize        = sizeof(BITMAPINFOHEADER),
                                    .biWidth       = video_width,
