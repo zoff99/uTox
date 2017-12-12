@@ -18,24 +18,37 @@
 // ---------- dirty hack ----------
 // ---------- dirty hack ----------
 // ---------- dirty hack ----------
-#if 0
+#if 1
+
+extern int global__ON_THE_FLY_CHANGES;
+extern int global__VPX_RESIZE_ALLOWED;
+extern int global__VPX_DROPFRAME_THRESH;
+extern int global__VPX_END_RESIZE_UP_THRESH;
+extern int global__VPX_END_RESIZE_DOWN_THRESH;
 extern int global__MAX_DECODE_TIME_US;
 extern int global__MAX_ENCODE_TIME_US;
 extern int global__VP8E_SET_CPUUSED_VALUE;
 extern int global__VPX_END_USAGE;
-extern int global__VPX_KF_MAX_DIST;
-extern int global__VPX_G_LAG_IN_FRAMES;
 
 extern int UTOX_DEFAULT_BITRATE_V;
 
-extern int global__VPX_ENCODER_USED;
-extern int global__VPX_DECODER_USED;
-extern int global__SEND_VIDEO_VP9_LOSSLESS_QUALITY;
-extern int global__SEND_VIDEO_LOSSLESS;
-extern int global__SEND_VIDEO_RAW_YUV;
+// old ---
+int global__VPX_KF_MAX_DIST;
+int global__VPX_G_LAG_IN_FRAMES;
+int global__VPX_ENCODER_USED;
+int global__VPX_DECODER_USED;
+int global__SEND_VIDEO_VP9_LOSSLESS_QUALITY;
+int global__SEND_VIDEO_LOSSLESS;
+int global__SEND_VIDEO_RAW_YUV;
+// old ---
 
 #else
 
+int global__ON_THE_FLY_CHANGES;
+int global__VPX_RESIZE_ALLOWED;
+int global__VPX_DROPFRAME_THRESH;
+int global__VPX_END_RESIZE_UP_THRESH;
+int global__VPX_END_RESIZE_DOWN_THRESH;
 int global__MAX_DECODE_TIME_US;
 int global__MAX_ENCODE_TIME_US;
 int global__VP8E_SET_CPUUSED_VALUE;
@@ -309,10 +322,10 @@ void utox_init(void) {
 
 // -------- values for best operations --------
 // -------- values for best operations --------
-    global__MAX_DECODE_TIME_US = 0;
-    global__MAX_ENCODE_TIME_US = 0;
-    global__VP8E_SET_CPUUSED_VALUE = 10;
-    global__VPX_END_USAGE = 3; // VBR=0
+    // global__MAX_DECODE_TIME_US = 0;
+    // global__MAX_ENCODE_TIME_US = 0;
+    global__VP8E_SET_CPUUSED_VALUE = 16;
+    global__VPX_END_USAGE = 0; // VBR=0
 	/*
 		0 -> VPX_VBR Variable Bit Rate (VBR) mode
 		1 -> VPX_CBR Constant Bit Rate (CBR) mode
@@ -320,13 +333,13 @@ void utox_init(void) {
 		3 -> VPX_Q   Constant Quality (Q) mode
 	*/
 
-    global__VPX_KF_MAX_DIST = 20;
-    global__VPX_G_LAG_IN_FRAMES = 0;
+    // global__VPX_KF_MAX_DIST = 20;
+    // global__VPX_G_LAG_IN_FRAMES = 0;
     UTOX_DEFAULT_BITRATE_V = 4000;
-    global__VPX_ENCODER_USED = 0; // 0 -> VP8, 1 -> VP9
-    global__SEND_VIDEO_VP9_LOSSLESS_QUALITY = 0;
-    global__SEND_VIDEO_LOSSLESS = 0;
-    global__SEND_VIDEO_RAW_YUV = 0;
+    // global__VPX_ENCODER_USED = 0; // 0 -> VP8, 1 -> VP9
+    // global__SEND_VIDEO_VP9_LOSSLESS_QUALITY = 0;
+    // global__SEND_VIDEO_LOSSLESS = 0;
+    // global__SEND_VIDEO_RAW_YUV = 0;
 // -------- values for best operations --------
 // -------- values for best operations --------
 

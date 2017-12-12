@@ -14,6 +14,23 @@
 #define CLEAR(x) memset(&(x), 0, sizeof(x))
 // ---------------------
 
+
+
+extern int global__ON_THE_FLY_CHANGES;
+extern int global__VPX_RESIZE_ALLOWED;
+extern int global__VPX_DROPFRAME_THRESH;
+extern int global__VPX_END_RESIZE_UP_THRESH;
+extern int global__VPX_END_RESIZE_DOWN_THRESH;
+extern int global__MAX_DECODE_TIME_US;
+extern int global__MAX_ENCODE_TIME_US;
+extern int global__VP8E_SET_CPUUSED_VALUE;
+extern int global__VPX_END_USAGE;
+
+extern int UTOX_DEFAULT_BITRATE_V;
+
+
+
+
 bool slash_send_file(void *object, char *filepath, int UNUSED(arg_length)) {
     if (filepath) {
         FRIEND *f = object;
@@ -174,24 +191,15 @@ bool slash_vpxcpu(void *object, char *arg, int arg_length)
 	CLEAR(arg1);
     snprintf(arg1, arg_length, "%s", arg);
 
-	LOG_ERR("slash_vpxcpu", "arg=%s" , arg1);
+	LOG_ERR("ARG:", "arg=%s" , arg1);
 
 	int num_new = get_number_in_string(arg1, (int)global__VP8E_SET_CPUUSED_VALUE);
 
-	if ((num_new >= -16) && (num_new <= 16))
+	
 	{
 		global__VP8E_SET_CPUUSED_VALUE = num_new;
-		TOXAV_ERR_BIT_RATE_SET error = 0;
-		toxav_bit_rate_set(global_toxav, f->number, 64, UTOX_DEFAULT_BITRATE_V, &error);
-
-        if (error)
-		{
-            LOG_ERR("slash_vpxcpu", "Setting new Video bitrate has failed with error #%u" , error);
-        }
-		else
-		{
-			LOG_ERR("slash_vpxcpu", "vpxcpu new:%d", (int)global__VP8E_SET_CPUUSED_VALUE);
-		}
+        global__ON_THE_FLY_CHANGES = 1;
+        LOG_ERR("ARG:", "enctime new:%d", (int)global__VP8E_SET_CPUUSED_VALUE);
 	}
 
 	return true;
@@ -206,25 +214,13 @@ bool slash_vpxusage(void *object, char *arg, int arg_length)
 	CLEAR(arg1);
     snprintf(arg1, arg_length, "%s", arg);
 
-	LOG_ERR("slash_vpxusage", "arg=%s" , arg1);
+	LOG_ERR("ARG:", "arg=%s" , arg1);
 
 	int num_new = get_number_in_string(arg1, (int)global__VPX_END_USAGE);
 
-	if ((num_new >= 0) && (num_new <= 3))
-	{
-		global__VPX_END_USAGE = num_new;
-		TOXAV_ERR_BIT_RATE_SET error = 0;
-		toxav_bit_rate_set(global_toxav, f->number, 64, UTOX_DEFAULT_BITRATE_V, &error);
-
-        if (error)
-		{
-            LOG_ERR("slash_vpxusage", "Setting new Video bitrate has failed with error #%u" , error);
-        }
-		else
-		{
-			LOG_ERR("slash_vpxusage", "vpxusage new:%d", (int)global__VPX_END_USAGE);
-		}
-	}
+	global__VPX_END_USAGE = num_new;
+    global__ON_THE_FLY_CHANGES = 1;
+    LOG_ERR("ARG:", "enctime new:%d", (int)global__VPX_END_USAGE);
 
 	return true;
 }
@@ -297,6 +293,96 @@ bool slash_vpxloss(void *object, char *arg, int arg_length)
 		{
 			LOG_ERR("slash_vpxloss", "vpxloss new:%d", (int)global__SEND_VIDEO_LOSSLESS);
 		}
+	}
+
+	return true;
+}
+
+
+bool slash_sza(void *object, char *arg, int arg_length)
+{
+	FRIEND *f = object;
+
+	char arg1[300];
+	CLEAR(arg1);
+    snprintf(arg1, arg_length, "%s", arg);
+
+	LOG_ERR("ARG:", "arg=%s" , arg1);
+
+	int num_new = get_number_in_string(arg1, (int)global__VPX_RESIZE_ALLOWED);
+
+	
+	{
+		global__VPX_RESIZE_ALLOWED = num_new;
+        global__ON_THE_FLY_CHANGES = 1;
+        LOG_ERR("ARG:", "sza new:%d", (int)global__VPX_RESIZE_ALLOWED);
+	}
+
+	return true;
+}
+
+
+bool slash_rzup(void *object, char *arg, int arg_length)
+{
+	FRIEND *f = object;
+
+	char arg1[300];
+	CLEAR(arg1);
+    snprintf(arg1, arg_length, "%s", arg);
+
+	LOG_ERR("ARG:", "arg=%s" , arg1);
+
+	int num_new = get_number_in_string(arg1, (int)global__VPX_END_RESIZE_UP_THRESH);
+
+	
+	{
+		global__VPX_END_RESIZE_UP_THRESH = num_new;
+        global__ON_THE_FLY_CHANGES = 1;
+        LOG_ERR("ARG:", "rzup new:%d", (int)global__VPX_END_RESIZE_UP_THRESH);
+	}
+
+	return true;
+}
+
+bool slash_rzdn(void *object, char *arg, int arg_length)
+{
+	FRIEND *f = object;
+
+	char arg1[300];
+	CLEAR(arg1);
+    snprintf(arg1, arg_length, "%s", arg);
+
+	LOG_ERR("ARG:", "arg=%s" , arg1);
+
+	int num_new = get_number_in_string(arg1, (int)global__VPX_END_RESIZE_DOWN_THRESH);
+
+	
+	{
+		global__VPX_END_RESIZE_DOWN_THRESH = num_new;
+        global__ON_THE_FLY_CHANGES = 1;
+        LOG_ERR("ARG:", "rzdn new:%d", (int)global__VPX_END_RESIZE_DOWN_THRESH);
+	}
+
+	return true;
+}
+
+bool slash_enctime(void *object, char *arg, int arg_length)
+{
+	FRIEND *f = object;
+
+	char arg1[300];
+	CLEAR(arg1);
+    snprintf(arg1, arg_length, "%s", arg);
+
+	LOG_ERR("ARG:", "arg=%s" , arg1);
+
+	int num_new = get_number_in_string(arg1, (int)global__MAX_ENCODE_TIME_US);
+
+	
+	{
+		global__MAX_ENCODE_TIME_US = num_new;
+        global__ON_THE_FLY_CHANGES = 1;
+        LOG_ERR("ARG:", "enctime new:%d", (int)global__MAX_ENCODE_TIME_US);
 	}
 
 	return true;
