@@ -18,13 +18,13 @@ struct Command commands[MAX_NUM_CMDS] = {
     { "topic",    5, slash_topic     },
 
     { "vbr",      3, slash_vbr       },
-    { "fps",      3, slash_fps       },
-    { "maxdist",  7, slash_maxdist   },
     { "vpxcpu",   6, slash_vpxcpu    },
     { "vpxusage", 8, slash_vpxusage  },
-
-    { "vpxenc",   6, slash_vpxenc    },
-    { "vpxloss",  7, slash_vpxloss   },
+ 
+    { "sza",      3, slash_sza       },
+    { "rzup",     4, slash_rzup      },
+    { "rzdn",     4, slash_rzdn      },
+    { "enctime",  7, slash_enctime   },
 
     { NULL,       0, NULL            },
 };

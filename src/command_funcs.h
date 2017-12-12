@@ -33,10 +33,13 @@ bool slash_topic(void *object, char *arg, int arg_length);
 
 bool slash_vbr(void *object, char *arg, int arg_length);
 bool slash_fps(void *object, char *arg, int arg_length);
-bool slash_maxdist(void *object, char *arg, int arg_length);
 bool slash_vpxcpu(void *object, char *arg, int arg_length);
 bool slash_vpxusage(void *object, char *arg, int arg_length);
-bool slash_vpxenc(void *object, char *arg, int arg_length);
-bool slash_vpxloss(void *object, char *arg, int arg_length);
+
+bool slash_sza(void *object, char *arg, int arg_length);
+bool slash_rzup(void *object, char *arg, int arg_length);
+bool slash_rzdn(void *object, char *arg, int arg_length);
+bool slash_enctime(void *object, char *arg, int arg_length);
+
 
 #endif
