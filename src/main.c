@@ -325,7 +325,7 @@ void utox_init(void) {
 
 // -------- values for best operations --------
 // -------- values for best operations --------
-    global__VP8E_SET_CPUUSED_VALUE = 8;
+    global__VP8E_SET_CPUUSED_VALUE = 10;
     global__VPX_END_USAGE = 0; // VBR=0
     global__MAX_ENCODE_TIME_US = 25000;
 	/*
