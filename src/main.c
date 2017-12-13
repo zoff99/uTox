@@ -334,7 +334,7 @@ void utox_init(void) {
 		2 -> VPX_CQ  Constrained Quality (CQ)  mode
 		3 -> VPX_Q   Constant Quality (Q) mode
 	*/
-    UTOX_DEFAULT_BITRATE_V = 20000;
+    UTOX_DEFAULT_BITRATE_V = 10000;
     UTOX_MIN_BITRATE_VIDEO = 4000;
 // -------- values for best operations --------
 // -------- values for best operations --------
