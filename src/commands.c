@@ -18,6 +18,7 @@ struct Command commands[MAX_NUM_CMDS] = {
     { "topic",    5, slash_topic     },
 
     { "vbr",      3, slash_vbr       },
+    { "vbm",      3, slash_vbm       },
     { "vpxcpu",   6, slash_vpxcpu    },
     { "vpxusage", 8, slash_vpxusage  },
  

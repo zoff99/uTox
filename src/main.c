@@ -31,6 +31,7 @@ extern int global__VP8E_SET_CPUUSED_VALUE;
 extern int global__VPX_END_USAGE;
 
 extern int UTOX_DEFAULT_BITRATE_V;
+extern int UTOX_MIN_BITRATE_VIDEO;
 
 // old ---
 int global__VPX_KF_MAX_DIST;
@@ -56,7 +57,8 @@ int global__VPX_END_USAGE;
 int global__VPX_KF_MAX_DIST;
 int global__VPX_G_LAG_IN_FRAMES;
 
-int UTOX_DEFAULT_BITRATE_V;
+extern int UTOX_DEFAULT_BITRATE_V;
+extern int UTOX_MIN_BITRATE_VIDEO;
 
 int global__VPX_ENCODER_USED;
 int global__VPX_DECODER_USED;
@@ -331,8 +333,8 @@ void utox_init(void) {
 		2 -> VPX_CQ  Constrained Quality (CQ)  mode
 		3 -> VPX_Q   Constant Quality (Q) mode
 	*/
-
-    UTOX_DEFAULT_BITRATE_V = 4000;
+    UTOX_DEFAULT_BITRATE_V = 20000;
+    UTOX_MIN_BITRATE_VIDEO = 20000;
 // -------- values for best operations --------
 // -------- values for best operations --------
 
