@@ -27,6 +27,7 @@ extern int global__VP8E_SET_CPUUSED_VALUE;
 extern int global__VPX_END_USAGE;
 
 extern int UTOX_DEFAULT_BITRATE_V;
+extern int UTOX_MIN_BITRATE_VIDEO;
 
 
 
@@ -141,13 +142,6 @@ bool slash_vbr(void *object, char *arg, int arg_length)
 
 	}
 
-	return true;
-}
-
-bool slash_fps(void *object, char *arg, int arg_length)
-{
-	// TODO: dummy for now
-	LOG_ERR("slash_fps", "dummy");
 	return true;
 }
 
@@ -388,5 +382,25 @@ bool slash_enctime(void *object, char *arg, int arg_length)
 	return true;
 }
 
+
+bool slash_vbm(void *object, char *arg, int arg_length)
+{
+	FRIEND *f = object;
+
+	char arg1[300];
+	CLEAR(arg1);
+    snprintf(arg1, arg_length, "%s", arg);
+
+	LOG_ERR("ARG:", "arg=%s" , arg1);
+
+	int num_new = get_number_in_string(arg1, (int)UTOX_MIN_BITRATE_VIDEO);
+	
+	{
+		UTOX_MIN_BITRATE_VIDEO = num_new;
+        LOG_ERR("ARG:", "vbm new:%d", (int)UTOX_MIN_BITRATE_VIDEO);
+	}
+
+	return true;
+}
 
 
