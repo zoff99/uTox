@@ -325,17 +325,19 @@ void utox_init(void) {
 
 // -------- values for best operations --------
 // -------- values for best operations --------
-    global__VP8E_SET_CPUUSED_VALUE = 8;
     global__VPX_END_USAGE = 0; // VBR=0
-    global__MAX_ENCODE_TIME_US = (1000000 / 24);
 	/*
 		0 -> VPX_VBR Variable Bit Rate (VBR) mode
 		1 -> VPX_CBR Constant Bit Rate (CBR) mode
 		2 -> VPX_CQ  Constrained Quality (CQ)  mode
 		3 -> VPX_Q   Constant Quality (Q) mode
 	*/
-    UTOX_DEFAULT_BITRATE_V = 15000;
-    UTOX_MIN_BITRATE_VIDEO = 4000;
+
+
+    global__VP8E_SET_CPUUSED_VALUE = 16;
+    global__MAX_ENCODE_TIME_US = (1000000 / 40);
+    UTOX_DEFAULT_BITRATE_V = 5000;
+    UTOX_MIN_BITRATE_VIDEO = 600;
 // -------- values for best operations --------
 // -------- values for best operations --------
 
