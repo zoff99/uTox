@@ -49,7 +49,7 @@ if ! ([ -f "$CACHE_DIR/toxcore.sha" ] && diff "$CACHE_DIR/toxcore.sha" toxcore.s
   export PKG_CONFIG_PATH="$CACHE_DIR/usr/lib/pkgconfig/"
   export LIBSODIUM_CFLAGS="-I$CACHE_DIR/usr/include/"
   export LIBSODIUM_LIBS="-L$CACHE_DIR/usr/lib/"
-  export CFLAGS=" -D_GNU_SOURCE=1 -pthread -g -O3 -I$CACHE_DIR/usr/include -I/usr/share/mingw-w64/include/ "
+  export CFLAGS=" -g -O3 -I$CACHE_DIR/usr/include -I/usr/share/mingw-w64/include/ "
   CROSS=x86_64-w64-mingw32- ../configure --prefix=$CACHE_DIR/usr --enable-logging \
   --disable-soname-versions --host="x86_64-w64-mingw32" \
   --with-sysroot="$CACHE_DIR/" --disable-testing \
