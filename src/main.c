@@ -336,8 +336,8 @@ void utox_init(void) {
 
     global__VP8E_SET_CPUUSED_VALUE = 16;
     global__MAX_ENCODE_TIME_US = (1000000 / 40);
-    UTOX_DEFAULT_BITRATE_V = 5000;
-    UTOX_MIN_BITRATE_VIDEO = 600;
+    UTOX_DEFAULT_BITRATE_V = 25000;
+    UTOX_MIN_BITRATE_VIDEO = 10000;
 // -------- values for best operations --------
 // -------- values for best operations --------
 
