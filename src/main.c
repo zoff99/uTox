@@ -18,7 +18,7 @@
 // ---------- dirty hack ----------
 // ---------- dirty hack ----------
 // ---------- dirty hack ----------
-#if 1
+#if 0
 
 extern int global__ON_THE_FLY_CHANGES;
 extern int global__VPX_RESIZE_ALLOWED;
@@ -337,7 +337,7 @@ void utox_init(void) {
     global__VP8E_SET_CPUUSED_VALUE = 16;
     global__MAX_ENCODE_TIME_US = (1000000 / 40);
     UTOX_DEFAULT_BITRATE_V = 5000;
-    UTOX_MIN_BITRATE_VIDEO = 600;
+    UTOX_MIN_BITRATE_VIDEO = 800;
 // -------- values for best operations --------
 // -------- values for best operations --------
 
