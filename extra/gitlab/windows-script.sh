@@ -3,7 +3,7 @@ set -eux
 
 . ./extra/gitlab/env.sh
 
-export CFLAGS=" -pthread -g -O0 -I$CACHE_DIR/usr/include -I/usr/share/mingw-w64/include/ "
+export CFLAGS=" -g -O0 -fno-omit-frame-pointer -I$CACHE_DIR/usr/include -I/usr/share/mingw-w64/include/ "
 
 # CMake 3.2 or higher is required. for c-toxcore :-(
 sudo apt-get install cmake3
