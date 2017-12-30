@@ -85,6 +85,7 @@ dependencies:
 compile:
   override:
     - echo "xxx"
+
 test:
   override:
     - echo "-- dummy --"
