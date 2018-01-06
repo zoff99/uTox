@@ -353,7 +353,7 @@ void utox_video_thread(void *args) {
                     global_video_out_fps = 0;
                 }
 
-                LOG_TRACE("uToxVideo", "outgoing fps=%d" , global_video_out_fps);
+                // LOG_TRACE("uToxVideo", "outgoing fps=%d" , global_video_out_fps);
 
                 __utimer_start(&tm_outgoing_video_frames);
                 // --- FPS ----
