@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <tox/toxav.h>
+
 // ---------------------
 #include <stdio.h>
 #define CLEAR(x) memset(&(x), 0, sizeof(x))
@@ -187,14 +189,11 @@ bool slash_vpxcpu(void *object, char *arg, int arg_length)
 
 	LOG_ERR("ARG:", "arg=%s" , arg1);
 
-	int num_new = get_number_in_string(arg1, (int)global__VP8E_SET_CPUUSED_VALUE);
+	int num_new = get_number_in_string(arg1, (int)16);
 
-	
-	{
-		global__VP8E_SET_CPUUSED_VALUE = num_new;
-        global__ON_THE_FLY_CHANGES = 1;
-        LOG_ERR("ARG:", "enctime new:%d", (int)global__VP8E_SET_CPUUSED_VALUE);
-	}
+    TOXAV_ERR_OPTION_SET error;
+    toxav_option_set(global_toxav, f->number, TOXAV_ENCODER_CPU_USED, (int32_t)num_new, &error);
+    LOG_ERR("ARG:", "vpxcpu new:%d res=%d", (int)num_new, (int)error);
 
 	return true;
 }
