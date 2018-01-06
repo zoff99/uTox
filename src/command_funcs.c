@@ -229,11 +229,20 @@ bool slash_vpxusage(void *object, char *arg, int arg_length)
 
 	LOG_ERR("ARG:", "arg=%s" , arg1);
 
-	int num_new = get_number_in_string(arg1, (int)global__VPX_END_USAGE);
+	int num_new = get_number_in_string(arg1, (int)TOXAV_ENCODER_VP8_QUALITY_NORMAL);
 
-	global__VPX_END_USAGE = num_new;
-    global__ON_THE_FLY_CHANGES = 1;
-    LOG_ERR("ARG:", "enctime new:%d", (int)global__VPX_END_USAGE);
+    if (num_new > 0)
+    {
+        TOXAV_ERR_OPTION_SET error;
+        toxav_option_set(global_toxav, f->number, TOXAV_ENCODER_VP8_QUALITY, (int32_t)TOXAV_ENCODER_VP8_QUALITY_HIGH, &error);
+        LOG_ERR("ARG:", "vpxusage new:TOXAV_ENCODER_VP8_QUALITY_HIGH res=%d", (int)error);
+    }
+    else
+    {
+        TOXAV_ERR_OPTION_SET error;
+        toxav_option_set(global_toxav, f->number, TOXAV_ENCODER_VP8_QUALITY, (int32_t)TOXAV_ENCODER_VP8_QUALITY_NORMAL, &error);
+        LOG_ERR("ARG:", "vpxusage new:TOXAV_ENCODER_VP8_QUALITY_NORMAL res=%d", (int)error);
+    }
 
 	return true;
 }
