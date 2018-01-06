@@ -16,8 +16,7 @@
 #define CLEAR(x) memset(&(x), 0, sizeof(x))
 // ---------------------
 
-
-
+#if 0
 extern int global__ON_THE_FLY_CHANGES;
 extern int global__VPX_RESIZE_ALLOWED;
 extern int global__VPX_DROPFRAME_THRESH;
@@ -30,7 +29,28 @@ extern int global__VPX_END_USAGE;
 
 extern int UTOX_DEFAULT_BITRATE_V;
 extern int UTOX_MIN_BITRATE_VIDEO;
+#else
+int global__ON_THE_FLY_CHANGES;
+int global__VPX_RESIZE_ALLOWED;
+int global__VPX_DROPFRAME_THRESH;
+int global__VPX_END_RESIZE_UP_THRESH;
+int global__VPX_END_RESIZE_DOWN_THRESH;
+int global__MAX_DECODE_TIME_US;
+int global__MAX_ENCODE_TIME_US;
+int global__VP8E_SET_CPUUSED_VALUE;
+int global__VPX_END_USAGE;
+int global__VPX_KF_MAX_DIST;
+int global__VPX_G_LAG_IN_FRAMES;
 
+extern int UTOX_DEFAULT_BITRATE_V;
+extern int UTOX_MIN_BITRATE_VIDEO;
+
+int global__VPX_ENCODER_USED;
+int global__VPX_DECODER_USED;
+int global__SEND_VIDEO_VP9_LOSSLESS_QUALITY;
+int global__SEND_VIDEO_LOSSLESS;
+int global__SEND_VIDEO_RAW_YUV;
+#endif
 
 
 
