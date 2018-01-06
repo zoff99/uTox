@@ -12,6 +12,10 @@ if ! [ -f "$CACHE_DIR/usr/lib/pkgconfig/opus.pc" ]; then
   cd opus-${OPUS_VERSION}
 
   ./autogen.sh
+
+  export CFLAGS=" -g -O3 -I$CACHE_DIR/usr/include -I/usr/share/mingw-w64/include/ "
+  export CXXFLAGS=" -g -O3 -I$CACHE_DIR/usr/include -I/usr/share/mingw-w64/include/ "
+
   ./configure "$TARGET_HOST" \
               --prefix="$CACHE_DIR/usr" \
               --disable-extra-programs \
