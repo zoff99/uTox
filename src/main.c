@@ -71,8 +71,6 @@ int global__SEND_VIDEO_RAW_YUV;
 // ---------- dirty hack ----------
 
 
-
-
 /* The utox_ functions contained in src/main.c are wrappers for the platform native_ functions
  * if you need to localize them to a specific platform, move them from here, to each
  * src/<platform>/main.x and change from utox_ to native_
@@ -336,8 +334,8 @@ void utox_init(void) {
 
     global__VP8E_SET_CPUUSED_VALUE = 16;
     global__MAX_ENCODE_TIME_US = (1000000 / 40);
-    UTOX_DEFAULT_BITRATE_V = 5000;
-    UTOX_MIN_BITRATE_VIDEO = 800;
+    UTOX_DEFAULT_BITRATE_V = 8000;
+    UTOX_MIN_BITRATE_VIDEO = 4000;
 // -------- values for best operations --------
 // -------- values for best operations --------
 

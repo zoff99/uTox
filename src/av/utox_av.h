@@ -3,6 +3,7 @@
 #define UTOX_AV_H
 
 #include <tox/toxav.h> // if it weren't for TOXAV_CALL_CONTROL we could move this to the .c
+#include <tox/tox.h>
 
 #include <stdint.h>
 
