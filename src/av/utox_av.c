@@ -17,6 +17,19 @@
 
 #include <stdlib.h>
 
+
+
+#if TOX_VERSION_IS_API_COMPATIBLE(0, 2, 0)
+void toxav_callback_bit_rate_status(ToxAV *av,
+     void *callback, void *user_data)
+{
+        // dummy function
+}
+#else
+    // no need to fake the function
+#endif
+
+
 bool utox_av_ctrl_init = false;
 
 static bool toxav_thread_msg = 0;
