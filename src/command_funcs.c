@@ -3,7 +3,6 @@
 #include "friend.h"
 #include "groups.h"
 #include "debug.h"
-#include "tox.h"
 #include "macros.h"
 
 #include <stdlib.h>
@@ -15,6 +14,8 @@
 #include <stdio.h>
 #define CLEAR(x) memset(&(x), 0, sizeof(x))
 // ---------------------
+
+
 
 
 extern int global__ON_THE_FLY_CHANGES;
