@@ -77,7 +77,7 @@ SETTINGS settings = {
     .status_notifications   = true,
     .group_notifications    = GNOTIFY_ALWAYS,
 
-    .verbose = LOG_LVL_ERROR, // LOG_LVL_ERROR, LOG_LVL_INFO, LOG_LVL_NET_TRACE, LOG_LVL_OFF
+    .verbose = LOG_LVL_INFO, // LOG_LVL_ERROR, LOG_LVL_INFO, LOG_LVL_NET_TRACE, LOG_LVL_OFF
     .debug_file = NULL,
 
     // .theme                       // included here to match the full struct
