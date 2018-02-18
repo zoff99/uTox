@@ -10,27 +10,6 @@ machine:
     GL_BUILD: "win64"
 ## ----------- WIN cross compile ----------------
     # ---------------------------------------------------
-    # v0.1.10 opus tweaks            ebe62c84a9d2e7e88be831bfbafcc3b47aa3a0c6
-    # v0.1.10 on the fly tweaks      07f32b34a61f982784a87c33068b62dd0a28ddce
-    # v0.1.10 runtime value change hack        2fe9bcb55ca44ea391d2b5fc1f747d326e5f443b
-    #         tweaks7                          17d722a654c3dcace15c4fab7cb3cf0aed609122
-    #         tweaks6                          452cce6b6262f12b3383141caf4f10087a20862f
-    #         tweaks5                          31e91cf25dd6f4128e16359af176ba6348fd58da
-    # v0.1.10 only key frames                  67ed796d49496531ef28c3b096914cf9f6cf0fb8
-    # v0.1.10 tweaks4                          adbf2386071801a8f70cba3d165ce1d5b87809fb
-    # v0.1.10 tweaks3                          48f0231a1e5f80a4f3b362fb7ac46bc3c9dbe3e2
-    # v0.1.10 more tweaks                      719da091470cf88518c297517f267c92c0a91f49
-    # v0.1.10 cpuused = 0                      5533939bbe405de20d698a17c7b4b7bbba0693aa
-    # v0.1.10 VP8E_SET_NOISE_SENSITIVITY = 2   cc4b9ef643d116933d0f1bab6778b78bfba08eb1
-    # v0.1.10 higher quality enc. 001          acd150ba78a68aa9de7283917e8b22db2d297517
-    # v0.1.10 rc_end_usage = VPX_VBR           e1f29e8671931d35bd1024a44041e4a065441c18
-    # v0.1.10 VPX_DL_GOOD_QUALITY              bef1c7667fed6761e87dbde5e7fd65ccb8487ee0
-    # v0.1.10 vpx tweaks2                      eab6e81ec9ed5b88aa712093ea53c802ff81d611
-    # v0.1.10 vpx tweaks                       cba9dd58f38ad28823b8e8a10e7c111fdf2064a6
-    # MAX_CRYPTO_PACKET_SIZE 1400 -> 1000      4e096ac87135ef15bc9b738006a91f9b455b9f54
-    # jitterbuffer  capacity 3 -> 10           8317821ed02f549380bbb05f2b80c44693a7bcb0
-    # v0.1.10 onlyKF    74dc53cf180e32f92ebb3cb5e8542e919cc3b343
-    # v0.1.10 mobtweaks f73b345c21fae0e0e56fae86dc82f63188a00aca
     # c-toxcore v0.1.9 a429ef4a28a5e5e0ad010efffb76d2abc3ada0af
     # c-toxcore v0.1.8 f6db9333e2d1262e7ba3846563c30f63c98ffa38
     # c-toxcore v0.1.7 48c86e942d487a8856cbd25797b320bfb1879ddc
@@ -47,7 +26,6 @@ machine:
     # CTOXCORE_URL: "https://github.com/TokTok/c-toxcore"
     CTOXCORE_URL: "https://github.com/zoff99/c-toxcore"
     TOXCORE_REPO_URI: "https://github.com/zoff99/c-toxcore"
-
 
 dependencies:
   pre:
