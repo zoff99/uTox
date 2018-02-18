@@ -23,16 +23,16 @@ if ! ([ -f "${CACHE_DIR}/libvpx.sha" ] && diff "${CACHE_DIR}/libvpx.sha" libvpx.
               --disable-unit-tests \
               --size-limit=16384x16384 \
               --enable-multi-res-encoding \
-              --enable-realtime-only \
+              --enable-runtime-cpu-detect \
               --enable-error-concealment \
               --enable-postproc \
               --enable-vp9-postproc \
               --enable-temporal-denoising \
               --enable-vp9-temporal-denoising
 
+              #--enable-realtime-only \
               #--enable-better-hw-compatibility \
               #--enable-onthefly-bitpacking \
-              #--enable-runtime-cpu-detect \
 
   mkdir ../libvpx-test-data
   # LIBVPX_TEST_DATA_PATH=../libvpx-test-data make testdata
