@@ -23,13 +23,13 @@ if ! ([ -f "${CACHE_DIR}/libvpx.sha" ] && diff "${CACHE_DIR}/libvpx.sha" libvpx.
               --disable-unit-tests \
               --size-limit=16384x16384 \
               --enable-multi-res-encoding \
-              --enable-runtime-cpu-detect \
               --enable-error-concealment \
               --enable-postproc \
               --enable-vp9-postproc \
               --enable-temporal-denoising \
               --enable-vp9-temporal-denoising
 
+              #--enable-runtime-cpu-detect \
               #--enable-realtime-only \
               #--enable-better-hw-compatibility \
               #--enable-onthefly-bitpacking \
