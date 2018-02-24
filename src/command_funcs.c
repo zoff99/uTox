@@ -331,14 +331,15 @@ bool slash_sza(void *object, char *arg, int arg_length)
 
 	LOG_ERR("ARG:", "arg=%s" , arg1);
 
-	int num_new = get_number_in_string(arg1, (int)global__VPX_RESIZE_ALLOWED);
+	int num_new = get_number_in_string(arg1, (int)60);
 
-	
-	{
-		global__VPX_RESIZE_ALLOWED = num_new;
-        global__ON_THE_FLY_CHANGES = 1;
-        LOG_ERR("ARG:", "sza new:%d", (int)global__VPX_RESIZE_ALLOWED);
-	}
+    if (num_new > 0)
+    {
+        TOXAV_ERR_OPTION_SET error;
+        toxav_option_set(global_toxav, f->number, TOXAV_ENCODER_RC_MAX_QUANTIZER,
+            (int32_t)num_new, &error);
+        LOG_ERR("ARG:", "TOXAV_ENCODER_RC_MAX_QUANTIZER new res=%d", (int)error);
+    }
 
 	return true;
 }
