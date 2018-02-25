@@ -516,7 +516,8 @@ static void utox_callback_av_change_state(ToxAV *av, uint32_t friend_number, uin
 }
 
 static void utox_incoming_rate_change(ToxAV *AV, uint32_t f_num, uint32_t UNUSED(a_bitrate), uint32_t v_bitrate, void *UNUSED(ud)) {
-    /* Just accept what toxav wants the bitrate to be... */
+    /* Just ignore everything here */
+#if 0
     if (v_bitrate > (uint32_t)UTOX_MIN_BITRATE_VIDEO) {
         TOXAV_ERR_BIT_RATE_SET error = 0;
         toxav_bit_rate_set(AV, f_num, -1, v_bitrate, &error);
@@ -528,6 +529,7 @@ static void utox_incoming_rate_change(ToxAV *AV, uint32_t f_num, uint32_t UNUSED
     } else {
         LOG_NOTE("uToxAV", "\tVideo bitrate unchanged %u is less than %u" , v_bitrate, UTOX_MIN_BITRATE_VIDEO);
     }
+#endif
     return;
 }
 
