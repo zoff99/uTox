@@ -279,25 +279,13 @@ bool slash_vpxloss(void *object, char *arg, int arg_length)
 	CLEAR(arg1);
     snprintf(arg1, arg_length, "%s", arg);
 
-	LOG_ERR("slash_vpxloss", "arg=%s" , arg1);
+	LOG_ERR("ARG:", "arg=%s" , arg1);
 
-	int num_new = get_number_in_string(arg1, (int)global__SEND_VIDEO_LOSSLESS);
+	int num_new = get_number_in_string(arg1, (int)16);
 
-	if ((num_new >= 0) && (num_new <= 1))
-	{
-		global__SEND_VIDEO_LOSSLESS = num_new;
-		TOXAV_ERR_BIT_RATE_SET error = 0;
-		toxav_bit_rate_set(global_toxav, f->number, 64, UTOX_DEFAULT_BITRATE_V, &error);
-
-        if (error)
-		{
-            LOG_ERR("slash_vpxloss", "Setting Video lossy/lossless has failed with error #%u" , error);
-        }
-		else
-		{
-			LOG_ERR("slash_vpxloss", "vpxloss new:%d", (int)global__SEND_VIDEO_LOSSLESS);
-		}
-	}
+    TOXAV_ERR_OPTION_SET error;
+    toxav_option_set(global_toxav, f->number, TOXAV_ENCODER_RC_MIN_QUANTIZER, (int32_t)num_new, &error);
+    LOG_ERR("ARG:", "vpxloss TOXAV_ENCODER_RC_MIN_QUANTIZER new:%d res=%d", (int)num_new, (int)error);
 
 	return true;
 }
