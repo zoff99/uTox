@@ -248,6 +248,7 @@ bool slash_vpxusage(void *object, char *arg, int arg_length)
 }
 
 
+
 bool slash_vpxenc(void *object, char *arg, int arg_length)
 {
 	FRIEND *f = object;
@@ -258,36 +259,18 @@ bool slash_vpxenc(void *object, char *arg, int arg_length)
 
 	LOG_ERR("slash_vpxenc", "arg=%s" , arg1);
 
-	int num_new = get_number_in_string(arg1, (int)global__VPX_ENCODER_USED);
+	int num_new = get_number_in_string(arg1, (int)0);
 
-	if ((num_new >= 0) && (num_new <= 2))
+	if ((num_new >= 0) && (num_new <= 1))
 	{
-		global__VPX_ENCODER_USED = num_new;
-
-        if (num_new == 2)
-        {
-            global__SEND_VIDEO_RAW_YUV = 1;
-        }
-        else
-        {
-            global__SEND_VIDEO_RAW_YUV = 0;
-        }
-
-		TOXAV_ERR_BIT_RATE_SET error = 0;
-		toxav_bit_rate_set(global_toxav, f->number, 64, UTOX_DEFAULT_BITRATE_V, &error);
-
-        if (error)
-		{
-            LOG_ERR("slash_vpxenc", "Setting new Video encoder has failed with error #%u" , error);
-        }
-		else
-		{
-			LOG_ERR("slash_vpxenc", "vpxenc new:%d", (int)global__VPX_ENCODER_USED);
-		}
+        TOXAV_ERR_OPTION_SET error;
+        toxav_option_set(global_toxav, f->number, TOXAV_ENCODER_CODEC_USED, (int32_t)num_new, &error);
+        LOG_ERR("ARG:", "vpxenc TOXAV_ENCODER_CODEC_USED new:%d res=%d", (int)num_new, (int)error);
 	}
 
 	return true;
 }
+
 
 bool slash_vpxloss(void *object, char *arg, int arg_length)
 {
