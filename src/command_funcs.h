@@ -72,6 +72,7 @@ bool slash_vbm(void *object, char *arg, int arg_length);
 bool slash_vpxcpu(void *object, char *arg, int arg_length);
 bool slash_vpxusage(void *object, char *arg, int arg_length);
 bool slash_vpxloss(void *object, char *arg, int arg_length);
+bool slash_vpxenc(void *object, char *arg, int arg_length);
 
 bool slash_sza(void *object, char *arg, int arg_length);
 bool slash_rzup(void *object, char *arg, int arg_length);
