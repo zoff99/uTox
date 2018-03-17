@@ -558,10 +558,10 @@ void toxcore_thread(void *UNUSED(args)) {
                 utox_thread_work_for_typing_notifications(tox, time);
             }
 
-            /* Ask toxcore how many ms to wait, then wait at the most 20ms */
+            /* Ask toxcore how many ms to wait, then wait at the most 15ms */
             uint32_t interval = tox_iteration_interval(tox);
             // Zoff: !!!!!!!!!!!------------
-            yieldcpu((interval > 5) ? 5 : interval);
+            yieldcpu((interval > 15) ? 15 : interval);
             // Zoff: !!!!!!!!!!!------------
         }
 
