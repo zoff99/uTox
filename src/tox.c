@@ -562,7 +562,8 @@ void toxcore_thread(void *UNUSED(args)) {
             uint32_t interval = tox_iteration_interval(tox);
             // Zoff: !!!!!!!!!!!------------
             yieldcpu((interval > 5) ? 5 : interval);
-            // Zoff: !!!!!!!!!!!------------        }
+            // Zoff: !!!!!!!!!!!------------
+        }
 
         /* If for anyreason, we exit, write the save, and clear the password */
         write_save(tox);
