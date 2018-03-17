@@ -272,7 +272,7 @@ bool slash_vpxenc(void *object, char *arg, int arg_length)
 }
 
 
-bool slash_vpxloss(void *object, char *arg, int arg_length)
+bool slash_vpxmqt(void *object, char *arg, int arg_length)
 {
 	FRIEND *f = object;
 
@@ -286,13 +286,13 @@ bool slash_vpxloss(void *object, char *arg, int arg_length)
 
     TOXAV_ERR_OPTION_SET error;
     toxav_option_set(global_toxav, f->number, TOXAV_ENCODER_RC_MIN_QUANTIZER, (int32_t)num_new, &error);
-    LOG_ERR("ARG:", "vpxloss TOXAV_ENCODER_RC_MIN_QUANTIZER new:%d res=%d", (int)num_new, (int)error);
+    LOG_ERR("ARG:", "vpxmqt TOXAV_ENCODER_RC_MIN_QUANTIZER new:%d res=%d", (int)num_new, (int)error);
 
 	return true;
 }
 
 
-bool slash_sza(void *object, char *arg, int arg_length)
+bool slash_vpxxqt(void *object, char *arg, int arg_length)
 {
 	FRIEND *f = object;
 
@@ -310,6 +310,30 @@ bool slash_sza(void *object, char *arg, int arg_length)
         toxav_option_set(global_toxav, f->number, TOXAV_ENCODER_RC_MAX_QUANTIZER,
             (int32_t)num_new, &error);
         LOG_ERR("ARG:", "TOXAV_ENCODER_RC_MAX_QUANTIZER new res=%d", (int)error);
+    }
+
+	return true;
+}
+
+
+bool slash_vpxkfm(void *object, char *arg, int arg_length)
+{
+	FRIEND *f = object;
+
+	char arg1[300];
+	CLEAR(arg1);
+    snprintf(arg1, arg_length, "%s", arg);
+
+	LOG_ERR("ARG:", "arg=%s" , arg1);
+
+	int num_new = get_number_in_string(arg1, (int)60);
+
+    if (num_new > 0)
+    {
+        TOXAV_ERR_OPTION_SET error;
+        toxav_option_set(global_toxav, f->number, TOXAV_ENCODER_KF_METHOD,
+            (int32_t)num_new, &error);
+        LOG_ERR("ARG:", "TOXAV_ENCODER_KF_METHOD new res=%d", (int)error);
     }
 
 	return true;
