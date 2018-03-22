@@ -19,6 +19,8 @@ echo $_INST_
 mkdir -p $_SRC_
 mkdir -p $_INST_
 
+export PKG_CONFIG_PATH=$_INST_/lib/pkgconfig
+
 
 full="1"
 
@@ -65,7 +67,7 @@ export LDFLAGS=" -O3 -L$_INST_/lib "
   --enable-error-concealment \
   --enable-better-hw-compatibility \
   --enable-postproc \
-  --enable-vp9-postproc
+  --enable-vp9-postproc \
   --enable-temporal-denoising \
   --enable-vp9-temporal-denoising
 make -j 4
@@ -152,6 +154,7 @@ O_OPTIONS=" -O0 "
 export PKG_CONFIG_PATH=$_INST_/lib/pkgconfig
 export CFLAGS=" -g $O_OPTIONS -I$_INST_/include/ -L$_INST_/lib -Wl,-Bstatic -lsodium -ltoxav -lopus -lvpx -lm -ltoxcore -ltoxdns -ltoxencryptsave -Wl,-Bdynamic "
 
+
 cmake \
  -DENABLE_AUTOUPDATE=OFF \
  -DENABLE_DBUS=OFF \
@@ -211,5 +214,7 @@ src/layout/libutoxLAYOUT.a
 
 # ldd utox
 
-ls -al utox && cp -av utox ~/utox/local_utox
+ls -al utox
+
+cp $_HOME_/build/utox_build/build2/utox $_HOME_/local_utox
 
