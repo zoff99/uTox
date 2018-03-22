@@ -560,7 +560,9 @@ void toxcore_thread(void *UNUSED(args)) {
 
             /* Ask toxcore how many ms to wait, then wait at the most 20ms */
             uint32_t interval = tox_iteration_interval(tox);
-            yieldcpu((interval > 20) ? 20 : interval);
+            // Zoff: !!!!!!!!!!!------------
+            yieldcpu((interval > 5) ? 5 : interval);
+            // Zoff: !!!!!!!!!!!------------
         }
 
         /* If for anyreason, we exit, write the save, and clear the password */
