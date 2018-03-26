@@ -325,8 +325,8 @@ void utox_init(void) {
 
 // -------- values for best operations --------
 // -------- values for best operations --------
-    UTOX_DEFAULT_BITRATE_V = 4000;
-    UTOX_MIN_BITRATE_VIDEO = 400;
+    UTOX_DEFAULT_BITRATE_V = 400;
+    UTOX_MIN_BITRATE_VIDEO = 100;
 // -------- values for best operations --------
 // -------- values for best operations --------
 
