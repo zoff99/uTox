@@ -191,9 +191,11 @@ bool slash_vpxcpu(void *object, char *arg, int arg_length)
 
 	int num_new = get_number_in_string(arg1, (int)16);
 
+#ifdef HAVE_TOXAV_OPTION_SET
     TOXAV_ERR_OPTION_SET error;
     toxav_option_set(global_toxav, f->number, TOXAV_ENCODER_CPU_USED, (int32_t)num_new, &error);
     LOG_ERR("ARG:", "vpxcpu new:%d res=%d", (int)num_new, (int)error);
+#endif
 
 	return true;
 }
@@ -214,15 +216,19 @@ bool slash_vpxusage(void *object, char *arg, int arg_length)
 
     if (num_new > 0)
     {
+#ifdef HAVE_TOXAV_OPTION_SET
         TOXAV_ERR_OPTION_SET error;
         toxav_option_set(global_toxav, f->number, TOXAV_ENCODER_VP8_QUALITY, (int32_t)TOXAV_ENCODER_VP8_QUALITY_HIGH, &error);
         LOG_ERR("ARG:", "vpxusage new:TOXAV_ENCODER_VP8_QUALITY_HIGH res=%d", (int)error);
+#endif
     }
     else
     {
+#ifdef HAVE_TOXAV_OPTION_SET
         TOXAV_ERR_OPTION_SET error;
         toxav_option_set(global_toxav, f->number, TOXAV_ENCODER_VP8_QUALITY, (int32_t)TOXAV_ENCODER_VP8_QUALITY_NORMAL, &error);
         LOG_ERR("ARG:", "vpxusage new:TOXAV_ENCODER_VP8_QUALITY_NORMAL res=%d", (int)error);
+#endif
     }
 #endif
 
@@ -244,9 +250,11 @@ bool slash_vpxenc(void *object, char *arg, int arg_length)
 
 	if ((num_new >= 0) && (num_new <= 1))
 	{
+#ifdef HAVE_TOXAV_OPTION_SET
         TOXAV_ERR_OPTION_SET error;
         toxav_option_set(global_toxav, f->number, TOXAV_ENCODER_CODEC_USED, (int32_t)num_new, &error);
         LOG_ERR("ARG:", "vpxenc TOXAV_ENCODER_CODEC_USED new:%d res=%d", (int)num_new, (int)error);
+#endif
 	}
 
 	return true;
@@ -264,9 +272,11 @@ bool slash_vpxloss(void *object, char *arg, int arg_length)
 
 	int num_new = get_number_in_string(arg1, (int)16);
 
+#ifdef HAVE_TOXAV_OPTION_SET
     TOXAV_ERR_OPTION_SET error;
     toxav_option_set(global_toxav, f->number, TOXAV_ENCODER_RC_MIN_QUANTIZER, (int32_t)num_new, &error);
     LOG_ERR("ARG:", "vpxloss TOXAV_ENCODER_RC_MIN_QUANTIZER new:%d res=%d", (int)num_new, (int)error);
+#endif
 
 	return true;
 }
@@ -286,10 +296,12 @@ bool slash_sza(void *object, char *arg, int arg_length)
 
     if (num_new > 0)
     {
+#ifdef HAVE_TOXAV_OPTION_SET
         TOXAV_ERR_OPTION_SET error;
         toxav_option_set(global_toxav, f->number, TOXAV_ENCODER_RC_MAX_QUANTIZER,
             (int32_t)num_new, &error);
         LOG_ERR("ARG:", "TOXAV_ENCODER_RC_MAX_QUANTIZER new res=%d", (int)error);
+#endif
     }
 
 	return true;

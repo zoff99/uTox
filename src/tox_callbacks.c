@@ -197,6 +197,8 @@ static void callback_group_message(Tox *UNUSED(tox), uint32_t gid, uint32_t pid,
     postmessage_utox(GROUP_MESSAGE, gid, pid, NULL);
 }
 
+// TODO: Zoff ----
+#if 0
 static void callback_group_namelist_change(Tox *tox, uint32_t gid, uint32_t pid, TOX_CONFERENCE_STATE_CHANGE change,
                                            void *UNUSED(userdata)) {
     LOG_ERR("Group callback", "gid %u pid %u change %u", gid, pid, change);
@@ -311,6 +313,7 @@ static void callback_group_namelist_change(Tox *tox, uint32_t gid, uint32_t pid,
         }
     }
 }
+#endif
 
 static void callback_group_topic(Tox *UNUSED(tox), uint32_t gid, uint32_t pid, const uint8_t *title, size_t length,
                                  void *UNUSED(userdata)) {
@@ -331,7 +334,10 @@ static void callback_group_topic(Tox *UNUSED(tox), uint32_t gid, uint32_t pid, c
 void utox_set_callbacks_groups(Tox *tox) {
     tox_callback_conference_invite(tox, callback_group_invite);
     tox_callback_conference_message(tox, callback_group_message);
+// TODO: Zoff -----
+#if 0
     tox_callback_conference_namelist_change(tox, callback_group_namelist_change);
+#endif
     tox_callback_conference_title(tox, callback_group_topic);
 }
 
