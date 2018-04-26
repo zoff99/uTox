@@ -9,6 +9,17 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <tox/toxav.h>
+
+// ---------------------
+#include <stdio.h>
+#define CLEAR(x) memset(&(x), 0, sizeof(x))
+
+extern int UTOX_DEFAULT_BITRATE_V;
+extern int UTOX_MIN_BITRATE_VIDEO;
+// ---------------------
+
+
 bool slash_send_file(void *object, char *filepath, int UNUSED(arg_length)) {
     if (filepath) {
         FRIEND *f = object;
@@ -70,3 +81,80 @@ bool slash_topic(void *object, char *arg, int arg_length) {
     LOG_ERR("slash_topic", " Could not allocate memory.");
     return false;
 }
+
+
+
+static int get_number_in_string(const char *str, int default_value)
+{
+    int number;
+
+    while (!(*str >= '0' && *str <= '9') && (*str != '-') && (*str != '+')) str++;
+
+    if (sscanf(str, "%d", &number) == 1)
+    {
+        return number;
+    }
+
+    // no int found, return default value
+    return default_value;
+}
+
+
+bool slash_vbr(void *object, char *arg, int arg_length)
+{
+	FRIEND *f = object;
+
+	char arg1[300];
+	CLEAR(arg1);
+    snprintf(arg1, arg_length, "%s", arg);
+
+	LOG_ERR("slash_vbr", "*arg=%s* len=%d" , arg1, arg_length);
+
+	int num_new = get_number_in_string(arg1, (int)UTOX_DEFAULT_BITRATE_V);
+
+	if ((num_new >= 100) && (num_new <= 50000))
+	{
+		UTOX_DEFAULT_BITRATE_V = num_new;
+		TOXAV_ERR_BIT_RATE_SET error = 0;
+		LOG_ERR("slash_vbr", "toxav_bit_rate_set: global_toxav=%p fnum=%d", global_toxav, (int)f->number);
+		toxav_bit_rate_set(global_toxav, f->number, 64, UTOX_DEFAULT_BITRATE_V, &error);
+
+        if (error)
+		{
+            LOG_ERR("slash_vbr", "Setting new Video bitrate has failed with error #%u" , error);
+        }
+		else
+		{
+			LOG_ERR("slash_vbr", "vbr new:%d", (int)UTOX_DEFAULT_BITRATE_V);
+		}
+
+	}
+
+	return true;
+}
+
+
+bool slash_vpxxqt(void *object, char *arg, int arg_length)
+{
+	FRIEND *f = object;
+
+	char arg1[300];
+	CLEAR(arg1);
+    snprintf(arg1, arg_length, "%s", arg);
+
+	LOG_ERR("ARG:", "arg=%s" , arg1);
+
+	int num_new = get_number_in_string(arg1, (int)60);
+
+    if (num_new > 0)
+    {
+        TOXAV_ERR_OPTION_SET error;
+        toxav_option_set(global_toxav, f->number, TOXAV_ENCODER_RC_MAX_QUANTIZER,
+            (int32_t)num_new, &error);
+        LOG_ERR("ARG:", "TOXAV_ENCODER_RC_MAX_QUANTIZER new res=%d", (int)error);
+    }
+
+	return true;
+}
+
+

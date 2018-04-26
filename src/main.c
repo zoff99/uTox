@@ -15,6 +15,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+extern int UTOX_DEFAULT_BITRATE_V;
+extern int UTOX_MIN_BITRATE_VIDEO;
 
 /* The utox_ functions contained in src/main.c are wrappers for the platform native_ functions
  * if you need to localize them to a specific platform, move them from here, to each
@@ -265,6 +267,14 @@ void parse_args(int argc, char *argv[],
  *
  * it's expect this will be called AFTER you parse argc/v and will act accordingly. */
 void utox_init(void) {
+
+// -------- values for best operations --------
+// -------- values for best operations --------
+    UTOX_DEFAULT_BITRATE_V = 500;
+    UTOX_MIN_BITRATE_VIDEO = 100;
+// -------- values for best operations --------
+// -------- values for best operations --------
+
     atexit(utox_raze);
 
     if (settings.debug_file == NULL) {

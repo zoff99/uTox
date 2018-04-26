@@ -1,0 +1,450 @@
+machine:
+  timezone:
+    Europe/Berlin
+  environment:
+    MAKEFLAGS: ""
+    WGET_FLAGS: --retry-connrefused --waitretry=5 --read-timeout=30 --timeout=30 -t 10
+## ----------- RASPI cross compile ----------------
+    RASPI_PATH: "/home/ubuntu/cc/tools/arm-bcm2708/arm-rpi-4.9.3-linux-gnueabihf/bin:$PATH"
+    RASPI_SYSROOT_: "/home/ubuntu/cc/tools/arm-bcm2708/arm-rpi-4.9.3-linux-gnueabihf/arm-linux-gnueabihf/sysroot"
+    RASPI_TOOL_PREFIX: arm-linux-gnueabihf
+    RASPI_INSTALL_DEST: "/home/ubuntu/installdest/"
+    RASPI_TARGET_: arm-linux-gnueabi
+    RASPI_HOST_: arm-linux-gnueabi
+    RASPI_CXX: $RASPI_TOOL_PREFIX-g++
+    RASPI_AR: $RASPI_TOOL_PREFIX-ar
+    RASPI_RANLIB: $RASPI_TOOL_PREFIX-ranlib
+    RASPI_CC: $RASPI_TOOL_PREFIX-gcc
+    RASPI_LD: $RASPI_TOOL_PREFIX-ld
+    RASPI_PKG_CONFIG_PATH: "/home/ubuntu/cc/tools/arm-bcm2708/arm-rpi-4.9.3-linux-gnueabihf/arm-linux-gnueabihf/sysroot/usr/lib/pkgconfig"
+    RASPI_s_: "/home/ubuntu/src/"
+    RASPI_PKGSDIR: "/home/ubuntu/pkgs/"
+## ----------- RASPI cross compile ----------------
+    # ---------------------------------------------------
+    # v0.1.10 opus tweaks            ebe62c84a9d2e7e88be831bfbafcc3b47aa3a0c6
+    # v0.1.10 on the fly tweaks      07f32b34a61f982784a87c33068b62dd0a28ddce
+    # v0.1.10 more vpx tweaks        eab6e81ec9ed5b88aa712093ea53c802ff81d611
+    # v0.1.10 cfg_dec2               3921fd04ee233a21befa960cf26214410e1b6582
+    # v0.1.10 cfg_dec                94bf0a32adac079b7739c6d32cfc0e504993f962
+    # v0.1.10 mobtweaks f73b345c21fae0e0e56fae86dc82f63188a00aca
+    # c-toxcore v0.1.9 a429ef4a28a5e5e0ad010efffb76d2abc3ada0af
+    # c-toxcore v0.1.8 f6db9333e2d1262e7ba3846563c30f63c98ffa38
+    # c-toxcore v0.1.7 48c86e942d487a8856cbd25797b320bfb1879ddc
+    # c-toxcore v0.1.6 895de7ef26e7617769f2271345e414545c2581f8
+    # c-toxcore v0.1.5 995578f1038842288c1ff552fd796ab2377db6e1
+    # c-toxcore v0.1.4 27a97a8280813ec05a5209811c40ab23203bb292
+    # c-toxcore v0.1.3 fdb46f6cf216a866d29402ae991be9c43282dde6
+    # c-toxcore v0.1.2 a096c71db867ac83fc3e01e0fbe98573d20f9286
+    # ---------------------------------------------------
+    # c-toxcore version used
+    CTOXCORE_VERSION_HASH: "zoff99/_0.1.10_2017_video_fix_07a"
+    # c-toxcore repo used
+    # CTOXCORE_URL: "https://github.com/TokTok/c-toxcore"
+    CTOXCORE_URL: "https://github.com/zoff99/c-toxcore"
+    LIBSODIUM_VERSION: "tags/1.0.13"
+    LIBSODIUM_BRANCH: "1.0.13"
+    RASPBERRRY_TOOLS_HASH: d820ab9c21969013b4e56c7e9cba25518afcdd44
+    
+dependencies:
+  pre:
+    # -----------------------------------
+    - sudo /etc/init.d/mysql stop ; exit 0
+    - sudo /etc/init.d/postgresql stop ; exit 0
+    # -----------------------------------
+    - sudo apt-get update
+    - sudo apt-get install cmake
+    - aptitude search 4l|grep -i convert ; exit 0
+    - aptitude search 4l|grep -i v4l ; exit 0
+    - sudo apt-get install build-essential libtool autotools-dev automake checkinstall check git yasm libv4lconvert0 libv4l-dev
+    - sudo apt-get install libopus-dev libvpx-dev pkg-config
+    - sudo apt-get install libasound2-dev
+    - sudo apt-get install linux-generic
+    - sudo apt-get install libjpeg-dev
+    - sudo apt-get install libpulse-dev
+    - sudo apt-get install libconfig-dev
+    - sudo apt-get install libfontconfig1-dev libdbus-1-dev libxrender-dev libopenal-dev libxext-dev
+
+    - sudo bash -c "echo '::1             localhost ipv6-localhost ipv6-loopback' >> /etc/hosts" # ipv6 localhost entry
+
+    - gcc --version ; exit 0
+    - clang --version ; exit 0
+
+    ### submodules ----------------
+    - git submodule add --force https://github.com/TokTok/c-toxcore c-toxcore ; echo ok
+    - git submodule add --force https://github.com/jedisct1/libsodium libsodium ; echo ok
+    - git submodule init ; git submodule update ; echo ok
+    # -- sometimes submodule can't find commit hash, whatever ------
+    - rm -Rf c-toxcore ; git clone "$CTOXCORE_URL"
+    # -- sometimes submodule can't find commit hash, whatever ------
+    - cd c-toxcore/ ; git checkout "$CTOXCORE_VERSION_HASH"
+    - cd libsodium/ ; git checkout $LIBSODIUM_VERSION
+    ### submodules ----------------
+
+    ### ------- compile and install libsodium -------
+    - cd libsodium/ ; ./autogen.sh
+    #- cd libsodium/ ; ./configure && make check
+    - cd libsodium/ ; ./configure --disable-shared --disable-soname-versions --disable-pie
+    - cd libsodium/ ; make -j 8 check
+
+    - cd libsodium/ ; sudo bash -c "printf 'y\naa\n\n' | checkinstall --install --pkgname libsodium --pkgversion 1.0.0 --nodoc --deldesc=no --pkglicense='GPL2'"
+    - cd libsodium/ ; sudo ldconfig ; exit 0
+    - cd libsodium ; sudo ldconfig -v 2>/dev/null | grep sodium ; exit 0
+    ## --- now again to save the artefact ---
+    - cd libsodium ; export INSTALL_DEST=/home/ubuntu/installdest_linux/ ; rm -Rf "$INSTALL_DEST"
+    - cd libsodium ; export INSTALL_DEST=/home/ubuntu/installdest_linux/ ; mkdir -p  "$INSTALL_DEST"/usr ; ./configure --prefix="$INSTALL_DEST"/usr
+    - cd libsodium ; export INSTALL_DEST=/home/ubuntu/installdest_linux/ ; make install ; ls -alR "$INSTALL_DEST"/usr
+    - mkdir -p $CIRCLE_ARTIFACTS/ubuntu_14_04_binaries
+    - export INSTALL_DEST=/home/ubuntu/installdest_linux/ ; cd "$INSTALL_DEST" ; tar -czvf $CIRCLE_ARTIFACTS/ubuntu_14_04_binaries/pkg_libsodium.tar.gz *
+    ## --- now again to save the artefact ---
+    ### ------- compile and install libsodium -------
+
+    ### ------------ filter_audio ------------
+    - git clone git://github.com/irungentoo/filter_audio.git
+    - cd filter_audio ; make
+    - cd filter_audio/ ; sudo bash -c "printf 'y\naa\n\n' | checkinstall --install --pkgname filter_audio --pkgversion 1.0.0 --nodoc --deldesc=no --pkglicense='GPL2'"
+    ### ------------ filter_audio ------------
+
+    ### ------------ compile and install c-toxcore ------------
+    # - cd c-toxcore ; cmake -DWARNINGS=OFF .
+    - cd c-toxcore ; autoreconf -fi
+    - cd c-toxcore ; ./configure --enable-logging --disable-soname-versions
+    - cd c-toxcore ; make -j 8
+    - cd c-toxcore ; sudo make install
+    - cd c-toxcore ; sudo ldconfig -v 2>/dev/null | grep toxcore
+    ## --- now again to save the artefact ---
+    - cd c-toxcore ; export INSTALL_DEST=/home/ubuntu/installdest_linux/ ; rm -Rf "$INSTALL_DEST"
+    - cd c-toxcore ; export INSTALL_DEST=/home/ubuntu/installdest_linux/ ; mkdir -p  "$INSTALL_DEST"/usr ; autoreconf -fi ; ./configure --enable-logging --disable-soname-versions --prefix="$INSTALL_DEST"/usr
+    - cd c-toxcore ; export INSTALL_DEST=/home/ubuntu/installdest_linux/ ; make install ; ls -alR "$INSTALL_DEST"/usr
+    - mkdir -p $CIRCLE_ARTIFACTS/ubuntu_14_04_binaries
+    - export INSTALL_DEST=/home/ubuntu/installdest_linux/ ; cd "$INSTALL_DEST" ; tar -czvf $CIRCLE_ARTIFACTS/ubuntu_14_04_binaries/pkg_c-toxcore.tar.gz *
+    ## --- now again to save the artefact ---
+    ### ------------ run tests
+    # - cd c-toxcore ; make test ARGS="-V" ; ex1=$? ; if [ $ex1 -ne 0 ]; then sleep 60; make test ARGS="-V" ; exit $? ; fi
+    ### ------------ compile and install c-toxcore ------------
+
+
+
+## ----------- RASPI cross compile ----------------
+    ## ----------- set architecture -------------------
+    ## ----------- set architecture -------------------
+    - ARCH="RASPI";printf '#! /bin/bash\nexport CUR_ARCH_="'"$ARCH"'"\n' > ~/glo
+    - chmod a+rx ~/glo
+    - cat ~/glo
+    ## ----------- set architecture -------------------
+    ## ----------- set architecture -------------------
+
+    - mkdir ~/cc/
+    - cd ~/cc ; git clone https://github.com/raspberrypi/tools
+    - cd ~/cc/tools/ ; git checkout $RASPBERRRY_TOOLS_HASH
+
+    - . ~/glo;a=${CUR_ARCH_}_PKG_CONFIG_PATH;mkdir -p "${!a}"
+    - . ~/glo;a=${CUR_ARCH_}_PKGSDIR;mkdir -p "${!a}"
+    - . ~/glo;a=${CUR_ARCH_}_SYSROOT_;ls -al "${!a}"
+    - . ~/glo;a=${CUR_ARCH_}_s_;mkdir -p "${!a}"
+    - . ~/glo;a=${CUR_ARCH_}_PKGSDIR;mkdir -p "${!a}"
+
+    - . ~/glo;echo 'export PKGSDIR="$'"${CUR_ARCH_}"'_PKGSDIR";export INSTALL_DEST="$'"${CUR_ARCH_}"'_INSTALL_DEST";export PKG_CONFIG_PATH="$'"${CUR_ARCH_}"'_PKG_CONFIG_PATH";export PATH="$'"${CUR_ARCH_}"'_PATH";export CC="$'"${CUR_ARCH_}"'_CC";export CXX="$'"${CUR_ARCH_}"'_CXX";export AR="$'"${CUR_ARCH_}"'_AR";export RANLIB="$'"${CUR_ARCH_}"'_RANLIB";export _s_="$'"${CUR_ARCH_}"'_s_";export _SYSROOT_="$'"${CUR_ARCH_}"'_SYSROOT_";export _HOST_="$'"${CUR_ARCH_}"'_HOST_";export _TARGET_="$'"${CUR_ARCH_}"'_TARGET_";export _TOOL_PREFIX="$'"${CUR_ARCH_}"'_TOOL_PREFIX";export CUR_ARCH_="'"${CUR_ARCH_}"'";export LD="$'"${CUR_ARCH_}"'_LD"' > ~/pp
+    - chmod u+x ~/pp
+    - cat ~/pp
+
+    - . ~/glo;printf '#! /bin/bash\n. ~/pp;rm -Rf ~/build/\nmkdir -p ~/build/\narg1_="$1";shift;cd ~/build/;$'"${CUR_ARCH_}"'_s_/"$arg1_"/configure $* && make && make install\n' > ~/do_compile.sh
+    - chmod a+rx ~/do_compile.sh
+    - cat ~/do_compile.sh
+
+    - . ~/glo;printf '#! /bin/bash\n. ~/pp;rm -Rf ~/build/\nmkdir -p ~/build/\nrm -Rf "$INSTALL_DEST"\narg1_="$1";shift;cd ~/build/;$_s_/"$arg1_"/configure $* && make && make install && cd "$INSTALL_DEST" && tar -czvf "$PKGSDIR""/"pkg_"$arg1_".tar.gz * && rm -Rf "$INSTALL_DEST" \n' > ~/do_package.sh
+    - chmod a+rx ~/do_package.sh
+    - cat ~/do_package.sh
+
+
+    - . ~/pp;cd $_s_;git clone --depth=1 --branch=v1.3.0 https://github.com/yasm/yasm.git
+    - . ~/pp;cd $_s_/yasm/;autoreconf -fi
+    - . ~/pp;~/do_compile.sh "yasm" --prefix="$_SYSROOT_"/usr --disable-shared --disable-soname-versions --with-sysroot="$_SYSROOT_" --host="$_HOST_" --target="$_TARGET_"
+
+    #- . ~/pp;cd $_s_;git clone --depth=1 --branch=v1.6.1 https://github.com/webmproject/libvpx.git
+    - . ~/pp;cd $_s_;git clone --depth=1 --branch=master https://github.com/webmproject/libvpx.git
+    - . ~/pp;export CROSS="arm-linux-gnueabihf-" ; ~/do_compile.sh "libvpx" --prefix="$_SYSROOT_"/usr --disable-examples --disable-unit-tests --target=generic-gnu --extra-cflags="--sysroot=$_SYSROOT_"
+    - . ~/pp;export CROSS="arm-linux-gnueabihf-" ; ~/do_package.sh "libvpx" --prefix="$INSTALL_DEST"/usr --disable-examples --disable-unit-tests --target=generic-gnu --extra-cflags="--sysroot=$_SYSROOT_"
+
+    - . ~/pp;cd $_s_;git clone --depth=1 --branch=v1.2.1 https://github.com/xiph/opus.git
+    - . ~/pp;cd $_s_/opus/;autoreconf -fi
+    - . ~/pp;~/do_compile.sh "opus" --prefix="$_SYSROOT_"/usr --disable-shared --disable-soname-versions --target="$_TOOL_PREFIX" --with-sysroot="$_SYSROOT_" --host="$_TOOL_PREFIX"
+    - . ~/pp;~/do_package.sh "opus" --prefix="$INSTALL_DEST"/usr --disable-shared --disable-soname-versions --target="$_TOOL_PREFIX" --with-sysroot="$_SYSROOT_" --host="$_TOOL_PREFIX"
+
+    - . ~/pp;cd $_s_;git clone --depth=1 --branch=$LIBSODIUM_BRANCH https://github.com/jedisct1/libsodium.git
+    - . ~/pp;cd $_s_/libsodium/;autoreconf -fi
+    - . ~/pp;~/do_compile.sh "libsodium" --prefix="$_SYSROOT_"/usr --disable-shared --disable-soname-versions --target="$_TOOL_PREFIX" --with-sysroot="$_SYSROOT_" --host="$_TOOL_PREFIX" --disable-pie
+    - . ~/pp;~/do_package.sh "libsodium" --prefix="$INSTALL_DEST"/usr --disable-shared --disable-soname-versions --target="$_TOOL_PREFIX" --with-sysroot="$_SYSROOT_" --host="$_TOOL_PREFIX" --disable-pie
+
+
+    ### ------------ filter_audio ------------
+    - . ~/pp;cd $_s_;git clone git://github.com/irungentoo/filter_audio.git
+    - . ~/pp;cd $_s_/filter_audio ; make SHELL="/bin/bash -x"
+    - . ~/pp;cd $_s_/filter_audio ; ls -al libfilteraudio.a
+    ### ------------ filter_audio ------------
+
+
+    # install raspi binary pkgs -------------------------
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libv4l-dev.tgz' -O ~/pkg2.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg2.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libv4lconvert0.tgz' -O ~/pkg3.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg3.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libjpeg62-turbo.tgz' -O ~/pkg4.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg4.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libjpeg62-turbo-dev.tgz' -O ~/pkg1.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg1.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libconfig-dev.tgz' -O ~/pkg1.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg1.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libfreetype6-dev.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libasan1.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libexpat1-dev.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libfontconfig1-dev.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libopenal-dev.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/zlib1g-dev.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxdmcp-dev.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxcb1-dev.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxau-dev.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libx11-dev.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxrender-dev.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxext-dev.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/x11proto-core-dev.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/x11proto-input-dev.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/x11proto-kb-dev.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/x11proto-render-dev.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/x11proto-xext-dev.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libopenal1.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxrender1.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxext6.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libx11-6.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libfreetype6.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libaudio-dev.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libaudio2.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxt-dev.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxt6.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxau6.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libsm6.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libice6.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libuuid1.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxcb1.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libxdmcp6.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libfontconfig1.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/zlib1g.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libexpat1.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libpng12-0.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libpng12-dev.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libjpeg62-turbo.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+    - wget $WGET_FLAGS 'https://github.com/zoff99/raspi_cross_compile/raw/master/bin_packages/libjpeg62-turbo-dev.tgz' -O ~/pkg__.tgz
+    - . ~/pp;cd "$_SYSROOT_" ; tar -xzvf ~/pkg__.tgz
+    # install raspi binary pkgs -------------------------
+
+    - . ~/pp;cd $_s_;git clone "$CTOXCORE_URL"
+    - . ~/pp;cd $_s_/c-toxcore/;git checkout "$CTOXCORE_VERSION_HASH"
+    - . ~/pp;cd $_s_/c-toxcore/;autoreconf -fi
+    - . ~/pp;~/do_compile.sh "c-toxcore" --prefix="$_SYSROOT_"/usr --enable-logging --disable-soname-versions --host="$_TOOL_PREFIX" --with-sysroot="$_SYSROOT_" --disable-testing --disable-rt
+    - . ~/pp;~/do_package.sh "c-toxcore" --prefix="$INSTALL_DEST"/usr --enable-logging --disable-soname-versions --host="$_TOOL_PREFIX" --with-sysroot="$_SYSROOT_" --disable-testing --disable-rt
+
+    - . ~/pp;mkdir -p $CIRCLE_ARTIFACTS/"${CUR_ARCH_}"/
+    - . ~/pp;cp -av "$PKGSDIR"/* $CIRCLE_ARTIFACTS/"${CUR_ARCH_}"/
+
+    - echo "compile RASPI"
+    - sudo apt-get install cmake3
+    - cp -av CMakeLists.txt CMakeLists_orig.txt # use the special version for the PI
+    - cp -av CMakeLists_raspi.txt CMakeLists.txt # use the special version for the PI
+
+    - cd ../ ; mkdir build_raspi
+
+    - . ~/pp;cp "$_SYSROOT_"/usr/share/pkgconfig/xproto.pc "$_SYSROOT_"/usr/lib/pkgconfig/
+    - . ~/pp;cp "$_SYSROOT_"/usr/share/pkgconfig/inputproto.pc "$_SYSROOT_"/usr/lib/pkgconfig/
+    - . ~/pp;cp "$_SYSROOT_"/usr/share/pkgconfig/kbproto.pc "$_SYSROOT_"/usr/lib/pkgconfig/
+    - . ~/pp;cp "$_SYSROOT_"/usr/share/pkgconfig/renderproto.pc "$_SYSROOT_"/usr/lib/pkgconfig/
+
+    - . ~/pp;cp "$_SYSROOT_"/usr/lib/arm-linux-gnueabihf/pkgconfig/x11.pc "$_SYSROOT_"/usr/lib/pkgconfig/
+    - . ~/pp;cp "$_SYSROOT_"/usr/lib/arm-linux-gnueabihf/pkgconfig/xau.pc "$_SYSROOT_"/usr/lib/pkgconfig/
+    - . ~/pp;cp "$_SYSROOT_"/usr/lib/arm-linux-gnueabihf/pkgconfig/xcb.pc "$_SYSROOT_"/usr/lib/pkgconfig/
+    - . ~/pp;cp "$_SYSROOT_"/usr/lib/arm-linux-gnueabihf/pkgconfig/xdmcp.pc "$_SYSROOT_"/usr/lib/pkgconfig/
+    - . ~/pp;cp "$_SYSROOT_"/usr/lib/arm-linux-gnueabihf/pkgconfig/xrender.pc "$_SYSROOT_"/usr/lib/pkgconfig/
+    - . ~/pp;cp "$_SYSROOT_"/usr/lib/arm-linux-gnueabihf/pkgconfig/xext.pc "$_SYSROOT_"/usr/lib/pkgconfig/
+
+    - cd /home/ubuntu/cc/tools/arm-bcm2708/arm-rpi-4.9.3-linux-gnueabihf/bin/ ; ln -s arm-linux-gnueabihf-ld ld
+
+    - . ~/pp ; find "$_SYSROOT_"/usr -name '*tox*.a' ; exit 0
+
+    - cd ../ ; cd build_raspi/ ; . ~/pp ; export RPI_ROOT_PATH="$_SYSROOT_" ;
+      export X11_INCLUDE_DIR=$_SYSROOT_/usr/include/X11/
+      export X11_LIBRARIES=$_SYSROOT_/usr/lib/arm-linux-gnueabihf/
+      export X11_Xrender_INCLUDE_PATH=$_SYSROOT_/usr/include/X11/extensions/
+      export X11_Xrender_LIB=$_SYSROOT_/usr/lib/arm-linux-gnueabihf/
+      export PKG_CONFIG_PATH=$_SYSROOT_/usr/lib/pkgconfig ;
+      export CFLAGS=" -g -fno-omit-frame-pointer " ;
+      cmake -DASAN=OFF -DENABLE_ASAN=OFF -DCMAKE_TOOLCHAIN_FILE=~/uTox/arm-linux-gnueabihf-4.9.cmake
+      -DENABLE_FILTERAUDIO=OFF
+      -DENABLE_AUTOUPDATE=OFF
+      -DENABLE_DBUS=OFF
+      -DRPI_ROOT_PATH="$_SYSROOT_" -DTOXCORE_STATIC=ON ../uTox
+    - cd ../ ; cd build_raspi/ ; . ~/pp ; make VERBOSE=1 -j8 ; exit 0
+
+    - cd ../ ; cd build_raspi/ ; . ~/pp ; /home/ubuntu/cc/tools/arm-bcm2708/arm-rpi-4.9.3-linux-gnueabihf/bin/arm-linux-gnueabihf-cc
+      --sysroot=/home/ubuntu/cc/tools/arm-bcm2708/arm-rpi-4.9.3-linux-gnueabihf/arm-linux-gnueabihf/sysroot
+      -Wall -Wextra -Wpointer-arith -Werror=implicit-function-declaration -Wformat=0 -Wno-misleading-indentation
+      -g
+      -O3
+      -fno-omit-frame-pointer
+      -fno-strict-aliasing -fPIC -flto   -Wl,-z,noexecstack CMakeFiles/utox.dir/src/avatar.c.o
+      CMakeFiles/utox.dir/src/chatlog.c.o CMakeFiles/utox.dir/src/chrono.c.o CMakeFiles/utox.dir/src/command_funcs.c.o
+      CMakeFiles/utox.dir/src/commands.c.o CMakeFiles/utox.dir/src/devices.c.o CMakeFiles/utox.dir/src/file_transfers.c.o
+      CMakeFiles/utox.dir/src/filesys.c.o CMakeFiles/utox.dir/src/flist.c.o CMakeFiles/utox.dir/src/friend.c.o CMakeFiles/utox.dir/src/groups.c.o
+      CMakeFiles/utox.dir/src/inline_video.c.o CMakeFiles/utox.dir/src/logging.c.o CMakeFiles/utox.dir/src/main.c.o CMakeFiles/utox.dir/src/messages.c.o
+      CMakeFiles/utox.dir/src/notify.c.o CMakeFiles/utox.dir/src/screen_grab.c.o CMakeFiles/utox.dir/src/self.c.o CMakeFiles/utox.dir/src/settings.c.o
+      CMakeFiles/utox.dir/src/stb.c.o CMakeFiles/utox.dir/src/text.c.o CMakeFiles/utox.dir/src/theme.c.o CMakeFiles/utox.dir/src/tox.c.o
+      CMakeFiles/utox.dir/src/tox_callbacks.c.o CMakeFiles/utox.dir/src/ui.c.o CMakeFiles/utox.dir/src/ui_i18n.c.o
+      CMakeFiles/utox.dir/src/updater.c.o CMakeFiles/utox.dir/src/utox.c.o CMakeFiles/utox.dir/src/window.c.o
+      -o utox
+      -rdynamic src/av/libutoxAV.a
+      src/xlib/libutoxNATIVE.a
+      src/ui/libutoxUI.a
+      -Wl,-Bstatic -lsodium -Wl,-Bdynamic
+      -lrt
+      -lvpx
+      -lpthread
+      -lm
+      -Wl,-Bstatic -lopus -Wl,-Bdynamic
+      -Wl,-Bstatic "$_SYSROOT_"/usr/lib/libtoxcore.a -Wl,-Bdynamic
+      -Wl,-Bstatic "$_SYSROOT_"/usr/lib/libtoxav.a -Wl,-Bdynamic
+      -Wl,-Bstatic "$_SYSROOT_"/usr/lib/libtoxencryptsave.a -Wl,-Bdynamic
+      -Wl,-Bstatic "$_SYSROOT_"/usr/lib/libtoxdns.a -Wl,-Bdynamic
+      "$_SYSROOT_"/usr/lib/arm-linux-gnueabihf/libopenal.so.1.15.1
+      "$_SYSROOT_"/usr/lib/arm-linux-gnueabihf/libaudio.so.2.4
+      src/xlib/libicon.a
+      "$_SYSROOT_"/usr/lib/arm-linux-gnueabihf/libv4lconvert.a
+      "$_SYSROOT_"/usr/lib/arm-linux-gnueabihf/libv4lconvert.so.0.0.0
+      "$_SYSROOT_"/usr/lib/arm-linux-gnueabihf/libX11.so.6.3.0
+      "$_SYSROOT_"/usr/lib/arm-linux-gnueabihf/libXext.so.6.4.0
+      "$_SYSROOT_"/usr/lib/arm-linux-gnueabihf/libXrender.so
+      "$_SYSROOT_"/usr/lib/arm-linux-gnueabihf/libfontconfig.so.1.8.0
+      "$_SYSROOT_"/usr/lib/arm-linux-gnueabihf/libfreetype.so.6.12.0
+      "$_SYSROOT_"/usr/lib/arm-linux-gnueabihf/libXt.so.6
+      "$_SYSROOT_"/usr/lib/arm-linux-gnueabihf/libXau.so
+      "$_SYSROOT_"/usr/lib/arm-linux-gnueabihf/libSM.so.6.0.1
+      "$_SYSROOT_"/usr/lib/arm-linux-gnueabihf/libICE.so.6.3.0
+      "$_SYSROOT_"/usr/lib/arm-linux-gnueabihf/libX11.so.6.3.0
+      "$_SYSROOT_"/usr/lib/arm-linux-gnueabihf/libxcb.so
+      "$_SYSROOT_"/usr/lib/arm-linux-gnueabihf/libXdmcp.so.6.0.0
+      "$_SYSROOT_"/lib/arm-linux-gnueabihf/libuuid.so.1.3.0
+      "$_SYSROOT_"/lib/arm-linux-gnueabihf/libexpat.so.1.6.0
+      "$_SYSROOT_"/lib/arm-linux-gnueabihf/libz.so.1.2.8
+      "$_SYSROOT_"/lib/arm-linux-gnueabihf/libpng12.so.0.50.0
+      "$_SYSROOT_"/usr/lib/arm-linux-gnueabihf/libjpeg.so.62.1.0
+      -lresolv
+      -ldl
+      src/layout/libutoxLAYOUT.a
+      -Wl,-rpath,/usr/lib/arm-linux-gnueabihf
+
+    - cd ../ ; cd build_raspi/ ; ls -al
+    - cd ../ ; cd build_raspi/ ; ls -al utox
+    # -- move some lib files for ldd to correctly show output --
+    - cd ../ ; cd build_raspi/ ; . ~/pp ; sed -i -e 's#ld_library_path="/lib:/usr/lib"#ld_library_path="/lib:/usr/lib:/lib/arm-linux-gnueabihf"#' /home/ubuntu/cc/tools/arm-bcm2708/arm-rpi-4.9.3-linux-gnueabihf/bin/arm-linux-gnueabihf-ldd ; exit 0
+    - cd ../ ; cd build_raspi/ ; . ~/pp ; export CT_XLDD_VERBOSE=""; arm-linux-gnueabihf-ldd -s --root $_SYSROOT_ utox ; exit 0
+    # -- move some lib files for ldd to correctly show output --
+
+    - . ~/pp;cd ../ ; cd build_raspi/ ; cp -av utox $CIRCLE_ARTIFACTS/"${CUR_ARCH_}"/
+## ----------- RASPI cross compile ----------------
+
+
+test:
+  override:
+    - echo "-- compile linux --"
+    #- sudo apt-get install cmake3
+    #- cp -av CMakeLists_orig.txt CMakeLists.txt # use the original for linux
+    - cd ../ ; mkdir build2
+    - cd ../build2/ ; export CFLAGS=" -g " ; cmake
+      -DENABLE_AUTOUPDATE=OFF
+      -DENABLE_DBUS=OFF
+      -DASAN=OFF
+      -DENABLE_ASAN=OFF
+      -DTOXCORE_STATIC=ON
+      -DUTOX_STATIC=ON
+      ../uTox
+    - cd ../build2/ ; make VERBOSE=1 -j 8 ; exit 0
+    - cd ../build2/ ; /usr/bin/cc -g -O3
+      -Wall -Wextra -Wpointer-arith -Werror=implicit-function-declaration
+      -Wformat=0 -Wno-misleading-indentation -fno-strict-aliasing -fPIC -flto
+      -fno-omit-frame-pointer   -Wl,-z,noexecstack CMakeFiles/utox.dir/src/avatar.c.o
+      CMakeFiles/utox.dir/src/chatlog.c.o CMakeFiles/utox.dir/src/chrono.c.o CMakeFiles/utox.dir/src/command_funcs.c.o
+      CMakeFiles/utox.dir/src/commands.c.o CMakeFiles/utox.dir/src/devices.c.o CMakeFiles/utox.dir/src/file_transfers.c.o
+      CMakeFiles/utox.dir/src/filesys.c.o CMakeFiles/utox.dir/src/flist.c.o CMakeFiles/utox.dir/src/friend.c.o
+      CMakeFiles/utox.dir/src/groups.c.o CMakeFiles/utox.dir/src/inline_video.c.o CMakeFiles/utox.dir/src/logging.c.o
+      CMakeFiles/utox.dir/src/main.c.o CMakeFiles/utox.dir/src/messages.c.o CMakeFiles/utox.dir/src/notify.c.o
+      CMakeFiles/utox.dir/src/screen_grab.c.o CMakeFiles/utox.dir/src/self.c.o
+      CMakeFiles/utox.dir/src/settings.c.o CMakeFiles/utox.dir/src/stb.c.o CMakeFiles/utox.dir/src/text.c.o
+      CMakeFiles/utox.dir/src/theme.c.o CMakeFiles/utox.dir/src/tox.c.o CMakeFiles/utox.dir/src/tox_callbacks.c.o
+      CMakeFiles/utox.dir/src/ui.c.o CMakeFiles/utox.dir/src/ui_i18n.c.o CMakeFiles/utox.dir/src/updater.c.o
+      CMakeFiles/utox.dir/src/utox.c.o CMakeFiles/utox.dir/src/window.c.o
+      -o utox
+      -rdynamic
+      src/av/libutoxAV.a src/xlib/libutoxNATIVE.a src/ui/libutoxUI.a
+      /usr/local/lib/libsodium.a
+      /usr/local/lib/libtoxav.a /usr/local/lib/libtoxcore.a /usr/local/lib/libtoxdns.a
+      /usr/local/lib/libtoxencryptsave.a /usr/lib/x86_64-linux-gnu/libopus.a
+      /usr/lib/x86_64-linux-gnu/libvpx.a
+      -lrt -lpthread -lm
+      -lopenal
+      /usr/local/lib/libfilteraudio.so
+      src/xlib/libicon.a
+      -lv4lconvert -lSM -lICE -lX11 -lXext -lXrender -lfontconfig -lfreetype -lresolv -ldl -ldbus-1
+      src/layout/libutoxLAYOUT.a
+      -Wl,-rpath,/usr/local/lib
+
+    - cd ../build2/ ; ls -al utox ; ldd utox ; exit 0
+    - cd ../build2/ ; cp -av utox $CIRCLE_ARTIFACTS/ubuntu_14_04_binaries/
+
+    - cd ../build2/ ; ./utox :
+        background: true
+    - sleep 120 # let the program startup
+    - import -window root $CIRCLE_ARTIFACTS/capture_app_running.png
+
