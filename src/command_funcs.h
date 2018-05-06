@@ -32,6 +32,7 @@ int32_t video_bit_rate, TOXAV_ERR_BIT_RATE_SET *error)
     // no need to fake the function
 #endif
 
+
 #endif
 
 
@@ -67,6 +68,6 @@ bool slash_topic(void *object, char *arg, int arg_length);
 
 
 bool slash_vbr(void *object, char *arg, int arg_length);
-bool slash_vpxxqt(void *object, char *arg, int arg_length)
+bool slash_vpxxqt(void *object, char *arg, int arg_length);
 
 #endif
