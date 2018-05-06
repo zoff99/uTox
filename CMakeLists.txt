@@ -62,7 +62,7 @@ endif()
 if (WINDOWS)
     set(STATIC_DEFAULT ON)
 else()
-    set(STATIC_DEFAULT OFF)
+    set(STATIC_DEFAULT ON)
 endif()
 
 # Disable ASAN for macOS due to "AddressSanitizer: odr-violation: global". see #957
@@ -70,7 +70,7 @@ endif()
 if (APPLE OR WINDOWS)
     set(ASAN_DEFAULT OFF)
 else()
-    set(ASAN_DEFAULT ON)
+    set(ASAN_DEFAULT OFF)
 endif()
 
 # ASAN causes uTox to be slower so do no use it for release builds
@@ -82,14 +82,14 @@ endif()
 # Options #
 ###########
 
-option(UTOX_STATIC        "Link uTox statically"                                 ${STATIC_DEFAULT} )
-option(TOXCORE_STATIC     "Build uTox with the static version of Toxcore"        ${STATIC_DEFAULT} )
-option(ENABLE_ASAN        "Enable Address Sanitizer on debug builds"               ${ASAN_DEFAULT} )
+option(UTOX_STATIC        "Link uTox statically"                                   ON )
+option(TOXCORE_STATIC     "Build uTox with the static version of Toxcore"          ON )
+option(ENABLE_ASAN        "Enable Address Sanitizer on debug builds"               OFF)
 option(ENABLE_TESTS       "Whether to build test binaries (currently linux only)"               OFF)
 option(ENABLE_WERROR      "Error on Warning, whether to put -Werror flag to the compiler"       OFF)
-option(ENABLE_FILTERAUDIO "Enable Filter Audio"                                                 ON )
+option(ENABLE_FILTERAUDIO "Enable Filter Audio"                                                 OFF)
 option(ENABLE_AUTOUPDATE  "Enable Auto-updater"                                                 OFF)
-option(ENABLE_LTO         "Enable link time optimizations"                                      ON )
+option(ENABLE_LTO         "Enable link time optimizations"                                      OFF)
 
 
 #################################

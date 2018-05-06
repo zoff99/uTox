@@ -294,9 +294,9 @@ static void callback_group_topic(Tox *UNUSED(tox), uint32_t gid, uint32_t pid, c
 void utox_set_callbacks_groups(Tox *tox) {
     tox_callback_conference_invite(tox, callback_group_invite);
     tox_callback_conference_message(tox, callback_group_message);
-    tox_callback_conference_peer_name(tox, callback_group_peer_name_change);
+    // tox_callback_conference_peer_name(tox, callback_group_peer_name_change);
     tox_callback_conference_title(tox, callback_group_topic);
-    tox_callback_conference_peer_list_changed(tox, callback_group_peer_list_changed);
+    // tox_callback_conference_peer_list_changed(tox, callback_group_peer_list_changed);
 }
 
 #ifdef ENABLE_MULTIDEVICE
