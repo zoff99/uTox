@@ -1,12 +1,16 @@
 #/usr/bin/env zsh
 
 if ! [ -d libav ]; then
-  https://github.com/libav/libav
+  git clone https://github.com/libav/libav
 fi
 cd libav
 git checkout v12.3
 
-CROSS=x86_64-w64-mingw32-  ./configure --target=x86_64-win64-gcc \
+CROSS=x86_64-w64-mingw32-  ./configure \
+          --arch=x86_64 \
+          --target-os=mingw32 \
+          --cross-prefix=x86_64-w64-mingw32- \
+          --enable-cross-compile \
           --prefix="${CACHE_DIR}/usr" \
           --disable-devices --disable-programs \
           --disable-doc --disable-avdevice --disable-avformat \
