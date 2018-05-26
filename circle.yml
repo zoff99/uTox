@@ -24,8 +24,8 @@ machine:
     CTOXCORE_VERSION_HASH: "zoff99/toxcore_v1.0.10__toxav_h264_001"
     # c-toxcore repo used
     # CTOXCORE_URL: "https://github.com/TokTok/c-toxcore"
-    CTOXCORE_URL: "https://github.com/zoff99/c-toxcore"
-    TOXCORE_REPO_URI: "https://github.com/zoff99/c-toxcore"
+    CTOXCORE_URL: "https://github.com/zoff99/c-toxcore_team"
+    TOXCORE_REPO_URI: "https://github.com/zoff99/c-toxcore_team"
 
 dependencies:
   pre:
