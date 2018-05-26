@@ -6,11 +6,10 @@ fi
 cd x264
 git checkout stable
 
-CROSS=x86_64-w64-mingw32-  ./configure "$TARGET_HOST" \
-          --prefix="${CACHE_DIR}/usr" \
-          --disable-opencl --enable-shared --enable-static \
-          --disable-avs --disable-cli
-
+./configure "$TARGET_HOST" --cross-prefix=x86_64-w64-mingw32- \
+    --prefix="${CACHE_DIR}/usr" \
+    --disable-opencl --enable-shared \
+    --enable-static --disable-avs --disable-cli --disable-asm
 
 make -j8
 make install
