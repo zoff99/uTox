@@ -6,7 +6,7 @@ set -eux
 export TARGET_HOST="--host=x86_64-w64-mingw32"
 export TARGET_TRGT="--target=x86_64-win32-gcc"
 export CROSS="x86_64-w64-mingw32-"
-export PKG_CONFIG_PATH="$CACHE_DIR/usr/lib/pkgconfig/"
+# export PKG_CONFIG_PATH="$CACHE_DIR/usr/lib/pkgconfig/"
 
 echo "==============================="
 echo "==============================="
