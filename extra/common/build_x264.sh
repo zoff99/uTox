@@ -21,11 +21,17 @@ bash autogen.sh
 make -j8
 make install
 
+make clean
+./configure
+make -j8
+sudo make install
+nasm -v
+
 cd ..
 rm -Rf nasm-*
 cd ..
 
-sudo apt-get install nasm
+## too old ## sudo apt-get install nasm
 
 
 # ============================
@@ -40,7 +46,9 @@ git checkout stable
 ./configure "$TARGET_HOST" --cross-prefix=x86_64-w64-mingw32- \
     --prefix="${CACHE_DIR}/usr" \
     --disable-opencl --enable-shared \
-    --enable-static --disable-avs --disable-cli --disable-asm
+    --enable-static --disable-avs --disable-cli
+
+# --disable-asm
 
 make -j8
 make install
