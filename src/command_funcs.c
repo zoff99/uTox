@@ -146,7 +146,7 @@ bool slash_vbr(void *object, char *arg, int arg_length)
 
 	int num_new = get_number_in_string(arg1, (int)UTOX_DEFAULT_BITRATE_V);
 
-	if ((num_new >= 100) && (num_new <= 50000))
+	if ((num_new >= 10) && (num_new <= 200000))
 	{
 		UTOX_DEFAULT_BITRATE_V = num_new;
 		TOXAV_ERR_BIT_RATE_SET error = 0;
