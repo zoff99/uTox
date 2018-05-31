@@ -261,7 +261,7 @@ bool slash_vpxenc(void *object, char *arg, int arg_length)
 
 	int num_new = get_number_in_string(arg1, (int)0);
 
-	if ((num_new >= 0) && (num_new <= 1))
+	if ((num_new == 0) || (num_new == 2))
 	{
         TOXAV_ERR_OPTION_SET error;
         toxav_option_set(global_toxav, f->number, TOXAV_ENCODER_CODEC_USED, (int32_t)num_new, &error);

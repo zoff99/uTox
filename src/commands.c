@@ -18,17 +18,17 @@ struct Command commands[MAX_NUM_CMDS] = {
     { "topic",    5, slash_topic     },
 
     { "vbr",      3, slash_vbr       },
-    { "vbm",      3, slash_vbm       },
-    { "vpxcpu",   6, slash_vpxcpu    },
-    { "vpxusage", 8, slash_vpxusage  },
-    { "vpxmqt" ,  6, slash_vpxmqt    },
+    //{ "vbm",      3, slash_vbm       },
+    //{ "vpxcpu",   6, slash_vpxcpu    },
+    //{ "vpxusage", 8, slash_vpxusage  },
+    //{ "vpxmqt" ,  6, slash_vpxmqt    },
     { "vpxenc"  , 6, slash_vpxenc    },
  
     { "vpxxqt",   6, slash_vpxxqt    },
-    { "vpxkfm",   6, slash_vpxkfm    },
-    { "rzup",     4, slash_rzup      },
-    { "rzdn",     4, slash_rzdn      },
-    { "enctime",  7, slash_enctime   },
+    //{ "vpxkfm",   6, slash_vpxkfm    },
+    //{ "rzup",     4, slash_rzup      },
+    //{ "rzdn",     4, slash_rzdn      },
+    //{ "enctime",  7, slash_enctime   },
 
     { NULL,       0, NULL            },
 };
