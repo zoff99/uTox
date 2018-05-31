@@ -109,7 +109,7 @@ SETTINGS settings = {
     .status_notifications   = true,
     .group_notifications    = GNOTIFY_ALWAYS,
 
-    .verbose = LOG_LVL_ERROR,
+    .verbose = LOG_LVL_ERROR  , // LOG_LVL_NET_TRACE   LOG_LVL_ERROR 
     .debug_file = NULL,
 
     .theme                = UINT32_MAX,

@@ -16,6 +16,11 @@ struct Command commands[MAX_NUM_CMDS] = {
     { "d",        1, slash_device    },
     { "sendfile", 8, slash_send_file },
     { "topic",    5, slash_topic     },
+
+    { "vbr",      3, slash_vbr       },
+    { "vpxenc"  , 6, slash_vpxenc    },
+    { "vpxxqt",   6, slash_vpxxqt    },
+
     { NULL,       0, NULL            },
 };
 

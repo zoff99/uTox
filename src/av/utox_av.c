@@ -265,7 +265,10 @@ void utox_av_ctrl_thread(void *UNUSED(args)) {
 
         if (av) {
             toxav_iterate(av);
-            yieldcpu(toxav_iteration_interval(av));
+            // Zoff: !!!!!!!!!!!------------
+            // yieldcpu(toxav_iteration_interval(av));
+            yieldcpu(1);
+            // Zoff: !!!!!!!!!!!------------
         } else {
             yieldcpu(10);
         }
