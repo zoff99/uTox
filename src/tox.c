@@ -304,15 +304,12 @@ static int load_toxcore_save(struct Tox_Options *options) {
     return -2;
 }
 
-static void log_callback(Tox *UNUSED(tox), TOX_LOG_LEVEL level, const char *file, uint32_t line,
+static void log_callback2(Tox *UNUSED(tox), TOX_LOG_LEVEL level, const char *file, uint32_t line,
                          const char *func, const char *message, void *UNUSED(user_data)) {
-    if (message && file && line) {
-        LOG_NET_TRACE("Toxcore", "TOXCORE LOGGING ERROR (%u): %s" , level, message);
-        LOG_NET_TRACE("Toxcore", "     in: %s:%u" , file, line);
-    } else if (func) {
-        LOG_NET_TRACE("Toxcore", "TOXCORE LOGGING ERROR: %s" , func);
-    } else {
-        LOG_ERR("Toxcore logging", "TOXCORE LOGGING is broken!!:\tOpen an bug upstream");
+                             
+    if (level > TOX_LOG_LEVEL_INFO)
+    {
+        debug("%d:%s:%d:%s:%s\n" , level, file, line, func, message);
     }
 }
 
@@ -329,7 +326,7 @@ static int init_toxcore(Tox **tox) {
     // tox_options_set_start_port(&topt, 0);
     // tox_options_set_end_port(&topt, 0);
 
-    tox_options_set_log_callback(&topt, log_callback);
+    tox_options_set_log_callback(&topt, log_callback2);
 
     tox_options_set_ipv6_enabled(&topt, settings.enable_ipv6);
     tox_options_set_udp_enabled(&topt, settings.enable_udp);
