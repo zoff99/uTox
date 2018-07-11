@@ -148,6 +148,10 @@ bool slash_vbr(void *object, char *arg, int arg_length)
 
 	if ((num_new >= 10) && (num_new <= 200000))
 	{
+        TOXAV_ERR_OPTION_SET error22;
+        toxav_option_set(global_toxav, f->number, TOXAV_ENCODER_VIDEO_BITRATE_AUTOSET, (int32_t)0, &error22);
+        LOG_ERR("ARG:", "TOXAV_ENCODER_VIDEO_BITRATE_AUTOSET new:%d res=%d", (int)0, (int)error22);
+
 		UTOX_DEFAULT_BITRATE_V = num_new;
 		TOXAV_ERR_BIT_RATE_SET error = 0;
 		LOG_ERR("slash_vbr", "toxav_bit_rate_set: global_toxav=%p fnum=%d", global_toxav, (int)f->number);
