@@ -19,16 +19,6 @@
 
 
 
-#if TOX_VERSION_IS_API_COMPATIBLE(0, 2, 0)
-void toxav_callback_bit_rate_status(ToxAV *av,
-     void *callback, void *user_data)
-{
-        // dummy function
-}
-#else
-    // no need to fake the function
-#endif
-
 
 bool utox_av_ctrl_init = false;
 
@@ -260,10 +250,10 @@ void utox_av_ctrl_thread(void *UNUSED(args)) {
             toxav_iterate(av);
             // Zoff: !!!!!!!!!!!------------
             // yieldcpu(toxav_iteration_interval(av));
-            yieldcpu(1);
+            yieldcpu(4);
             // Zoff: !!!!!!!!!!!------------
         } else {
-            yieldcpu(10);
+            yieldcpu(15);
         }
     }
 
