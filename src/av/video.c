@@ -38,7 +38,9 @@ static pthread_mutex_t video_thread_lock;
 #include <sys/time.h>
 static struct timeval tm_outgoing_video_frames;
 uint32_t global_video_out_fps;
-unsigned long long timspan_in_ms;
+#define TIMESPAN_IN_MS_ELEMENTS 10
+unsigned long long timspan_in_ms[TIMESPAN_IN_MS_ELEMENTS];
+uint16_t timspan_in_ms_cur_index = 0;
 uint32_t sleep_between_frames;
 
 static inline void __utimer_start(struct timeval* tm1)
@@ -310,8 +312,8 @@ void utox_video_thread(void *args) {
                 }
 #endif
 
-                unsigned long long timspan_in_ms = __utimer_stop(&tt1);
-                // fprintf(stderr, "CT=%d\n", (int)timspan_in_ms);
+                unsigned long long timspan_in_ms2 = __utimer_stop(&tt1);
+                // fprintf(stderr, "CT=%d\n", (int)timspan_in_ms2);
 
                 // ----------- SEND to all friends -----------
                 // ----------- SEND to all friends -----------
@@ -329,7 +331,7 @@ void utox_video_thread(void *args) {
                         TOXAV_ERR_OPTION_SET error2;
                         toxav_option_set(av, get_friend(i)->number,
                                          TOXAV_CLIENT_VIDEO_CAPTURE_DELAY_MS,
-                                         (int32_t)timspan_in_ms,
+                                         (int32_t)timspan_in_ms2,
                                          &error2);
 #endif
 
@@ -360,19 +362,25 @@ void utox_video_thread(void *args) {
                 // --- FPS ----
                 // --- FPS ----
                 // --- FPS ----
-                timspan_in_ms = 99999;
-                timspan_in_ms = __utimer_stop(&tm_outgoing_video_frames);
+                timspan_in_ms[timspan_in_ms_cur_index] = __utimer_stop(&tm_outgoing_video_frames);
 
-                if ((timspan_in_ms > 0) && (timspan_in_ms < 99999))
+                if ((timspan_in_ms[timspan_in_ms_cur_index] > 0) && (timspan_in_ms[timspan_in_ms_cur_index] < 99999))
                 {
-                    global_video_out_fps = (int)(1000 / timspan_in_ms);
+                    global_video_out_fps = (int)(1000 / timspan_in_ms[timspan_in_ms_cur_index]);
                 }
                 else
                 {
                     global_video_out_fps = 0;
                 }
 
+                timspan_in_ms_cur_index++;
+                if (timspan_in_ms_cur_index > (TIMESPAN_IN_MS_ELEMENTS - 1))
+                {
+                    timspan_in_ms_cur_index = 0;
+                }
+
                 // LOG_TRACE("uToxVideo", "outgoing fps=%d" , global_video_out_fps);
+                // fprintf(stderr, "outgoing fps=%d\n" , global_video_out_fps);
 
                 __utimer_start(&tm_outgoing_video_frames);
                 // --- FPS ----
@@ -396,30 +404,42 @@ void utox_video_thread(void *args) {
             // use fps+1 here to compensate for inaccurate delay values
             sleep_between_frames = (1000 / (settings.video_fps + 1));
 
-            // LOG_TRACE("uToxVideo", "settings fps=%d sleep_between_frames=%d timspan_in_ms=%d" , (int)settings.video_fps, (int)sleep_between_frames, (int)timspan_in_ms);
-
-            if ((timspan_in_ms > 0) && (timspan_in_ms < 99999))
+            int32_t timspan_average = 0;
+            for (int i=0;i < TIMESPAN_IN_MS_ELEMENTS;i++)
             {
-                if (timspan_in_ms > sleep_between_frames)
+                timspan_average = timspan_average + timspan_in_ms[i];
+            }
+            timspan_average = timspan_average / TIMESPAN_IN_MS_ELEMENTS;
+
+            //fprintf(stderr, "settings fps=%d sleep_between_frames=%d timspan_average=%d\n" , (int)settings.video_fps, (int)sleep_between_frames, (int)timspan_average);
+
+            if ((timspan_average > 0) && (timspan_average < 99999))
+            {
+                if (timspan_average > sleep_between_frames)
                 {
                     int32_t sleep_delay_corrected =
-                            (sleep_between_frames) - ( timspan_in_ms - (sleep_between_frames) );
+                            (sleep_between_frames) - (2*(timspan_average - sleep_between_frames));
                     if (sleep_delay_corrected < 0)
                     {
                         sleep_delay_corrected = 0;
                     }
                     sleep_between_frames = (uint32_t)sleep_delay_corrected;
                 }
+                else if (timspan_average < sleep_between_frames)
+                {
+                    // HINT: should not happen
+                    //fprintf(stderr, "should not happen: %d : %d\n", (int)sleep_between_frames, (int)timspan_average);
+                }
             }
 
+            //fprintf(stderr, "sleep corrected=%d\n", (int)sleep_between_frames);
             // LOG_TRACE("uToxVideo", "sleep corrected=%d" , (int)sleep_between_frames);
             yieldcpu(sleep_between_frames); /* 60fps = 16.666ms || 25 fps = 40ms || the data quality is SO much better at 25... */
             // --- FPS ----
             // --- FPS ----
             // --- FPS ----
-            
-            
-            
+
+
             continue;     /* We're running video, so don't sleep for an extra 100 ms */
         }
 
@@ -497,217 +517,7 @@ static uint8_t rgb_to_v(int r, int g, int b) {
     return v > 255 ? 255 : v < 0 ? 0 : v;
 }
 
-
-struct bgr2yuv_data {
-    uint8_t *plane_y;
-    uint8_t *plane_u;
-    uint8_t *plane_v;
-    uint8_t *rgb;
-    uint16_t width;
-    uint16_t height;
-};
-
-
-void *thread_bgr2yuv_1__x(void *data)
-{
-    struct bgr2yuv_data *bgdata = (struct bgr2yuv_data *) data;
-    uint8_t *plane_y = bgdata->plane_y;
-    //uint8_t *plane_u = bgdata->plane_u;
-    //uint8_t *plane_v = bgdata->plane_v;
-    uint16_t height = bgdata->height;
-    uint16_t width = bgdata->width;
-    uint8_t *rgb = bgdata->rgb;
-
-    uint8_t *p;
-    uint8_t  r, g, b;
-
-    for (uint16_t y = 0; y != height; y += 2) {
-        p = rgb;
-        for (uint16_t x = 0; x != width; x++) {
-            b          = *rgb++;
-            g          = *rgb++;
-            r          = *rgb++;
-            *plane_y++ = rgb_to_y(r, g, b);
-        }
-
-        for (uint16_t x = 0; x != width / 2; x++) {
-            b          = *rgb++;
-            g          = *rgb++;
-            r          = *rgb++;
-            *plane_y++ = rgb_to_y(r, g, b);
-
-            b          = *rgb++;
-            g          = *rgb++;
-            r          = *rgb++;
-            *plane_y++ = rgb_to_y(r, g, b);
-
-            //b = ((int)b + (int)*(rgb - 6) + (int)*p + (int)*(p + 3) + 2) / 4;
-            p++;
-            //g = ((int)g + (int)*(rgb - 5) + (int)*p + (int)*(p + 3) + 2) / 4;
-            p++;
-            //r = ((int)r + (int)*(rgb - 4) + (int)*p + (int)*(p + 3) + 2) / 4;
-            p++;
-
-            //*plane_u++ = rgb_to_u(r, g, b);
-            //*plane_v++ = rgb_to_v(r, g, b);
-
-            p += 3;
-        }
-    }
-}
-
-
-void *thread_bgr2yuv_1(void *data)
-{
-    struct bgr2yuv_data *bgdata = (struct bgr2yuv_data *) data;
-    uint8_t *plane_y = bgdata->plane_y;
-    //uint8_t *plane_u = bgdata->plane_u;
-    //uint8_t *plane_v = bgdata->plane_v;
-    uint16_t height = bgdata->height;
-    uint16_t width = bgdata->width;
-    uint8_t *rgb = bgdata->rgb;
-
-    uint8_t *p;
-    uint8_t  r, g, b;
-
-    for (uint16_t y = 0; y != height; y++) {
-        for (uint16_t x = 0; x != width; x++) {
-            b          = *rgb++;
-            g          = *rgb++;
-            r          = *rgb++;
-            *plane_y++ = rgb_to_y(r, g, b);
-        }
-    }
-}
-
-
-void *thread_bgr2yuv_2(void *data)
-{
-    struct bgr2yuv_data *bgdata = (struct bgr2yuv_data *) data;
-    //uint8_t *plane_y = bgdata->plane_y;
-    uint8_t *plane_u = bgdata->plane_u;
-    //uint8_t *plane_v = bgdata->plane_v;
-    uint16_t height = bgdata->height;
-    uint16_t width = bgdata->width;
-    uint8_t *rgb = bgdata->rgb;
-
-    uint8_t *p;
-    uint8_t  r, g, b;
-
-    for (uint16_t y = 0; y != height; y += 2) {
-        p = rgb;
-        //for (uint16_t x = 0; x != width; x++) {
-            //b          = *rgb++;
-            //g          = *rgb++;
-            //r          = *rgb++;
-            //*plane_y++ = rgb_to_y(r, g, b);
-        //}
-        rgb = rgb + (3 * width);
-
-        for (uint16_t x = 0; x != width / 2; x++) {
-            //b          = *rgb++;
-            //g          = *rgb++;
-            //r          = *rgb++;
-            //*plane_y++ = rgb_to_y(r, g, b);
-            rgb = rgb + 3;
-
-            b          = *rgb++;
-            g          = *rgb++;
-            r          = *rgb++;
-            //*plane_y++ = rgb_to_y(r, g, b);
-
-            b = ((int)b + (int)*(rgb - 6) + (int)*p + (int)*(p + 3) + 2) / 4;
-            p++;
-            g = ((int)g + (int)*(rgb - 5) + (int)*p + (int)*(p + 3) + 2) / 4;
-            p++;
-            r = ((int)r + (int)*(rgb - 4) + (int)*p + (int)*(p + 3) + 2) / 4;
-            p++;
-
-            *plane_u++ = rgb_to_u(r, g, b);
-            //*plane_v++ = rgb_to_v(r, g, b);
-
-            p += 3;
-        }
-    }
-}
-
-void *thread_bgr2yuv_3(void *data)
-{
-    struct bgr2yuv_data *bgdata = (struct bgr2yuv_data *) data;
-    //uint8_t *plane_y = bgdata->plane_y;
-    //uint8_t *plane_u = bgdata->plane_u;
-    uint8_t *plane_v = bgdata->plane_v;
-    uint16_t height = bgdata->height;
-    uint16_t width = bgdata->width;
-    uint8_t *rgb = bgdata->rgb;
-
-    uint8_t *p;
-    uint8_t  r, g, b;
-
-    for (uint16_t y = 0; y != height; y += 2) {
-        p = rgb;
-        //for (uint16_t x = 0; x != width; x++) {
-            //b          = *rgb++;
-            //g          = *rgb++;
-            //r          = *rgb++;
-            //*plane_y++ = rgb_to_y(r, g, b);
-        //}
-        rgb = rgb + (3 * width);
-
-        for (uint16_t x = 0; x != width / 2; x++) {
-            //b          = *rgb++;
-            //g          = *rgb++;
-            //r          = *rgb++;
-            //*plane_y++ = rgb_to_y(r, g, b);
-            rgb = rgb + 3;
-
-            b          = *rgb++;
-            g          = *rgb++;
-            r          = *rgb++;
-            //*plane_y++ = rgb_to_y(r, g, b);
-
-            b = ((int)b + (int)*(rgb - 6) + (int)*p + (int)*(p + 3) + 2) / 4;
-            p++;
-            g = ((int)g + (int)*(rgb - 5) + (int)*p + (int)*(p + 3) + 2) / 4;
-            p++;
-            r = ((int)r + (int)*(rgb - 4) + (int)*p + (int)*(p + 3) + 2) / 4;
-            p++;
-
-            //*plane_u++ = rgb_to_u(r, g, b);
-            *plane_v++ = rgb_to_v(r, g, b);
-
-            p += 3;
-        }
-    }
-}
-
 void bgrtoyuv420(uint8_t *plane_y, uint8_t *plane_u, uint8_t *plane_v, uint8_t *rgb, uint16_t width, uint16_t height) {
-
-#if 0
-    struct bgr2yuv_data *bgdata = calloc(1, sizeof(struct bgr2yuv_data));
-    bgdata->plane_y = plane_y;
-    bgdata->plane_u = plane_u;
-    bgdata->plane_v = plane_v;
-    bgdata->rgb = rgb;
-    bgdata->width = width;
-    bgdata->height = height;
-
-    pthread_t tid[2];
-    if (pthread_create(&(tid[0]), NULL, thread_bgr2yuv_1, (void *)(bgdata)) != 0)
-    {
-    }
-    if (pthread_create(&(tid[1]), NULL, thread_bgr2yuv_2, (void *)(bgdata)) != 0)
-    {
-    }
-    if (pthread_create(&(tid[2]), NULL, thread_bgr2yuv_3, (void *)(bgdata)) != 0)
-    {
-    }
-    pthread_join(tid[0], NULL);
-    pthread_join(tid[1], NULL);
-    pthread_join(tid[2], NULL);
-
-    free(bgdata);
-#else
     uint8_t *p;
     uint8_t  r, g, b;
 
@@ -744,8 +554,6 @@ void bgrtoyuv420(uint8_t *plane_y, uint8_t *plane_u, uint8_t *plane_v, uint8_t *
             p += 3;
         }
     }
-#endif
-
 }
 
 void bgrxtoyuv420(uint8_t *plane_y, uint8_t *plane_u, uint8_t *plane_v, uint8_t *rgb, uint16_t width, uint16_t height) {

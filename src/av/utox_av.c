@@ -16,6 +16,7 @@
 #include "../native/thread.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 
 
 
@@ -119,11 +120,15 @@ void utox_av_ctrl_thread(void *UNUSED(args)) {
                 case UTOXAV_CALL_END: {
                     call_count--;
                     FRIEND *f = get_friend(msg->param1);
-                    if (f
-                        && f->call_state_self & (TOXAV_FRIEND_CALL_STATE_SENDING_V | TOXAV_FRIEND_CALL_STATE_ACCEPTING_V))
+                    fprintf(stderr,"CALL END:111 %d\n", (int)f->call_state_self);
+                    //if (f
+                    //    && f->call_state_self & (TOXAV_FRIEND_CALL_STATE_SENDING_V | TOXAV_FRIEND_CALL_STATE_ACCEPTING_V))
+                    if (f)
                     {
+                        fprintf(stderr,"CALL END:video stop -----------------\n");
                         utox_video_stop(false);
                     }
+                    fprintf(stderr,"CALL END:222\n");
 
                     postmessage_audio(UTOXAUDIO_STOP_FRIEND, msg->param1, msg->param2, NULL);
                     postmessage_audio(UTOXAUDIO_STOP_RINGTONE, msg->param1, msg->param2, NULL);
