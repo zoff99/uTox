@@ -572,17 +572,19 @@ void *thread_bgr2yuv_2(void *data)
     for (uint16_t y = 0; y != height; y += 2) {
         p = rgb;
         for (uint16_t x = 0; x != width; x++) {
-            b          = *rgb++;
-            g          = *rgb++;
-            r          = *rgb++;
+            //b          = *rgb++;
+            //g          = *rgb++;
+            //r          = *rgb++;
             //*plane_y++ = rgb_to_y(r, g, b);
         }
+        rgb = rgb + (3 * width);
 
         for (uint16_t x = 0; x != width / 2; x++) {
-            b          = *rgb++;
-            g          = *rgb++;
-            r          = *rgb++;
+            //b          = *rgb++;
+            //g          = *rgb++;
+            //r          = *rgb++;
             //*plane_y++ = rgb_to_y(r, g, b);
+            rgb = rgb + 3;
 
             b          = *rgb++;
             g          = *rgb++;
@@ -620,17 +622,19 @@ void *thread_bgr2yuv_3(void *data)
     for (uint16_t y = 0; y != height; y += 2) {
         p = rgb;
         for (uint16_t x = 0; x != width; x++) {
-            b          = *rgb++;
-            g          = *rgb++;
-            r          = *rgb++;
+            //b          = *rgb++;
+            //g          = *rgb++;
+            //r          = *rgb++;
             //*plane_y++ = rgb_to_y(r, g, b);
         }
+        rgb = rgb + (3 * width);
 
         for (uint16_t x = 0; x != width / 2; x++) {
-            b          = *rgb++;
-            g          = *rgb++;
-            r          = *rgb++;
+            //b          = *rgb++;
+            //g          = *rgb++;
+            //r          = *rgb++;
             //*plane_y++ = rgb_to_y(r, g, b);
+            rgb = rgb + 3;
 
             b          = *rgb++;
             g          = *rgb++;
