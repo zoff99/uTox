@@ -508,7 +508,7 @@ struct bgr2yuv_data {
 };
 
 
-void *thread_bgr2yuv_1(void *data)
+void *thread_bgr2yuv_1__x(void *data)
 {
     struct bgr2yuv_data *bgdata = (struct bgr2yuv_data *) data;
     uint8_t *plane_y = bgdata->plane_y;
@@ -556,6 +556,31 @@ void *thread_bgr2yuv_1(void *data)
     }
 }
 
+
+void *thread_bgr2yuv_1(void *data)
+{
+    struct bgr2yuv_data *bgdata = (struct bgr2yuv_data *) data;
+    uint8_t *plane_y = bgdata->plane_y;
+    //uint8_t *plane_u = bgdata->plane_u;
+    //uint8_t *plane_v = bgdata->plane_v;
+    uint16_t height = bgdata->height;
+    uint16_t width = bgdata->width;
+    uint8_t *rgb = bgdata->rgb;
+
+    uint8_t *p;
+    uint8_t  r, g, b;
+
+    for (uint16_t y = 0; y != height; y++) {
+        for (uint16_t x = 0; x != width; x++) {
+            b          = *rgb++;
+            g          = *rgb++;
+            r          = *rgb++;
+            *plane_y++ = rgb_to_y(r, g, b);
+        }
+    }
+}
+
+
 void *thread_bgr2yuv_2(void *data)
 {
     struct bgr2yuv_data *bgdata = (struct bgr2yuv_data *) data;
@@ -571,12 +596,12 @@ void *thread_bgr2yuv_2(void *data)
 
     for (uint16_t y = 0; y != height; y += 2) {
         p = rgb;
-        for (uint16_t x = 0; x != width; x++) {
+        //for (uint16_t x = 0; x != width; x++) {
             //b          = *rgb++;
             //g          = *rgb++;
             //r          = *rgb++;
             //*plane_y++ = rgb_to_y(r, g, b);
-        }
+        //}
         rgb = rgb + (3 * width);
 
         for (uint16_t x = 0; x != width / 2; x++) {
@@ -621,12 +646,12 @@ void *thread_bgr2yuv_3(void *data)
 
     for (uint16_t y = 0; y != height; y += 2) {
         p = rgb;
-        for (uint16_t x = 0; x != width; x++) {
+        //for (uint16_t x = 0; x != width; x++) {
             //b          = *rgb++;
             //g          = *rgb++;
             //r          = *rgb++;
             //*plane_y++ = rgb_to_y(r, g, b);
-        }
+        //}
         rgb = rgb + (3 * width);
 
         for (uint16_t x = 0; x != width / 2; x++) {
@@ -658,6 +683,7 @@ void *thread_bgr2yuv_3(void *data)
 
 void bgrtoyuv420(uint8_t *plane_y, uint8_t *plane_u, uint8_t *plane_v, uint8_t *rgb, uint16_t width, uint16_t height) {
 
+#if 0
     struct bgr2yuv_data *bgdata = calloc(1, sizeof(struct bgr2yuv_data));
     bgdata->plane_y = plane_y;
     bgdata->plane_u = plane_u;
@@ -681,6 +707,45 @@ void bgrtoyuv420(uint8_t *plane_y, uint8_t *plane_u, uint8_t *plane_v, uint8_t *
     pthread_join(tid[2], NULL);
 
     free(bgdata);
+#else
+    uint8_t *p;
+    uint8_t  r, g, b;
+
+    for (uint16_t y = 0; y != height; y += 2) {
+        p = rgb;
+        for (uint16_t x = 0; x != width; x++) {
+            b          = *rgb++;
+            g          = *rgb++;
+            r          = *rgb++;
+            *plane_y++ = rgb_to_y(r, g, b);
+        }
+
+        for (uint16_t x = 0; x != width / 2; x++) {
+            b          = *rgb++;
+            g          = *rgb++;
+            r          = *rgb++;
+            *plane_y++ = rgb_to_y(r, g, b);
+
+            b          = *rgb++;
+            g          = *rgb++;
+            r          = *rgb++;
+            *plane_y++ = rgb_to_y(r, g, b);
+
+            b = ((int)b + (int)*(rgb - 6) + (int)*p + (int)*(p + 3) + 2) / 4;
+            p++;
+            g = ((int)g + (int)*(rgb - 5) + (int)*p + (int)*(p + 3) + 2) / 4;
+            p++;
+            r = ((int)r + (int)*(rgb - 4) + (int)*p + (int)*(p + 3) + 2) / 4;
+            p++;
+
+            *plane_u++ = rgb_to_u(r, g, b);
+            *plane_v++ = rgb_to_v(r, g, b);
+
+            p += 3;
+        }
+    }
+#endif
+
 }
 
 void bgrxtoyuv420(uint8_t *plane_y, uint8_t *plane_u, uint8_t *plane_v, uint8_t *rgb, uint16_t width, uint16_t height) {
