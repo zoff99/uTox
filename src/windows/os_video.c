@@ -550,6 +550,26 @@ void native_video_close(void *handle) {
     }
 }
 
+
+// --- FPS ---
+#include <sys/time.h>
+
+static inline void __utimer_start(struct timeval* tm1)
+{
+    gettimeofday(tm1, NULL);
+}
+
+static inline unsigned long long __utimer_stop(struct timeval* tm1)
+{
+    struct timeval tm2;
+    gettimeofday(&tm2, NULL);
+
+    unsigned long long t = 1000 * (tm2.tv_sec - tm1->tv_sec) + (tm2.tv_usec - tm1->tv_usec) / 1000;
+	return t;
+}
+// --- FPS ---
+
+
 int native_video_getframe(uint8_t *y, uint8_t *u, uint8_t *v, uint16_t width, uint16_t height) {
     if (width != video_width || height != video_height) {
         LOG_TRACE("Video", "width/height mismatch %u %u != %u %u" , width, height, video_width, video_height);
@@ -562,6 +582,9 @@ int native_video_getframe(uint8_t *y, uint8_t *u, uint8_t *v, uint16_t width, ui
         // if (t - lasttime >= (uint64_t)1000 * 1000 * 1000 / 24)
         if (1 == 1)
         {
+            // static struct timeval tt3;
+            // __utimer_start(&tt3);
+
             BITMAPINFO info = {.bmiHeader = {
                                    .biSize        = sizeof(BITMAPINFOHEADER),
                                    .biWidth       = video_width,
@@ -573,6 +596,10 @@ int native_video_getframe(uint8_t *y, uint8_t *u, uint8_t *v, uint16_t width, ui
 
             BitBlt(capturedc, 0, 0, video_width, video_height, desktopdc, video_x, video_y, SRCCOPY | CAPTUREBLT);
             GetDIBits(capturedc, capturebitmap, 0, video_height, dibits, &info, DIB_RGB_COLORS);
+
+            // unsigned long long timspan_in_ms = __utimer_stop(&tt3);
+            // fprintf(stderr, "SCRCP=%d\n", (int)timspan_in_ms);
+
             bgrtoyuv420(y, u, v, dibits, video_width, video_height);
             lasttime = t;
             return 1;

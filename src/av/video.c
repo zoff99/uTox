@@ -286,10 +286,15 @@ void utox_video_thread(void *args) {
 
         if (video_active) {
             pthread_mutex_lock(&video_thread_lock);
+
+            static struct timeval tt1;
+            __utimer_start(&tt1);
+
             // capturing is enabled, capture frames
             const int r = native_video_getframe(utox_video_frame.y, utox_video_frame.u, utox_video_frame.v,
                                                 utox_video_frame.w, utox_video_frame.h);
             if (r == 1) {
+#if 0
                 if (settings.video_preview) {
                     /* Make a copy of the video frame for uTox to display */
                     UTOX_FRAME_PKG *frame = malloc(sizeof(UTOX_FRAME_PKG));
@@ -303,6 +308,10 @@ void utox_video_thread(void *args) {
 
                     postmessage_utox(AV_VIDEO_FRAME, UINT16_MAX, 1, (void *)frame);
                 }
+#endif
+
+                unsigned long long timspan_in_ms = __utimer_stop(&tt1);
+                // fprintf(stderr, "CT=%d\n", (int)timspan_in_ms);
 
                 // ----------- SEND to all friends -----------
                 // ----------- SEND to all friends -----------
@@ -315,6 +324,16 @@ void utox_video_thread(void *args) {
                         TOXAV_ERR_SEND_FRAME error = 0;
                         toxav_video_send_frame(av, get_friend(i)->number, utox_video_frame.w, utox_video_frame.h,
                                                utox_video_frame.y, utox_video_frame.u, utox_video_frame.v, &error);
+
+#ifdef HAVE_TOXAV_OPTION_SET
+                        TOXAV_ERR_OPTION_SET error2;
+                        toxav_option_set(av, get_friend(i)->number,
+                                         TOXAV_CLIENT_VIDEO_CAPTURE_DELAY_MS,
+                                         (int32_t)timspan_in_ms,
+                                         &error2);
+#endif
+
+
                         // LOG_TRACE("uToxVideo", "Sent video frame to friend %u" , i);
                         if (error) {
                             if (error == TOXAV_ERR_SEND_FRAME_SYNC) {
@@ -478,7 +497,27 @@ static uint8_t rgb_to_v(int r, int g, int b) {
     return v > 255 ? 255 : v < 0 ? 0 : v;
 }
 
-void bgrtoyuv420(uint8_t *plane_y, uint8_t *plane_u, uint8_t *plane_v, uint8_t *rgb, uint16_t width, uint16_t height) {
+
+struct bgr2yuv_data {
+    uint8_t *plane_y;
+    uint8_t *plane_u;
+    uint8_t *plane_v;
+    uint8_t *rgb;
+    uint16_t width;
+    uint16_t height;
+};
+
+
+void *thread_bgr2yuv_1(void *data)
+{
+    struct bgr2yuv_data *bgdata = (struct bgr2yuv_data *) data;
+    uint8_t *plane_y = bgdata->plane_y;
+    //uint8_t *plane_u = bgdata->plane_u;
+    //uint8_t *plane_v = bgdata->plane_v;
+    uint16_t height = bgdata->height;
+    uint16_t width = bgdata->width;
+    uint8_t *rgb = bgdata->rgb;
+
     uint8_t *p;
     uint8_t  r, g, b;
 
@@ -502,6 +541,54 @@ void bgrtoyuv420(uint8_t *plane_y, uint8_t *plane_u, uint8_t *plane_v, uint8_t *
             r          = *rgb++;
             *plane_y++ = rgb_to_y(r, g, b);
 
+            //b = ((int)b + (int)*(rgb - 6) + (int)*p + (int)*(p + 3) + 2) / 4;
+            p++;
+            //g = ((int)g + (int)*(rgb - 5) + (int)*p + (int)*(p + 3) + 2) / 4;
+            p++;
+            //r = ((int)r + (int)*(rgb - 4) + (int)*p + (int)*(p + 3) + 2) / 4;
+            p++;
+
+            //*plane_u++ = rgb_to_u(r, g, b);
+            //*plane_v++ = rgb_to_v(r, g, b);
+
+            p += 3;
+        }
+    }
+}
+
+void *thread_bgr2yuv_2(void *data)
+{
+    struct bgr2yuv_data *bgdata = (struct bgr2yuv_data *) data;
+    //uint8_t *plane_y = bgdata->plane_y;
+    uint8_t *plane_u = bgdata->plane_u;
+    //uint8_t *plane_v = bgdata->plane_v;
+    uint16_t height = bgdata->height;
+    uint16_t width = bgdata->width;
+    uint8_t *rgb = bgdata->rgb;
+
+    uint8_t *p;
+    uint8_t  r, g, b;
+
+    for (uint16_t y = 0; y != height; y += 2) {
+        p = rgb;
+        for (uint16_t x = 0; x != width; x++) {
+            b          = *rgb++;
+            g          = *rgb++;
+            r          = *rgb++;
+            //*plane_y++ = rgb_to_y(r, g, b);
+        }
+
+        for (uint16_t x = 0; x != width / 2; x++) {
+            b          = *rgb++;
+            g          = *rgb++;
+            r          = *rgb++;
+            //*plane_y++ = rgb_to_y(r, g, b);
+
+            b          = *rgb++;
+            g          = *rgb++;
+            r          = *rgb++;
+            //*plane_y++ = rgb_to_y(r, g, b);
+
             b = ((int)b + (int)*(rgb - 6) + (int)*p + (int)*(p + 3) + 2) / 4;
             p++;
             g = ((int)g + (int)*(rgb - 5) + (int)*p + (int)*(p + 3) + 2) / 4;
@@ -510,11 +597,86 @@ void bgrtoyuv420(uint8_t *plane_y, uint8_t *plane_u, uint8_t *plane_v, uint8_t *
             p++;
 
             *plane_u++ = rgb_to_u(r, g, b);
+            //*plane_v++ = rgb_to_v(r, g, b);
+
+            p += 3;
+        }
+    }
+}
+
+void *thread_bgr2yuv_3(void *data)
+{
+    struct bgr2yuv_data *bgdata = (struct bgr2yuv_data *) data;
+    //uint8_t *plane_y = bgdata->plane_y;
+    //uint8_t *plane_u = bgdata->plane_u;
+    uint8_t *plane_v = bgdata->plane_v;
+    uint16_t height = bgdata->height;
+    uint16_t width = bgdata->width;
+    uint8_t *rgb = bgdata->rgb;
+
+    uint8_t *p;
+    uint8_t  r, g, b;
+
+    for (uint16_t y = 0; y != height; y += 2) {
+        p = rgb;
+        for (uint16_t x = 0; x != width; x++) {
+            b          = *rgb++;
+            g          = *rgb++;
+            r          = *rgb++;
+            //*plane_y++ = rgb_to_y(r, g, b);
+        }
+
+        for (uint16_t x = 0; x != width / 2; x++) {
+            b          = *rgb++;
+            g          = *rgb++;
+            r          = *rgb++;
+            //*plane_y++ = rgb_to_y(r, g, b);
+
+            b          = *rgb++;
+            g          = *rgb++;
+            r          = *rgb++;
+            //*plane_y++ = rgb_to_y(r, g, b);
+
+            b = ((int)b + (int)*(rgb - 6) + (int)*p + (int)*(p + 3) + 2) / 4;
+            p++;
+            g = ((int)g + (int)*(rgb - 5) + (int)*p + (int)*(p + 3) + 2) / 4;
+            p++;
+            r = ((int)r + (int)*(rgb - 4) + (int)*p + (int)*(p + 3) + 2) / 4;
+            p++;
+
+            //*plane_u++ = rgb_to_u(r, g, b);
             *plane_v++ = rgb_to_v(r, g, b);
 
             p += 3;
         }
     }
+}
+
+void bgrtoyuv420(uint8_t *plane_y, uint8_t *plane_u, uint8_t *plane_v, uint8_t *rgb, uint16_t width, uint16_t height) {
+
+    struct bgr2yuv_data *bgdata = calloc(1, sizeof(struct bgr2yuv_data));
+    bgdata->plane_y = plane_y;
+    bgdata->plane_u = plane_u;
+    bgdata->plane_v = plane_v;
+    bgdata->rgb = rgb;
+    bgdata->width = width;
+    bgdata->height = height;
+
+    pthread_t tid[2];
+    if (pthread_create(&(tid[0]), NULL, thread_bgr2yuv_1, (void *)(bgdata)) != 0)
+    {
+    }
+    if (pthread_create(&(tid[1]), NULL, thread_bgr2yuv_2, (void *)(bgdata)) != 0)
+    {
+    }
+    if (pthread_create(&(tid[2]), NULL, thread_bgr2yuv_3, (void *)(bgdata)) != 0)
+    {
+    }
+    pthread_join(tid[0], NULL);
+    pthread_join(tid[1], NULL);
+    pthread_join(tid[2], NULL);
+
+    free(bgdata);
 }
 
 void bgrxtoyuv420(uint8_t *plane_y, uint8_t *plane_u, uint8_t *plane_v, uint8_t *rgb, uint16_t width, uint16_t height) {
