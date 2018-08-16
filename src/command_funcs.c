@@ -1,10 +1,12 @@
-#include "command_funcs.h"
 
 #include "friend.h"
 #include "groups.h"
 #include "debug.h"
 #include "tox.h"
+#include <tox/toxav.h>
 #include "macros.h"
+
+#include "command_funcs.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -97,6 +99,8 @@ static int get_number_in_string(const char *str, int default_value)
 }
 
 
+#ifdef HAVE_TOXAV_OPTION_SET
+
 bool slash_vbr(void *object, char *arg, int arg_length)
 {
 	FRIEND *f = object;
@@ -176,4 +180,6 @@ bool slash_vpxxqt(void *object, char *arg, int arg_length)
 	return true;
 }
 
+
+#endif
 

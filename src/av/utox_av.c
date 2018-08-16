@@ -65,7 +65,7 @@ void utox_av_ctrl_thread(void *UNUSED(args)) {
             }
 
             if (!utox_audio_thread_init || !utox_video_thread_init) {
-                yieldcpu(10);
+                yieldcpu(4);
             }
 
             switch (msg->msg) {

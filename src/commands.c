@@ -1,9 +1,11 @@
 #include "commands.h"
 
-#include "command_funcs.h"
 #include "debug.h"
 #include "flist.h"
 #include "tox.h"
+#include <tox/toxav.h>
+
+#include "command_funcs.h"
 
 #include "layout/friend.h" // TODO, we should try to remove this dependency
 #include "ui/edit.h"
@@ -16,11 +18,11 @@ struct Command commands[MAX_NUM_CMDS] = {
     { "d",        1, slash_device    },
     { "sendfile", 8, slash_send_file },
     { "topic",    5, slash_topic     },
-
+#ifdef HAVE_TOXAV_OPTION_SET
     { "vbr",      3, slash_vbr       },
     { "vpxenc"  , 6, slash_vpxenc    },
     { "vpxxqt",   6, slash_vpxxqt    },
-
+#endif
     { NULL,       0, NULL            },
 };
 
