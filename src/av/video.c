@@ -269,6 +269,8 @@ void utox_video_thread(void *args) {
     init_video_devices();
 
     utox_video_thread_init = 1;
+    int32_t sleep_delay_corrected = 24; // set to 24ms default sleep delay
+    int32_t timspan_current = sleep_delay_corrected;
 
     while (1) {
         if (video_thread_msg) {
@@ -363,6 +365,12 @@ void utox_video_thread(void *args) {
                 // --- FPS ----
                 // --- FPS ----
                 timspan_in_ms[timspan_in_ms_cur_index] = __utimer_stop(&tm_outgoing_video_frames);
+                if (timspan_in_ms[timspan_in_ms_cur_index] > 9999)
+                {
+                    timspan_in_ms[timspan_in_ms_cur_index] = 24;
+                }
+
+                timspan_current = timspan_in_ms[timspan_in_ms_cur_index];
 
                 if ((timspan_in_ms[timspan_in_ms_cur_index] > 0) && (timspan_in_ms[timspan_in_ms_cur_index] < 99999))
                 {
@@ -380,7 +388,6 @@ void utox_video_thread(void *args) {
                 }
 
                 // LOG_TRACE("uToxVideo", "outgoing fps=%d" , global_video_out_fps);
-                // fprintf(stderr, "outgoing fps=%d\n" , global_video_out_fps);
 
                 __utimer_start(&tm_outgoing_video_frames);
                 // --- FPS ----
@@ -411,30 +418,43 @@ void utox_video_thread(void *args) {
             }
             timspan_average = timspan_average / TIMESPAN_IN_MS_ELEMENTS;
 
-            //fprintf(stderr, "settings fps=%d sleep_between_frames=%d timspan_average=%d\n" , (int)settings.video_fps, (int)sleep_between_frames, (int)timspan_average);
+            // fprintf(stderr, "settings fps=%d sleep_between_frames=%d timspan_average=%d\n" ,
+            //     (int)settings.video_fps, (int)sleep_between_frames, (int)timspan_current);
+            // fprintf(stderr, "outgoing fps=%d\n" , global_video_out_fps);
 
-            if ((timspan_average > 0) && (timspan_average < 99999))
+            if (timspan_current != sleep_between_frames)
             {
-                if (timspan_average > sleep_between_frames)
+                int32_t delta_ms = ((int32_t)timspan_current - (int32_t)sleep_between_frames);
+
+                // fprintf(stderr, "x:%d %d %d\n" ,
+                //     (int)delta_ms, (int)sleep_between_frames, (int)timspan_current);
+
+#if 1
+                if (delta_ms < -20)
                 {
-                    int32_t sleep_delay_corrected =
-                            (sleep_between_frames) - (2*(timspan_average - sleep_between_frames));
-                    if (sleep_delay_corrected < 0)
-                    {
-                        sleep_delay_corrected = 0;
-                    }
-                    sleep_between_frames = (uint32_t)sleep_delay_corrected;
+                   delta_ms = -20;
                 }
-                else if (timspan_average < sleep_between_frames)
+                else if (delta_ms > 20)
                 {
-                    // HINT: should not happen
-                    //fprintf(stderr, "should not happen: %d : %d\n", (int)sleep_between_frames, (int)timspan_average);
+                   delta_ms = 20;
+                }
+#endif
+
+                // fprintf(stderr, "0:%d %d\n" , (int)sleep_delay_corrected, (int)delta_ms);
+                sleep_delay_corrected = sleep_delay_corrected - delta_ms;
+                // fprintf(stderr, "1:%d %d\n" , (int)sleep_delay_corrected, (int)delta_ms);
+
+                if (sleep_delay_corrected < 0)
+                {
+                    sleep_delay_corrected = 0;
+                }
+                else if (sleep_delay_corrected > 2000)
+                {
+                    sleep_delay_corrected = 2000;
                 }
             }
 
-            //fprintf(stderr, "sleep corrected=%d\n", (int)sleep_between_frames);
-            // LOG_TRACE("uToxVideo", "sleep corrected=%d" , (int)sleep_between_frames);
-            yieldcpu(sleep_between_frames); /* 60fps = 16.666ms || 25 fps = 40ms || the data quality is SO much better at 25... */
+            yieldcpu(sleep_delay_corrected);
             // --- FPS ----
             // --- FPS ----
             // --- FPS ----
@@ -443,6 +463,8 @@ void utox_video_thread(void *args) {
             continue;     /* We're running video, so don't sleep for an extra 100 ms */
         }
 
+        sleep_delay_corrected = 24;
+        timspan_current = sleep_delay_corrected;
         yieldcpu(100);
     }
 
