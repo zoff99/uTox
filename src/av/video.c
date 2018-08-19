@@ -34,6 +34,29 @@ static vpx_image_t input;
 
 static pthread_mutex_t video_thread_lock;
 
+// --- FPS ---
+#include <sys/time.h>
+static struct timeval tm_outgoing_video_frames;
+uint32_t global_video_out_fps;
+#define TIMESPAN_IN_MS_ELEMENTS 10
+unsigned long long timspan_in_ms[TIMESPAN_IN_MS_ELEMENTS];
+uint16_t timspan_in_ms_cur_index = 0;
+uint32_t sleep_between_frames;
+
+static inline void __utimer_start(struct timeval* tm1)
+{
+    gettimeofday(tm1, NULL);
+}
+
+static inline unsigned long long __utimer_stop(struct timeval* tm1)
+{
+    struct timeval tm2;
+    gettimeofday(&tm2, NULL);
+
+    unsigned long long t = 1000 * (tm2.tv_sec - tm1->tv_sec) + (tm2.tv_usec - tm1->tv_usec) / 1000;
+	return t;
+}
+// --- FPS ---
 
 static bool video_device_init(void *handle) {
     // initialize video (will populate video_width and video_height)
@@ -246,6 +269,8 @@ void utox_video_thread(void *args) {
     init_video_devices();
 
     utox_video_thread_init = 1;
+    int32_t sleep_delay_corrected = 24; // set to 24ms default sleep delay
+    int32_t timspan_current = sleep_delay_corrected;
 
     while (1) {
         if (video_thread_msg) {
@@ -265,10 +290,15 @@ void utox_video_thread(void *args) {
 
         if (video_active) {
             pthread_mutex_lock(&video_thread_lock);
+
+            static struct timeval tt1;
+            __utimer_start(&tt1);
+
             // capturing is enabled, capture frames
             const int r = native_video_getframe(utox_video_frame.y, utox_video_frame.u, utox_video_frame.v,
                                                 utox_video_frame.w, utox_video_frame.h);
             if (r == 1) {
+#if 0
                 if (settings.video_preview) {
                     /* Make a copy of the video frame for uTox to display */
                     UTOX_FRAME_PKG *frame = malloc(sizeof(UTOX_FRAME_PKG));
@@ -282,7 +312,14 @@ void utox_video_thread(void *args) {
 
                     postmessage_utox(AV_VIDEO_FRAME, UINT16_MAX, 1, (void *)frame);
                 }
+#endif
 
+                unsigned long long timspan_in_ms2 = __utimer_stop(&tt1);
+                // fprintf(stderr, "CT=%d\n", (int)timspan_in_ms2);
+
+                // ----------- SEND to all friends -----------
+                // ----------- SEND to all friends -----------
+                // ----------- SEND to all friends -----------
                 size_t active_video_count = 0;
                 for (size_t i = 0; i < self.friend_list_count; i++) {
                     if (SEND_VIDEO_FRAME(i)) {
@@ -291,6 +328,16 @@ void utox_video_thread(void *args) {
                         TOXAV_ERR_SEND_FRAME error = 0;
                         toxav_video_send_frame(av, get_friend(i)->number, utox_video_frame.w, utox_video_frame.h,
                                                utox_video_frame.y, utox_video_frame.u, utox_video_frame.v, &error);
+
+#ifdef HAVE_TOXAV_OPTION_SET
+                        TOXAV_ERR_OPTION_SET error2;
+                        toxav_option_set(av, get_friend(i)->number,
+                                         TOXAV_CLIENT_VIDEO_CAPTURE_DELAY_MS,
+                                         (int32_t)timspan_in_ms2,
+                                         &error2);
+#endif
+
+
                         // LOG_TRACE("uToxVideo", "Sent video frame to friend %u" , i);
                         if (error) {
                             if (error == TOXAV_ERR_SEND_FRAME_SYNC) {
@@ -311,6 +358,42 @@ void utox_video_thread(void *args) {
                         }
                     }
                 }
+                // ----------- SEND to all friends -----------
+                // ----------- SEND to all friends -----------
+                // ----------- SEND to all friends -----------
+                // --- FPS ----
+                // --- FPS ----
+                // --- FPS ----
+                timspan_in_ms[timspan_in_ms_cur_index] = __utimer_stop(&tm_outgoing_video_frames);
+                if (timspan_in_ms[timspan_in_ms_cur_index] > 9999)
+                {
+                    timspan_in_ms[timspan_in_ms_cur_index] = 24;
+                }
+
+                timspan_current = timspan_in_ms[timspan_in_ms_cur_index];
+
+                if ((timspan_in_ms[timspan_in_ms_cur_index] > 0) && (timspan_in_ms[timspan_in_ms_cur_index] < 99999))
+                {
+                    global_video_out_fps = (int)(1000 / timspan_in_ms[timspan_in_ms_cur_index]);
+                }
+                else
+                {
+                    global_video_out_fps = 0;
+                }
+
+                timspan_in_ms_cur_index++;
+                if (timspan_in_ms_cur_index > (TIMESPAN_IN_MS_ELEMENTS - 1))
+                {
+                    timspan_in_ms_cur_index = 0;
+                }
+
+                // LOG_TRACE("uToxVideo", "outgoing fps=%d" , global_video_out_fps);
+
+                __utimer_start(&tm_outgoing_video_frames);
+                // --- FPS ----
+                // --- FPS ----
+                // --- FPS ----
+
             } else if (r == -1) {
                 LOG_ERR("uToxVideo", "Err... something really bad happened trying to get this frame, I'm just going "
                             "to plots now!");
@@ -319,10 +402,69 @@ void utox_video_thread(void *args) {
             }
 
             pthread_mutex_unlock(&video_thread_lock);
-            yieldcpu(1000 / settings.video_fps); /* 60fps = 16.666ms || 25 fps = 40ms || the data quality is SO much better at 25... */
+
+            
+            // --- FPS ----
+            // --- FPS ----
+            // --- FPS ----
+            
+            // use fps+1 here to compensate for inaccurate delay values
+            sleep_between_frames = (1000 / (settings.video_fps + 1));
+
+            int32_t timspan_average = 0;
+            for (int i=0;i < TIMESPAN_IN_MS_ELEMENTS;i++)
+            {
+                timspan_average = timspan_average + timspan_in_ms[i];
+            }
+            timspan_average = timspan_average / TIMESPAN_IN_MS_ELEMENTS;
+
+            // fprintf(stderr, "settings fps=%d sleep_between_frames=%d timspan_average=%d\n" ,
+            //     (int)settings.video_fps, (int)sleep_between_frames, (int)timspan_current);
+            // fprintf(stderr, "outgoing fps=%d\n" , global_video_out_fps);
+
+            if (timspan_current != sleep_between_frames)
+            {
+                int32_t delta_ms = ((int32_t)timspan_current - (int32_t)sleep_between_frames);
+
+                // fprintf(stderr, "x:%d %d %d\n" ,
+                //     (int)delta_ms, (int)sleep_between_frames, (int)timspan_current);
+
+#if 1
+                if (delta_ms < -20)
+                {
+                   delta_ms = -20;
+                }
+                else if (delta_ms > 20)
+                {
+                   delta_ms = 20;
+                }
+#endif
+
+                // fprintf(stderr, "0:%d %d\n" , (int)sleep_delay_corrected, (int)delta_ms);
+                sleep_delay_corrected = sleep_delay_corrected - delta_ms;
+                // fprintf(stderr, "1:%d %d\n" , (int)sleep_delay_corrected, (int)delta_ms);
+
+                if (sleep_delay_corrected < 0)
+                {
+                    sleep_delay_corrected = 0;
+                }
+                else if (sleep_delay_corrected > 2000)
+                {
+                    sleep_delay_corrected = 2000;
+                }
+            }
+
+            yieldcpu(sleep_delay_corrected);
+            // --- FPS ----
+            // --- FPS ----
+            // --- FPS ----
+
+
             continue;     /* We're running video, so don't sleep for an extra 100 ms */
         }
 
+        sleep_delay_corrected = 24;
+        timspan_current = sleep_delay_corrected;
         yieldcpu(100);
     }
 
