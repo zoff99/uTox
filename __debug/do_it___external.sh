@@ -8,11 +8,13 @@ START_TIME=$SECONDS
 
 ## ----------------------
 full="1"
-O_OPTIONS=" -O0 "
+O_OPTIONS=" -O3 "
 opus_sys=1
 vpx_sys=1
 x264_sys=1
 ffmpeg_sys=1
+numcpus_=12
+quiet_=1
 ## ----------------------
 
 
@@ -21,11 +23,26 @@ export _HOME2_
 _HOME_=$(cd $_HOME2_;pwd)
 export _HOME_
 
+export qqq=""
+
+if [ "$quiet_""x" == "1x" ]; then
+	export qqq=" -qq "
+fi
+
+
+redirect_cmd() {
+    if [ "$quiet_""x" == "1x" ]; then
+        "$@" > /dev/null 2>&1
+    else
+        "$@"
+    fi
+}
+
 echo "installing system packages ..."
 
-apt-get update -qq > /dev/null 2>&1
+redirect_cmd apt-get update $qqq
 
-apt-get install -qq -y --force-yes lsb-release > /dev/null 2>&1
+redirect_cmd apt-get install $qqq -y --force-yes lsb-release
 system__=$(lsb_release -i|cut -d ':' -f2|sed -e 's#\s##g')
 version__=$(lsb_release -r|cut -d ':' -f2|sed -e 's#\s##g')
 echo "compiling for: $system__ $version__"
@@ -46,19 +63,21 @@ fi
 if [ $ffmpeg_sys == 1 ]; then
     syslibs_str__="$syslibs_str__""f"
 fi
-echo "installing more system packages ..."
-
 
 echo "with system libs for: $syslibs_str__"
 
-apt-get install -qq -y --force-yes software-properties-common wget git cmake > /dev/null 2>&1
+
+
+echo "installing more system packages ..."
+
+redirect_cmd apt-get install $qqq -y --force-yes software-properties-common wget git cmake
 
 #dpkg -l|grep ffmpeg
 #dpkg -l|grep libav
 #dpkg -l|grep x264
 
 
-apt-get install -qq -y --force-yes \
+redirect_cmd apt-get install $qqq -y --force-yes \
     automake \
     autotools-dev \
     build-essential \
@@ -70,7 +89,7 @@ apt-get install -qq -y --force-yes \
     libopenal-dev \
     fontconfig-config libfontconfig1-dev \
     libv4l-dev \
-    pkg-config  > /dev/null 2>&1    
+    pkg-config
 
 
 pkgs="
@@ -98,7 +117,7 @@ x11proto-xinerama-dev
 "
 
 for i in $pkgs ; do
-    apt-get install -qq -y --force-yes $i > /dev/null 2>&1
+    redirect_cmd apt-get install $qqq -y --force-yes $i
 done
 
 
@@ -106,8 +125,8 @@ done
 type -a cmake
 cmake --version
 #add-apt-repository -y ppa:george-edison55/cmake-3.x
-#apt-get update -qq > /dev/null 2>&1
-#apt-get install -qq -y --force-yes cmake > /dev/null 2>&1
+#apt-get update $qqq > /dev/null 2>&1
+#apt-get install $qqq -y --force-yes cmake > /dev/null 2>&1
 #type -a cmake
 #cmake --version
 
@@ -144,7 +163,7 @@ cd $_HOME_/build
 mkdir -p nasm
 cd nasm
 rm -f nasm.tar.bz2
-wget 'https://www.nasm.us/pub/nasm/releasebuilds/2.13.02/nasm-2.13.02.tar.bz2' -O nasm.tar.bz2  > /dev/null 2>&1
+redirect_cmd wget 'https://www.nasm.us/pub/nasm/releasebuilds/2.13.02/nasm-2.13.02.tar.bz2' -O nasm.tar.bz2
 echo '8d3028d286be7c185ba6ae4c8a692fc5438c129b2a3ffad60cbdcedd2793bbbe  nasm.tar.bz2'|sha256sum -c
 
 res=$?
@@ -157,9 +176,9 @@ fi
 tar -xjf nasm.tar.bz2 || true
 cd nasm-*
 
-bash autogen.sh > /dev/null 2>&1
-./configure > /dev/null 2>&1
-make -j8 > /dev/null 2>&1
+redirect_cmd bash autogen.sh
+redirect_cmd ./configure
+redirect_cmd make -j"$numcpus_"
 make install
 nasm -v
 
@@ -167,15 +186,15 @@ nasm -v
 echo "LIBAV ..."
 
 if [ $ffmpeg_sys == 1 ] ; then
-    apt-get install -qq -y --force-yes libavutil-dev libavfilter-dev libavcodec-dev # > /dev/null 2>&1
+    apt-get install $qqq -y --force-yes libavutil-dev libavfilter-dev libavcodec-dev # > /dev/null 2>&1
 else
 
 cd $_HOME_/build
 rm -Rf libav
-git clone https://github.com/libav/libav > /dev/null 2>&1
+redirect_cmd git clone https://github.com/libav/libav
 cd libav
 git checkout v12.3
-./configure --prefix=$_INST_ --disable-devices --disable-programs \
+redirect_cmd ./configure --prefix=$_INST_ --disable-devices --disable-programs \
 --disable-doc --disable-avdevice --disable-avformat \
 --disable-swscale \
 --disable-avfilter --disable-network --disable-everything \
@@ -184,8 +203,8 @@ git checkout v12.3
 --disable-libxcb-xfixes \
 --enable-parser=h264 \
 --enable-runtime-cpudetect \
---enable-gpl --enable-decoder=h264 > /dev/null 2>&1
-make -j4 > /dev/null 2>&1
+--enable-gpl --enable-decoder=h264
+redirect_cmd make -j"$numcpus_"
 make install > /dev/null 2>&1
 
 fi
@@ -194,7 +213,7 @@ fi
 echo "X264 ..."
 
 if [ $x264_sys == 1 ] ; then
-    apt-get install -qq -y --force-yes libx264-dev # > /dev/null 2>&1
+    apt-get install $qqq -y --force-yes libx264-dev # > /dev/null 2>&1
 else
 
 
@@ -203,9 +222,9 @@ rm -Rf x264
 git clone git://git.videolan.org/x264.git > /dev/null 2>&1
 cd x264
 git checkout stable
-./configure --prefix=$_INST_ --disable-opencl --enable-shared --enable-static \
---disable-avs --disable-cli > /dev/null 2>&1
-make -j4 > /dev/null 2>&1
+redirect_cmd ./configure --prefix=$_INST_ --disable-opencl --enable-shared --enable-static \
+--disable-avs --disable-cli
+redirect_cmd make -j"$numcpus_"
 make install > /dev/null 2>&1
 
 
@@ -221,8 +240,8 @@ git clone https://github.com/jedisct1/libsodium > /dev/null 2>&1
 cd libsodium
 git checkout 1.0.13
 autoreconf -fi > /dev/null 2>&1
-./configure --prefix=$_INST_ --disable-shared --disable-soname-versions > /dev/null 2>&1
-make -j4 > /dev/null 2>&1
+redirect_cmd ./configure --prefix=$_INST_ --disable-shared --disable-soname-versions
+redirect_cmd make -j"$numcpus_"
 make install > /dev/null 2>&1
 
 
@@ -241,8 +260,8 @@ git clone https://github.com/xiph/opus.git > /dev/null 2>&1
 cd opus
 git checkout v1.2.1
 ./autogen.sh > /dev/null 2>&1
-./configure --prefix=$_INST_ --disable-shared > /dev/null 2>&1
-make -j 4 > /dev/null 2>&1
+redirect_cmd ./configure --prefix=$_INST_ --disable-shared
+redirect_cmd make -j"$numcpus_"
 make install > /dev/null 2>&1
 
 fi
@@ -252,7 +271,7 @@ fi
 echo "VPX ..."
 
 if [ $vpx_sys == 1 ] ; then
-    apt-get install -qq -y --force-yes libvpx-dev # > /dev/null 2>&1
+    apt-get install $qqq -y --force-yes libvpx-dev # > /dev/null 2>&1
 else
 
 cd $_HOME_/build
@@ -262,7 +281,7 @@ cd libvpx > /dev/null 2>&1
 git checkout v1.7.0
 export CFLAGS=" -g -O3 -I$_INST_/include/ -Wall -Wextra "
 export LDFLAGS=" -O3 -L$_INST_/lib "
-./configure --prefix=$_INST_ \
+redirect_cmd ./configure --prefix=$_INST_ \
   --disable-examples \
   --disable-unit-tests \
   --enable-shared \
@@ -275,8 +294,8 @@ export LDFLAGS=" -O3 -L$_INST_/lib "
   --enable-postproc \
   --enable-vp9-postproc
   --enable-temporal-denoising \
-  --enable-vp9-temporal-denoising > /dev/null 2>&1
-make -j 4 > /dev/null 2>&1
+  --enable-vp9-temporal-denoising
+redirect_cmd make -j"$numcpus_"
 make install > /dev/null 2>&1
 unset CFLAGS
 unset LDFLAGS
@@ -292,7 +311,7 @@ git clone https://github.com/irungentoo/filter_audio.git > /dev/null 2>&1
 cd filter_audio
 export DESTDIR=$_INST_
 export PREFIX=""
-make > /dev/null 2>&1
+redirect_cmd make
 make install > /dev/null 2>&1
 export DESTDIR=""
 unset DESTDIR
@@ -310,27 +329,25 @@ echo "c-toxcore ..."
 cd $_HOME_/build
 
 
-    rm -Rf c-toxcore
-    git clone https://github.com/Zoxcore/c-toxcore c-toxcore > /dev/null 2>&1
-    cd c-toxcore
-    git checkout zoff99/work_001 ## new branch now!!
-    ./autogen.sh > /dev/null 2>&1
-    export CFLAGS=" -D_GNU_SOURCE -g -O3 -I$_INST_/include/ -Wall -Wextra -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable -Wno-unused-but-set-variable "
-    export LDFLAGS=" -O3 -L$_INST_/lib "
-    ./configure \
-      --prefix=$_INST_ \
-      --disable-soname-versions --disable-testing --disable-shared > /dev/null 2>&1
-    unset CFLAGS
-    unset LDFLAGS
+rm -Rf c-toxcore
+git clone https://github.com/Zoxcore/c-toxcore c-toxcore > /dev/null 2>&1
+cd c-toxcore
+git checkout toxav-multi-codec
+./autogen.sh > /dev/null 2>&1
+export CFLAGS=" -D_GNU_SOURCE -g -O3 -I$_INST_/include/ -Wall -Wextra -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable -Wno-unused-but-set-variable "
+export LDFLAGS=" -O3 -L$_INST_/lib "
+redirect_cmd ./configure \
+  --prefix=$_INST_ \
+  --disable-soname-versions --disable-testing --disable-shared
+unset CFLAGS
+unset LDFLAGS
 
-make -j 4 > /dev/null 2>&1 || exit 1
-
-
-
+redirect_cmd make -j"$numcpus_" || exit 1
 
 
 make install > /dev/null 2>&1
-# libtool --finish $_INST_/lib
+
+
 
 
 echo "compiling uTox ..."
@@ -370,9 +387,9 @@ cmake \
  -DUTOX_STATIC=ON \
  ../
 
- make clean > /dev/null 2> /dev/null
+make clean > /dev/null 2> /dev/null
 
-make -j 8 2>/dev/null # > /dev/null 2>&1
+redirect_cmd make -j"$numcpus_"
 
 unset CFLAGS
 

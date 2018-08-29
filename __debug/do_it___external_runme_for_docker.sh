@@ -17,8 +17,8 @@ mkdir -p $_HOME_/script
 
 cp -av "$_HOME_"/do_it___external.sh $_HOME_/script/
 
-system_to_build_for="debian:9"
-# system_to_build_for="ubuntu:16.04"
+# system_to_build_for="debian:9"
+system_to_build_for="ubuntu:18.04"
 
 
 cd $_HOME_/
