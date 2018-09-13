@@ -15,10 +15,10 @@ msgid(SPLASH_TITLE)
 msgstr("Welcome to the newer uTox!")
 
 msgid(SPLASH_TEXT)
-msgstr("You have just upgraded to version 0.16.1! Release name: No capes!")
+msgstr("You have just upgraded to version 0.17.0! Release name: bork bork")
 
 msgid(CHANGE_LOG_TITLE)
-msgstr("Changes in v0.16.1 (check out our new website, utox.io, we beg you)")
+msgstr("Changes in v0.17.0")
 
 msgid(CHANGE_LOG_TEXT)
 msgstr(
@@ -27,6 +27,33 @@ msgstr(
 "    To be sure that it works and autoupdates, you have to rename the .exe to \"uTox.exe\"\n"
 "    and enable it in the settings.\n"
 "\n"
+"  Features:\n"
+"    Toxcore 0.2.x. support!\n"
+"    Settings are now stored in a human-readable .ini file.\n"
+"    We now support Tox URIs.\n"
+"    Dropdowns now stay open after being clicked.\n"
+"    You can now get a QR code representing your ToxID.\n"
+"    Estonian language support\n"
+"  Fixes:\n"
+"    The zenburn colour scheme now works.\n"
+"    Calls are now added to the chatlogs.\n"
+"    Saving inline images now works to paths with non-ascii characters.\n"
+"    GTK should work on more platforms now.\n"
+"    Exporting chatlogs on macOS doesn't crash anymore.\n"
+"    File transfers are now supported on macOS.\n"
+"    The force proxy setting is now saved.\n"
+"    The tray icon should maybe now probably work on most (maybe) Linux systems.\n"
+"    Lots of UI fixes involving the bounding boxes of things.\n"
+"    We now handle signals on Linux systems.\n"
+"    Filter audio can now be enabled again.\n"
+"    The Windows tray icon will be reloaded if Windows explorer crashes.\n"
+"    You no longer end up with invalid fps data when loading an older save.\n"
+"    Datetime format is now saved.\n"
+"    Non-ASCII should work better now.\n"
+"    Tooltips will now always be drawn within the window boundaries.\n"
+"  Development:\n"
+"    You can now set the library locations with CMAKE_PREFIX_PATH.\n"
+"\nv0.16.0\n"
 "  Features:\n"
 "    Language is now saved.\n"
 "    Added group audio calls.\n"
@@ -176,6 +203,9 @@ msgstr("Friend request sent. Your friend will appear online after the request is
 msgid(REQ_INVALID_ID)
 msgstr("Error: Invalid Tox ID")
 
+msgid(REQ_ADDED_NO_FREQ_SENT)
+msgstr("Note: Friend added but friend request was not sent (nospam missing)")
+
 msgid(REQ_EMPTY_ID)
 msgstr("Error: No Tox ID specified")
 
@@ -281,6 +311,9 @@ msgstr("Call ringing")
 msgid(CALL_STARTED)
 msgstr("Call started")
 
+msgid(CALL_ENDED)
+msgstr("Call ended")
+
 msgid(CALL_FRIEND_HAD_ENDED_CALL)
 msgstr(" has ended the call!")
 
@@ -310,11 +343,14 @@ msgstr("Export Chatlog as plain text")
 msgid(GROUPCHAT_JOIN_AUDIO)
 msgstr("Join audio chat")
 
+msgid(GROUP_CREATE_WITH_AUDIO)
+msgstr("Enable Audio")
+
 msgid(GROUP_CREATE_TEXT)
-msgstr("Create a text group chat")
+msgstr("Create a text-chat group")
 
 msgid(GROUP_CREATE_VOICE)
-msgstr("Create a group chat with voice")
+msgstr("Create a voice-chat group")
 
 msgid(CREATEGROUPCHAT)
 msgstr("Create Groupchat")
@@ -472,6 +508,17 @@ msgstr("Away")
 msgid(STATUS_BUSY)
 msgstr("Busy")
 
+msgid(STATUS_OFFLINE)
+msgstr("Offline")
+
+/*
+ * Leave %.*s. They are variables
+ * The first one is your friend's name
+ * The second one is the state your friend is now in
+ */
+msgid(STATUS_MESSAGE)
+msgstr("uTox %.*s is now %s.")
+
 msgid(SETTINGS_UI_MINI_ROSTER)
 msgstr("Use mini contact list")
 
@@ -517,6 +564,9 @@ msgstr("Hide password field")
 msgid(HIDE_UI_PASSWORD_TOOLTIP)
 msgstr("Click to hide profile password field.")
 
+msgid(PASSWORD_TOO_SHORT)
+msgstr("Password must be at least 4 characters long")
+
 msgid(LOCK)
 msgstr("Lock")
 
@@ -536,10 +586,10 @@ msgid(NETWORK)
 msgstr("Network")
 
 msgid(IPV6)
-msgstr("IPv6:")
+msgstr("IPv6")
 
 msgid(UDP)
-msgstr("UDP:")
+msgstr("UDP")
 
 msgid(PROXY)
 msgstr("Proxy (SOCKS 5)")
@@ -567,6 +617,18 @@ msgstr("Close To Tray")
 
 msgid(START_IN_TRAY)
 msgstr("Start In Tray")
+
+msgid(SHOW_QR)
+msgstr("Show QR code")
+
+msgid(HIDE_QR)
+msgstr("Hide QR code")
+
+msgid(SAVE_QR)
+msgstr("Save QR code")
+
+msgid(COPY_TOX_ID)
+msgstr("Copy as text")
 
 msgid(COPY)
 msgstr("Copy")
@@ -764,7 +826,7 @@ msgid(CONTACT_SEARCH_ADD_HINT)
 msgstr("Search/Add Friends")
 
 msgid(PROXY_EDIT_HINT_IP)
-msgstr("IP")
+msgstr("IP address")
 
 msgid(PROXY_EDIT_HINT_PORT)
 msgstr("Port")

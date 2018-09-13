@@ -56,10 +56,12 @@ bool utox_move_file(const uint8_t *current_name, const uint8_t *new_name);
  */
 bool native_create_dir(const uint8_t *filepath);
 
-/* read a whole file from a path,
- *  on success: returns pointer to data (must be free()'d later), writes size of data to *size if size is not NULL
- *  on failure: returns NULL
+/**
+ * @brief Get full path of the file in the Tox profile folder.
+ *
+ * @param name name of the file.
+ * @return null-terminated string, or NULL on failure.
  */
-void *file_raw(char *path, uint32_t *size);
+char *utox_get_filepath(const char *name);
 
 #endif

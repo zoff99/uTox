@@ -76,6 +76,7 @@ enum {
     TOX_FRIEND_ACCEPT,
     TOX_FRIEND_DELETE,
     TOX_FRIEND_ONLINE,
+    TOX_FRIEND_NEW_NO_REQ,
 
     /* Default actions */
     TOX_SEND_MESSAGE,

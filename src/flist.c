@@ -221,8 +221,8 @@ static void drawitem(ITEM *i, int x, int y, int width) {
         case ITEM_GROUP_CREATE: {
             drawalpha(group_bitmap, avatar_x, y + ROSTER_AVATAR_TOP, default_w, default_w,
                       (selected_item == i) ? COLOR_MAIN_TEXT : COLOR_LIST_TEXT);
-            flist_draw_name(i, name_x, name_y, width, S(CREATEGROUPCHAT), S(CURSOR_CLICK_RIGHT), SLEN(CREATEGROUPCHAT),
-                            SLEN(CURSOR_CLICK_RIGHT), 1, (selected_item == i) ? COLOR_MAIN_TEXT : COLOR_LIST_TEXT);
+            flist_draw_name(i, name_x, name_y, width, S(CREATEGROUPCHAT), NULL, SLEN(CREATEGROUPCHAT),
+                            0, 1, (selected_item == i) ? COLOR_MAIN_TEXT : COLOR_LIST_TEXT);
             break;
         }
 
@@ -442,6 +442,8 @@ static void page_close(ITEM *i) {
         }
 
         case ITEM_GROUP_CREATE: {
+            panel_chat.disabled  = true;
+            panel_group_create.disabled = true;
             break;
         }
 
@@ -468,7 +470,7 @@ static void page_open(ITEM *i) {
 
             #ifdef UNITY
             if (unity_running) {
-                mm_rm_entry(f->cid);
+                mm_rm_entry(f->id_bin);
             }
             #endif
 
@@ -534,11 +536,12 @@ static void page_open(ITEM *i) {
             edit_chat_msg_group.history_cur    = g->edit_history_cur;
             edit_chat_msg_group.history_length = g->edit_history_length;
 
-            panel_chat.disabled           = 0;
-            panel_group.disabled          = 0;
-            panel_group_chat.disabled     = 0;
-            panel_group_video.disabled    = 1;
-            panel_group_settings.disabled = 1;
+            panel_chat.disabled           = false;
+            panel_group.disabled          = false;
+            panel_group_chat.disabled     = false;
+            panel_group_video.disabled    = true;
+            panel_group_settings.disabled = true;
+            panel_group_create.disabled   = true;
             break;
         }
 
@@ -560,6 +563,8 @@ static void page_open(ITEM *i) {
         }
 
         case ITEM_GROUP_CREATE: {
+            panel_chat.disabled         = false;
+            panel_group_create.disabled = false;
             // postmessage_toxcore(TOX_GROUP_CREATE, 0, 0, NULL);
             break;
         }
@@ -610,10 +615,14 @@ void flist_start(void) {
     flist_update_shown_list();
 }
 
-void flist_add_friend(FRIEND *f) {
+void flist_add_friend(FRIEND *f, const char *msg, const int msg_length) {
     ITEM *i = newitem();
     i->item = ITEM_FRIEND;
     i->id_number = f->number;
+
+    if (msg_length > 0) {
+        message_add_type_text(&f->msg, true, msg, msg_length, true, false);
+    }
 }
 
 void flist_add_friend_accepted(FRIEND *f, FREQUEST *req) {
@@ -631,6 +640,10 @@ void flist_add_friend_accepted(FRIEND *f, FREQUEST *req) {
                 ((MESSAGES *)messages_friend.object)->cursor_over_msg = UINT32_MAX;
                 messages_friend.content_scroll->content_height        = f->msg.height;
                 messages_friend.content_scroll->d                     = f->msg.scroll;
+
+                if (req->length > 0) {
+                    message_add_type_text(&f->msg, false, req->msg, req->length, true, false);
+                }
 
                 f->msg.id = f->number;
             }
@@ -775,7 +788,7 @@ void flist_selectswap(void) {
 
 static struct {
     ITEM_TYPE type;
-    void *    data;
+    uint8_t * data;
 } push_pop;
 
 static void push_selected(void) {
@@ -797,7 +810,7 @@ static void push_selected(void) {
                                                                                // a lot of damage
                 return;
             }
-            memcpy(push_pop.data, &f->cid, TOX_PUBLIC_KEY_SIZE);
+            memcpy(push_pop.data, &f->id_bin, TOX_PUBLIC_KEY_SIZE);
             break;
         }
         case ITEM_FREQUEST:
@@ -825,7 +838,7 @@ static void pop_selected(void) {
             for (uint16_t i = 0; i < itemcount; ++i) {
                 if (item[i].item == ITEM_FRIEND) {
                     FRIEND *f = get_friend(item[i].id_number);
-                    if (memcmp(push_pop.data, &f->cid, TOX_PUBLIC_KEY_SIZE) == 0) {
+                    if (memcmp(push_pop.data, &f->id_bin, TOX_PUBLIC_KEY_SIZE) == 0) {
                         show_page(&item[i]);
                         return;
                     }
@@ -884,6 +897,49 @@ GROUPCHAT *flist_get_groupchat(void) {
 
 ITEM_TYPE flist_get_type(void) {
     return selected_item->item;
+}
+
+/**
+ * @brief Extract string ToxId from Tox URI.
+ *
+ * @param str Null-terminated Tox URI.
+ * @param tox_id Extracted ToxId; it has to be at least TOX_ADDRESS_SIZE * 2 + 1.
+ *
+ * @return True if success false otherwise.
+ */
+static bool get_tox_id_from_uri(const char *str, char *tox_id) {
+    const char *tox_uri_scheme = "tox:";
+    const int tox_uri_scheme_length = 4;
+
+    if (strncmp(str, tox_uri_scheme, tox_uri_scheme_length) == 0 &&
+        strlen(str) - tox_uri_scheme_length == TOX_ADDRESS_SIZE * 2) {
+        memcpy(tox_id, &str[tox_uri_scheme_length], TOX_ADDRESS_SIZE * 2);
+        tox_id[TOX_ADDRESS_SIZE * 2] = '\0';
+        return true;
+    }
+
+    return false;
+}
+
+bool try_open_tox_uri(const char *str) {
+    char tox_id[TOX_ADDRESS_SIZE * 2 + 1];
+
+    if (!get_tox_id_from_uri(str, tox_id)) {
+        return false;
+    }
+
+    FRIEND *friend = get_friend_by_id(tox_id);
+
+    if (friend) {
+        flist_selectchat(friend->number);
+    } else if (tox_thread_init == UTOX_TOX_THREAD_INIT_SUCCESS) {
+        edit_setstr(&edit_add_new_friend_id, tox_id, TOX_ADDRESS_SIZE * 2);
+        edit_setstr(&edit_search, (char *)"", 0);
+        flist_selectaddfriend();
+        edit_setfocus(&edit_add_new_friend_msg);
+    }
+
+    return true;
 }
 
 /******************************************************************************
@@ -1063,7 +1119,6 @@ static void contextmenu_list_onselect(uint8_t i) {
                 contextmenu_friend(i);
                 return;
             }
-
             case ITEM_GROUP: {
                 panel_group_chat.disabled = false;
                 GROUPCHAT *g = get_group(right_mouse_item->id_number);
@@ -1094,16 +1149,6 @@ static void contextmenu_list_onselect(uint8_t i) {
                 }
                 return;
             }
-
-            case ITEM_GROUP_CREATE: {
-                if (i) {
-                    postmessage_toxcore(TOX_GROUP_CREATE, 0, 1, NULL);
-                } else {
-                    postmessage_toxcore(TOX_GROUP_CREATE, 0, 0, NULL);
-                }
-                return;
-            }
-
             default: {
                 LOG_TRACE("F-List", "blerg" );
                 return;
@@ -1132,7 +1177,6 @@ bool flist_mright(void *UNUSED(n)) {
                                                 STR_REMOVE_GROUP };
 
     static UTOX_I18N_STR menu_group[]        = { STR_GROUPCHAT_SETTINGS, STR_CHANGE_GROUP_TOPIC, STR_REMOVE_GROUP };
-    static UTOX_I18N_STR menu_create_group[] = { STR_GROUP_CREATE_TEXT, STR_GROUP_CREATE_VOICE };
     static UTOX_I18N_STR menu_request[]      = { STR_REQ_ACCEPT, STR_REQ_DECLINE };
 
     if (mouseover_item) {
@@ -1160,7 +1204,6 @@ bool flist_mright(void *UNUSED(n)) {
             }
 
             case ITEM_GROUP_CREATE: {
-                contextmenu_new(COUNTOF(menu_create_group), menu_create_group, contextmenu_list_onselect);
                 break;
             }
 

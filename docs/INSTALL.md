@@ -5,27 +5,13 @@ The following steps install μTox on your computron/toaster/carrier pigeon. This
 For any and all of the following, you'll need to have [toxcore](https://github.com/TokTok/c-toxcore) installed first.
 
 - [Unix-like](#unix-like)
-- [OS X](#os-x)
+- [macOS](#macOS)
 - [Windows](#windows)
 - [Android](#android)
 
 ## Unix-like
 
-Dependencies:
-
-|   Name       | Required |
-|--------------|----------|
-| cmake >= 3.2 |   yes    |
-| dbus         |   no     |
-| filter_audio |   no     |
-| freetype     |   yes    |
-| GTK          |   no (runtime only) |
-| libvpx       |   yes    |
-| openal       |   yes    |
-| toxcore      |   yes    |
-| v4l          |   yes    |
-| xext         |   yes    |
-| xrender      |   yes    |
+Please make sure you have all of the required [dependencies](DEPENDENCIES.md).
 
 1. First compile:
 
@@ -76,11 +62,17 @@ Install using:
 sudo pkg install utox
 ```
 
-## OS X
+## macOS
 
-No one is currently providing binaries for OSX yet... Sorry Apple people... you should ask @stal888 to do something about that!
+You can download the latest dmg from here: https://github.com/uTox/uTox/releases.
 
-[I guess I'll try to build it](BUILD.md#osx).
+If there is no current version you can try and [build it](BUILD.md#macOS) or ask @publicarray to provide a new build.
+
+Install using homebrew cask:
+
+```bash
+brew cask install utox
+```
 
 ## Windows
 

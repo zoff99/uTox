@@ -3,6 +3,7 @@
 #include "../commands.h"
 #include "../debug.h"
 #include "../filesys.h"
+#include "../flist.h"
 #include "../main.h"
 #include "../settings.h"
 #include "../theme.h"
@@ -138,56 +139,11 @@ uint64_t get_time(void) {
     return ((uint64_t)ts.tv_sec * (1000 * 1000 * 1000)) + (uint64_t)ts.tv_nsec;
 }
 
-void openurl(char *str) {
-    NSString *urls = [[NSString alloc] initWithCString:(char *)str encoding:NSUTF8StringEncoding];
-
-    NSURL *url = NULL;
-    if (!strncasecmp((const char *)str, "http://", 7) || !strncasecmp((const char *)str, "https://", 8)) {
-        url = [NSURL URLWithString:urls];
-    } else /* it's a path */ {
-        url = [NSURL fileURLWithPath:urls];
-    }
-
-    [[NSWorkspace sharedWorkspace] openURL:url];
-    [urls release];
-}
-
 void config_osdefaults(UTOX_SAVE *r) {
     r->window_x      = 0;
     r->window_y      = 0;
     r->window_width  = DEFAULT_WIDTH;
     r->window_height = DEFAULT_HEIGHT;
-}
-
-void ensure_directory_r(char *path, int perm) {
-    if ((strcmp(path, "/") == 0) || (strcmp(path, ".") == 0))
-        return;
-
-    struct stat finfo;
-    if (stat(path, &finfo) != 0) {
-        if (errno != ENOENT) {
-            printf("stat(%s): %s", path, strerror(errno));
-            abort();
-        }
-    } else {
-        return; // already exists
-    }
-
-    const char *parent = dirname(path);
-    if (!parent)
-        abort();
-
-    char *parent_copy = strdup(parent);
-    if (!parent_copy)
-        abort();
-
-    ensure_directory_r(parent_copy, perm);
-    free(parent_copy);
-
-    if (mkdir(path, perm) != 0 && errno != EEXIST) {
-        LOG_ERR("Native", "ensure_directory_r(%s): %s", path, strerror(errno));
-        abort();
-    }
 }
 
 bool native_remove_file(const uint8_t *name, size_t length, bool portable_mode) {
@@ -302,6 +258,25 @@ void exit_ptt(void) {
 void redraw(void) {
     uToxAppDelegate *ad = (uToxAppDelegate *)[NSApp delegate];
     [ad soilWindowContents];
+}
+
+void openurl(char *str) {
+    if (try_open_tox_uri(str)) {
+        redraw();
+        return;
+    }
+
+    NSString *urls = [[NSString alloc] initWithCString:(char *)str encoding:NSUTF8StringEncoding];
+
+    NSURL *url = NULL;
+    if (!strncasecmp((const char *)str, "http://", 7) || !strncasecmp((const char *)str, "https://", 8)) {
+        url = [NSURL URLWithString:urls];
+    } else /* it's a path */ {
+        url = [NSURL fileURLWithPath:urls];
+    }
+
+    [[NSWorkspace sharedWorkspace] openURL:url];
+    [urls release];
 }
 
 void launch_at_startup(bool should) {

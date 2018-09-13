@@ -44,6 +44,10 @@
  * accepts: MESSAGES *pointer, MESSAGE *pointer, MSG_DATA *pointer
  */
 
+static int get_time_width() {
+    return SCALE(settings.use_long_time_msg ? TIME_WIDTH_LONG : TIME_WIDTH);
+}
+
 static int msgheight(MSG_HEADER *msg, int width) {
     switch (msg->msg_type) {
         case MSG_TYPE_NULL: {
@@ -55,13 +59,13 @@ static int msgheight(MSG_HEADER *msg, int width) {
         case MSG_TYPE_ACTION_TEXT:
         case MSG_TYPE_NOTICE:
         case MSG_TYPE_NOTICE_DAY_CHANGE: {
-            int  theight = text_height(abs(width - MESSAGES_X - TIME_WIDTH), font_small_lineheight,
+            int  theight = text_height(abs(width - SCALE(MESSAGES_X) - get_time_width()), font_small_lineheight,
                                        msg->via.txt.msg, msg->via.txt.length);
             return (theight == 0) ? 0 : theight + MESSAGES_SPACING;
         }
 
         case MSG_TYPE_IMAGE: {
-            uint32_t maxwidth = width - MESSAGES_X - TIME_WIDTH;
+            uint32_t maxwidth = width - SCALE(MESSAGES_X) - get_time_width();
             if (msg->via.img.zoom || msg->via.img.w <= maxwidth) {
                 return msg->via.img.h + MESSAGES_SPACING;
             }
@@ -83,7 +87,7 @@ static int msgheight_group(MSG_HEADER *msg, int width) {
         case MSG_TYPE_ACTION_TEXT:
         case MSG_TYPE_NOTICE:
         case MSG_TYPE_NOTICE_DAY_CHANGE: {
-            int theight = text_height(abs(width - MESSAGES_X - TIME_WIDTH), font_small_lineheight,
+            int theight = text_height(abs(width - SCALE(MESSAGES_X) - get_time_width()), font_small_lineheight,
                                       msg->via.grp.msg, msg->via.grp.length);
             return (theight == 0) ? 0 : theight + MESSAGES_SPACING;
         }
@@ -133,6 +137,7 @@ static uint32_t message_add(MESSAGES *m, MSG_HEADER *msg) {
                 m->data = realloc(m->data, (m->number + 10) * sizeof(void *));
                 m->extra += 10;
             } else {
+                m->number = 0;
                 m->data = calloc(20, sizeof(void *));
                 m->extra = 20;
             }
@@ -236,6 +241,10 @@ uint32_t message_add_group(MESSAGES *m, MSG_HEADER *msg) {
 
 uint32_t message_add_type_text(MESSAGES *m, bool auth, const char *msgtxt, uint16_t length, bool log, bool send) {
     MSG_HEADER *msg = calloc(1, sizeof(MSG_HEADER));
+    if (!msg) {
+        LOG_FATAL_ERR(EXIT_MALLOC, "Messages", "Could not allocate memory for a message.");
+    }
+
     time(&msg->time);
     msg->our_msg  = auth;
     msg->msg_type = MSG_TYPE_TEXT;
@@ -244,6 +253,10 @@ uint32_t message_add_type_text(MESSAGES *m, bool auth, const char *msgtxt, uint1
     msg->via.txt.length = length;
 
     FRIEND *f = get_friend(m->id);
+    if (!f) {
+        LOG_DEBUG("Messages", "Could not get friend with id: %u", m->id);
+        return UINT32_MAX;
+    }
 
     if (auth) {
         msg->via.txt.author_length = self.name_length;
@@ -275,15 +288,26 @@ uint32_t message_add_type_text(MESSAGES *m, bool auth, const char *msgtxt, uint1
 
 uint32_t message_add_type_action(MESSAGES *m, bool auth, const char *msgtxt, uint16_t length, bool log, bool send) {
     MSG_HEADER *msg = calloc(1, sizeof(MSG_HEADER));
+    if (!msg) {
+        LOG_FATAL_ERR(EXIT_MALLOC, "Messages", "Could not get the message header.");
+    }
 
     time(&msg->time);
     msg->our_msg  = auth;
     msg->msg_type = MSG_TYPE_ACTION_TEXT;
 
     msg->via.action.msg = calloc(1, length);
+    if (!msg->via.action.msg) {
+        LOG_FATAL_ERR(EXIT_MALLOC, "Messages", "Could not allocate memory for message.");
+    }
+
     msg->via.action.length = length;
 
     FRIEND *f = get_friend(m->id);
+    if (!f) {
+        LOG_DEBUG("Messages", "Could not get friend with number: %u", m->id);
+        return UINT32_MAX;
+    }
 
     if (auth) {
         msg->via.txt.author_length = self.name_length;
@@ -338,6 +362,10 @@ uint32_t message_add_type_image(MESSAGES *m, bool auth, NATIVE_IMAGE *img, uint1
     }
 
     MSG_HEADER *msg = calloc(1, sizeof(MSG_HEADER));
+    if (!msg) {
+        LOG_FATAL_ERR(EXIT_MALLOC, "Messages", "Could not allocate memory for message header.");
+    }
+
     time(&msg->time);
     msg->our_msg  = auth;
     msg->msg_type = MSG_TYPE_IMAGE;
@@ -357,6 +385,9 @@ MSG_HEADER *message_add_type_file(MESSAGES *m, uint32_t file_number, bool incomi
                                 const uint8_t *name, size_t name_size, size_t target_size, size_t current_size)
 {
     MSG_HEADER *msg = calloc(1, sizeof(MSG_HEADER));
+    if (!msg) {
+        LOG_FATAL_ERR(EXIT_MALLOC, "Messages", "Could not allocate memory for message header.");
+    }
 
     time(&msg->time);
     msg->our_msg     = !incoming;
@@ -379,6 +410,9 @@ MSG_HEADER *message_add_type_file(MESSAGES *m, uint32_t file_number, bool incomi
         msg->via.ft.path = NULL;
     } else { // It's a file
         msg->via.ft.path = calloc(1, UTOX_FILE_NAME_LENGTH);
+        if (!msg->via.ft.path) {
+            LOG_FATAL_ERR(EXIT_MALLOC, "Messages", "Could not allocate memory for the file path.");
+        }
     }
 
     message_add(m, msg);
@@ -615,7 +649,7 @@ static void messages_draw_timestamp(int x, int y, const time_t *time) {
 
     setcolor(COLOR_MAIN_TEXT_SUBTEXT);
     setfont(FONT_MISC);
-    drawtext(x, y, timestr, len);
+    drawtext(x - MESSAGES_SPACING, y, timestr, len);
 }
 
 static void messages_draw_author(int x, int y, int w, char *name, uint32_t length, uint32_t color) {
@@ -746,8 +780,8 @@ static int messages_draw_image(MSG_IMG *img, int x, int y, uint32_t maxwidth) {
 static void messages_draw_filetransfer(MESSAGES *m, MSG_FILE *file, uint32_t i, int x, int y, int w, int UNUSED(h)) {
     // Used in macros.
     int room_for_clip = BM_FT_CAP_WIDTH + SCALE(2);
-    int dx            = x + MESSAGES_X + room_for_clip;
-    int d_width       = w - MESSAGES_X - TIME_WIDTH - room_for_clip;
+    int dx            = x + SCALE(MESSAGES_X) + room_for_clip;
+    int d_width       = w - SCALE(MESSAGES_X) - get_time_width() - room_for_clip;
     /* Mouse Positions */
     bool mo             = (m->cursor_over_msg == i);
     bool mouse_over     = (mo && m->cursor_over_position) ? 1 : 0;
@@ -937,11 +971,53 @@ static int messages_draw_group(MESSAGES *m, MSG_HEADER *msg, uint32_t curr_msg_i
         h2 = UINT32_MAX;
     }
 
-    messages_draw_author(x, y, MESSAGES_X - NAME_OFFSET, msg->via.grp.author, msg->via.grp.author_length, msg->via.grp.author_color);
+    messages_draw_author(x, y, SCALE(MESSAGES_X - NAME_OFFSET), msg->via.grp.author, msg->via.grp.author_length, msg->via.grp.author_color);
     messages_draw_timestamp(x + width, y, &msg->time);
     return messages_draw_text(msg->via.grp.msg, msg->via.grp.length, msg->height, msg->msg_type, msg->our_msg, 1,
-                              h1, h2, x + MESSAGES_X, y, width - TIME_WIDTH - MESSAGES_X, height)
+                              h1, h2, x + SCALE(MESSAGES_X), y, width - get_time_width() - SCALE(MESSAGES_X), height)
            + MESSAGES_SPACING;
+}
+
+static int messages_time_change(MESSAGES *m, MSG_HEADER *msg, size_t index, int x, int y, int width, int height) {
+    uint32_t h1 = UINT32_MAX, h2 = UINT32_MAX;
+
+    if ((m->sel_start_msg > index && m->sel_end_msg > index)
+        || (m->sel_start_msg < index && m->sel_end_msg < index)) {
+        /* Out side the highlight area */
+        h1 = UINT32_MAX;
+        h2 = UINT32_MAX;
+    } else {
+        if (m->sel_start_msg < index) {
+            h1 = 0;
+        } else {
+            h1 = m->sel_start_position;
+        }
+
+        if (m->sel_end_msg > index) {
+            h2 = msg->via.notice.length;
+        } else {
+            h2 = m->sel_end_position;
+        }
+    }
+
+                /* error check */
+    if ((m->sel_start_msg == m->sel_end_msg && m->sel_start_position == m->sel_end_position) || h1 == h2) {
+        h1 = UINT32_MAX;
+        h2 = UINT32_MAX;
+    }
+
+    /* text.c is super broken, so we have to be hacky here */
+    if (h2 != msg->via.notice.length) {
+        if (m->sel_end_msg != index) {
+            h2 = msg->via.notice.length - h2;
+        } else {
+            h2 -= h1;
+        }
+    }
+
+    return messages_draw_text(msg->via.notice.msg, msg->via.notice.length, msg->height,
+                              msg->msg_type, msg->our_msg, msg->receipt_time,
+                              h1, h2, x + SCALE(MESSAGES_X), y, width - get_time_width() - SCALE(MESSAGES_X), height);
 }
 
 /** Formats all messages from self and friends, and then call draw functions
@@ -950,7 +1026,7 @@ static int messages_draw_group(MESSAGES *m, MSG_HEADER *msg, uint32_t curr_msg_i
  * accepts: messages struct *pointer, int x,y positions, int width,height
  */
 void messages_draw(PANEL *panel, int x, int y, int width, int height) {
-    if (width - MESSAGES_X - TIME_WIDTH <= 0) {
+    if (width - SCALE(MESSAGES_X) - get_time_width() <= 0) {
         return;
     }
 
@@ -966,7 +1042,7 @@ void messages_draw(PANEL *panel, int x, int y, int width, int height) {
 
     if (m->width != width) {
         m->width = width;
-        messages_updateheight(m, width - MESSAGES_X + TIME_WIDTH);
+        messages_updateheight(m, width - SCALE(MESSAGES_X) + get_time_width());
         y -= scroll_gety(panel->content_scroll, height);
     }
 
@@ -979,7 +1055,7 @@ void messages_draw(PANEL *panel, int x, int y, int width, int height) {
             /* Empty message */
             pthread_mutex_unlock(&messages_lock);
             return;
-        } else if (y + msg->height <= (unsigned)MAIN_TOP) {
+        } else if (y + msg->height <= (unsigned)SCALE(MAIN_TOP)) {
             /* message is exclusively above the viewing window */
             y += msg->height;
             continue;
@@ -1022,16 +1098,28 @@ void messages_draw(PANEL *panel, int x, int y, int width, int height) {
             }
 
             if (draw_author) {
-                if (msg->our_msg != lastauthor) {
+                if (msg->our_msg != lastauthor || y < SCALE(MAIN_TOP) + font_small_lineheight) {
+                    int msg_y = y;
+
+                    // If previous author label is invisible (i.e. above top side of the messages window)
+                    // than clear its old place by drawing a rectangle with background colour.
+                    // After that we are able to draw a new author label at the same place.
+                    if (y < SCALE(MAIN_TOP) + font_small_lineheight) {
+                        msg_y = SCALE(MAIN_TOP);
+
+                        // MAIN_TOP + 1 because otherwise it cuts off one pixel from TOP FRAME somehow
+                        draw_rect_fill(x, SCALE(MAIN_TOP) + 1, SCALE(MESSAGES_X), font_small_lineheight, COLOR_BKGRND_MAIN);
+                    }
+
                     FRIEND *f = get_friend(m->id);
                     if (msg->our_msg) {
-                        messages_draw_author(x, y, MESSAGES_X - NAME_OFFSET, self.name, self.name_length,
+                        messages_draw_author(x, msg_y, SCALE(MESSAGES_X - NAME_OFFSET), self.name, self.name_length,
                                              COLOR_MAIN_TEXT_SUBTEXT);
                     } else if (f->alias) {
-                        messages_draw_author(x, y, MESSAGES_X - NAME_OFFSET, f->alias, f->alias_length,
+                        messages_draw_author(x, msg_y, SCALE(MESSAGES_X - NAME_OFFSET), f->alias, f->alias_length,
                                              COLOR_MAIN_TEXT_CHAT);
                     } else {
-                        messages_draw_author(x, y, MESSAGES_X - NAME_OFFSET, f->name, f->name_length,
+                        messages_draw_author(x, msg_y, SCALE(MESSAGES_X - NAME_OFFSET), f->name, f->name_length,
                                              COLOR_MAIN_TEXT_CHAT);
                     }
                     lastauthor = msg->our_msg;
@@ -1051,55 +1139,17 @@ void messages_draw(PANEL *panel, int x, int y, int width, int height) {
             case MSG_TYPE_NOTICE: {
                 // Draw timestamps
                 messages_draw_timestamp(x + width, y, &msg->time);
-                /* intentional fall through */
+                y = messages_time_change(m, msg, curr_msg_i, x, y, width, height);
+                break;
             }
             case MSG_TYPE_NOTICE_DAY_CHANGE: {
-                // Normal message
-                uint32_t h1 = UINT32_MAX, h2 = UINT32_MAX;
-
-                if ((m->sel_start_msg > curr_msg_i && m->sel_end_msg > curr_msg_i)
-                    || (m->sel_start_msg < curr_msg_i && m->sel_end_msg < curr_msg_i)) {
-                    /* Out side the highlight area */
-                    h1 = UINT32_MAX;
-                    h2 = UINT32_MAX;
-                } else {
-                    if (m->sel_start_msg < curr_msg_i) {
-                        h1 = 0;
-                    } else {
-                        h1 = m->sel_start_position;
-                    }
-
-                    if (m->sel_end_msg > curr_msg_i) {
-                        h2 = msg->via.notice.length;
-                    } else {
-                        h2 = m->sel_end_position;
-                    }
-                }
-
-                /* error check */
-                if ((m->sel_start_msg == m->sel_end_msg && m->sel_start_position == m->sel_end_position) || h1 == h2) {
-                    h1 = UINT32_MAX;
-                    h2 = UINT32_MAX;
-                }
-
-                /* text.c is super broken, so we have to be hacky here */
-                if (h2 != msg->via.notice.length) {
-                    if (m->sel_end_msg != curr_msg_i) {
-                        h2 = msg->via.notice.length - h2;
-                    } else {
-                        h2 -= h1;
-                    }
-                }
-
-                y = messages_draw_text(msg->via.notice.msg, msg->via.notice.length, msg->height,
-                                       msg->msg_type, msg->our_msg, msg->receipt_time,
-                                       h1, h2, x + MESSAGES_X, y, width - TIME_WIDTH - MESSAGES_X, height);
+                y = messages_time_change(m, msg, curr_msg_i, x, y, width, height);
                 break;
             }
 
             // Draw image
             case MSG_TYPE_IMAGE: {
-                y += messages_draw_image(&msg->via.img, x + MESSAGES_X, y, width - MESSAGES_X - TIME_WIDTH);
+                y += messages_draw_image(&msg->via.img, x + SCALE(MESSAGES_X), y, width - SCALE(MESSAGES_X) - get_time_width());
                 break;
             }
 
@@ -1120,11 +1170,14 @@ void messages_draw(PANEL *panel, int x, int y, int width, int height) {
 static bool messages_mmove_text(MESSAGES *m, int width, int mx, int my, int dy, char *message, uint32_t msg_height,
                                 uint16_t msg_length)
 {
-    cursor                  = CURSOR_TEXT;
-    m->cursor_over_position = hittextmultiline(mx - MESSAGES_X, width - MESSAGES_X - TIME_WIDTH, (my < 0 ? 0 : my),
+    if (mx < width - get_time_width()) {
+        cursor = CURSOR_TEXT;
+    }
+
+    m->cursor_over_position = hittextmultiline(mx - SCALE(MESSAGES_X), width - SCALE(MESSAGES_X) - get_time_width(), (my < 0 ? 0 : my),
                                                msg_height, font_small_lineheight, message, msg_length, 1);
 
-    if (my < 0 || my >= dy || mx < MESSAGES_X || m->cursor_over_position == msg_length) {
+    if (my < 0 || my >= dy || mx < SCALE(MESSAGES_X) || m->cursor_over_position == msg_length) {
         m->cursor_over_uri = UINT32_MAX;
         return 0;
     }
@@ -1150,10 +1203,13 @@ static bool messages_mmove_text(MESSAGES *m, int width, int mx, int my, int dy, 
     char *end = message + msg_length;
     while (str != end && *str != ' ' && *str != '\n') {
         if (str == message || *(str - 1) == '\n' || *(str - 1) == ' ') {
-            if (m->cursor_over_uri == UINT32_MAX && end - str >= 7 && (strcmp2(str, "http://") == 0)) {
+            if (m->cursor_over_uri == UINT32_MAX && end - str >= 7 && (strncmp(str, "http://", 7) == 0)) {
                 cursor             = CURSOR_HAND;
                 m->cursor_over_uri = str - message;
-            } else if (m->cursor_over_uri == UINT32_MAX && end - str >= 8 && (strcmp2(str, "https://") == 0)) {
+            } else if (m->cursor_over_uri == UINT32_MAX && end - str >= 8 && (strncmp(str, "https://", 8) == 0)) {
+                cursor             = CURSOR_HAND;
+                m->cursor_over_uri = str - message;
+            } else if (m->cursor_over_uri == UINT32_MAX && end - str >= 4 && (strncmp(str, "tox:", 4) == 0)) {
                 cursor             = CURSOR_HAND;
                 m->cursor_over_uri = str - message;
             }
@@ -1172,7 +1228,7 @@ static bool messages_mmove_text(MESSAGES *m, int width, int mx, int my, int dy, 
 
 static bool messages_mmove_image(MSG_IMG *image, uint32_t max_width, int mx, int my) {
     if (image->w > max_width) {
-        mx -= MESSAGES_X;
+        mx -= SCALE(MESSAGES_X);
         int w = image->w > max_width ? max_width : image->w;
         int h = (image->zoom || image->w <= max_width) ? image->h : image->h * max_width / image->w;
 
@@ -1187,9 +1243,9 @@ static bool messages_mmove_image(MSG_IMG *image, uint32_t max_width, int mx, int
 static uint8_t messages_mmove_filetransfer(int mx, int my, int width) {
     mx -= SCALE(10); /* Why? */
     if (mx >= 0 && mx < width && my >= 0 && my < FILE_TRANSFER_BOX_HEIGHT) {
-        if (mx >= width - TIME_WIDTH - (BM_FTB_WIDTH * 2) - SCALE(2) - SCROLL_WIDTH
-            && mx <= width - TIME_WIDTH - SCROLL_WIDTH) {
-            if (mx >= width - TIME_WIDTH - BM_FTB_WIDTH - SCROLL_WIDTH) {
+        if (mx >= width - get_time_width() - (BM_FTB_WIDTH * 2) - SCALE(2) - SCROLL_WIDTH
+            && mx <= width - get_time_width() - SCROLL_WIDTH) {
+            if (mx >= width - get_time_width() - BM_FTB_WIDTH - SCROLL_WIDTH) {
                 // mouse is over the right button (pause / accept)
                 return 2;
             } else {
@@ -1207,14 +1263,10 @@ bool messages_mmove(PANEL *panel, int UNUSED(px), int UNUSED(py), int width, int
 {
     MESSAGES *m = panel->object;
 
-    if (mx >= width - TIME_WIDTH) {
-        m->cursor_over_time = 1;
-    } else {
-        m->cursor_over_time = 0;
-    }
+    m->cursor_over_time = inrect(mx, my, width - get_time_width(), 0, get_time_width(), m->height);
 
     if (m->cursor_down_msg < m->number) {
-        uint32_t maxwidth = width - MESSAGES_X - TIME_WIDTH;
+        uint32_t maxwidth = width - SCALE(MESSAGES_X) - get_time_width();
         MSG_HEADER *msg = m->data[m->cursor_down_msg];
         if ((msg->msg_type == MSG_TYPE_IMAGE) && (msg->via.img.w > maxwidth)) {
             msg->via.img.position -= (double)dx / (double)(msg->via.img.w - maxwidth);
@@ -1277,7 +1329,7 @@ bool messages_mmove(PANEL *panel, int UNUSED(px), int UNUSED(py), int width, int
                 }
 
                 case MSG_TYPE_IMAGE: {
-                    m->cursor_over_position = messages_mmove_image(&msg->via.img, (width - MESSAGES_X - TIME_WIDTH), mx, my);
+                    m->cursor_over_position = messages_mmove_image(&msg->via.img, (width - SCALE(MESSAGES_X) - get_time_width()), mx, my);
                     break;
                 }
 
@@ -1451,15 +1503,17 @@ bool messages_dclick(PANEL *panel, bool triclick) {
             case MSG_TYPE_ACTION_TEXT: {
                 m->sel_start_msg = m->sel_end_msg = m->cursor_over_msg;
 
-                const char c = triclick ? '\n' : ' ';
-
                 uint16_t i = m->cursor_over_position;
-                while (i != 0 && msg->via.txt.msg[i - 1] != c) {
+                while (i != 0 && msg->via.txt.msg[i - 1] != '\n'
+                       /*  If it's a dclick, also set ' ' as boundary, else do nothing. */
+                       && (!triclick ? (msg->via.txt.msg[i - 1] != ' ') : 1)) {
                     i -= utf8_unlen(msg->via.txt.msg + i);
                 }
                 m->sel_start_position = i;
                 i = m->cursor_over_position;
-                while (i != msg->via.txt.length && msg->via.txt.msg[i] != c) {
+                while (i != msg->via.txt.length && msg->via.txt.msg[i] != '\n'
+                       /*  If it's a dclick, also set ' ' as boundary, else do nothing. */
+                       && (!triclick ? (msg->via.txt.msg[i] != ' ') : 1)) {
                     i += utf8_len(msg->via.txt.msg + i);
                 }
                 m->sel_end_position = i;
@@ -1749,7 +1803,7 @@ void messages_init(MESSAGES *m, uint32_t friend_number) {
 
     pthread_mutex_lock(&messages_lock);
 
-    memset(m, 0, sizeof(*m) * COUNTOF(m));
+    memset(m, 0, sizeof(*m));
 
     m->data = calloc(20, sizeof(void *));
     if (!m->data) {

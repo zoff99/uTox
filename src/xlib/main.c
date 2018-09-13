@@ -39,11 +39,13 @@
 #include <locale.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <signal.h>
 
 bool hidden = false;
 
 XIC xic = NULL;
 static XSizeHints *xsh = NULL;
+static bool shutdown = false;
 
 void setclipboard(void) {
     XSetSelectionOwner(display, XA_CLIPBOARD, main_window.window, CurrentTime);
@@ -209,6 +211,11 @@ uint64_t get_time(void) {
 }
 
 void openurl(char *str) {
+    if (try_open_tox_uri(str)) {
+        redraw();
+        return;
+    }
+
     char *cmd = "xdg-open";
     if (!fork()) {
         execlp(cmd, cmd, str, (char *)0);
@@ -588,7 +595,7 @@ void notify(char *title, uint16_t UNUSED(title_length), const char *msg, uint16_
     } else {
         FRIEND *obj = object;
         if (friend_has_avatar(obj)) {
-            f_cid = obj->cid;
+            f_cid = obj->id_bin;
         }
     }
 
@@ -666,6 +673,12 @@ static void cursors_init(void) {
     cursors[CURSOR_ZOOM_OUT] = XCreateFontCursor(display, XC_target);
 }
 
+static void signal_handler(int signal)
+{
+    LOG_INFO("XLIB MAIN", "Got signal: %s (%i)", strsignal(signal), signal);
+    shutdown = true;
+}
+
 #include "../ui/dropdown.h" // this is for dropdown.language TODO provide API
 int main(int argc, char *argv[]) {
     if (!XInitThreads()) {
@@ -726,6 +739,14 @@ int main(int argc, char *argv[]) {
 
     /* catch WM_DELETE_WINDOW */
     XSetWMProtocols(display, main_window.window, &wm_delete_window, 1);
+
+    struct sigaction action;
+    action.sa_handler = &signal_handler;
+
+    /* catch terminating signals */
+    sigaction(SIGINT, &action, NULL);
+    sigaction(SIGHUP, &action, NULL);
+    sigaction(SIGTERM, &action, NULL);
 
     /* set drag and drog version */
     Atom dndversion = 3;
@@ -810,7 +831,7 @@ int main(int argc, char *argv[]) {
     thread(toxcore_thread, NULL);
 
     /* event loop */
-    while (true) {
+    while (!shutdown) {
         XEvent event;
         XNextEvent(display, &event);
         if (!doevent(event)) {

@@ -7,11 +7,11 @@ project(uTox LANGUAGES C)
 #####################
 
 set(PROJECT_VERSION_MAJOR "0")
-set(PROJECT_VERSION_MINOR "16")
-set(PROJECT_VERSION_PATCH "1")
+set(PROJECT_VERSION_MINOR "17")
+set(PROJECT_VERSION_PATCH "0")
 set(PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
 
-set(PROJECT_COPYRIGHT "Copyleft 2017 uTox contributors. Some rights reserved.")
+set(PROJECT_COPYRIGHT "Copyleft 2018 uTox contributors. Some rights reserved.")
 
 execute_process(COMMAND date +%Y OUTPUT_VARIABLE BUILD_YEAR OUTPUT_STRIP_TRAILING_WHITESPACE)
 execute_process(COMMAND date +%B OUTPUT_VARIABLE BUILD_MONTH OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -73,6 +73,11 @@ else()
     set(ASAN_DEFAULT ON)
 endif()
 
+# ASAN causes uTox to be slower so do no use it for release builds
+if (CMAKE_BUILD_TYPE MATCHES "Release")
+   set(ASAN_DEFAULT OFF)
+endif()
+
 ###########
 # Options #
 ###########
@@ -80,7 +85,7 @@ endif()
 option(UTOX_STATIC        "Link uTox statically"                                 ${STATIC_DEFAULT} )
 option(TOXCORE_STATIC     "Build uTox with the static version of Toxcore"        ${STATIC_DEFAULT} )
 option(ENABLE_ASAN        "Enable Address Sanitizer on debug builds"               ${ASAN_DEFAULT} )
-option(ENABLE_TESTS       "Whether to build test binaries (currently linux only)"               ON )
+option(ENABLE_TESTS       "Whether to build test binaries (currently Unix-like OSes only)"      ON )
 option(ENABLE_WERROR      "Error on Warning, whether to put -Werror flag to the compiler"       OFF)
 option(ENABLE_FILTERAUDIO "Enable Filter Audio"                                                 ON )
 option(ENABLE_AUTOUPDATE  "Enable Auto-updater"                                                 OFF)
@@ -128,7 +133,6 @@ if(${CMAKE_BUILD_TYPE} MATCHES Debug)
     string(REPLACE "\n" " " GIT_VERSION ${GIT_VERSION})
 endif()
 
-
 #######################################################################
 # C compiler flags
 #######################################################################
@@ -162,6 +166,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} $ENV{CFLAGS}")
 add_cflag("-Wall")
 add_cflag("-Wextra")
 add_cflag("-Wpointer-arith")
+add_cflag("-Wimplicit-fallthrough=5")
 
 ## Warnings we don't tolerate
 add_cflag("-Werror=implicit-function-declaration")
@@ -285,6 +290,11 @@ endif()
 include_directories(${LIBTOX_INCLUDE_DIRS})
 set(TOX_LIBS ${LIBTOX_LIBRARIES})
 
+
+include_directories(SYSTEM third-party/stb)
+include_directories(SYSTEM third-party/minini/dev)
+include_directories(SYSTEM third-party/qrcodegen/c)
+
 find_package(libsodium REQUIRED)
 include_directories(${LIBSODIUM_INCLUDE_DIRS})
 set(LIBRARIES ${LIBRARIES} ${LIBSODIUM_LIBRARIES})
@@ -308,7 +318,9 @@ if(WIN32)
         link_directories( libs/toktok_32/lib /usr/i686-w64-mingw32/lib/ libs/windows-x32/lib )
     endif()
 
-    ## Needed to build the widows icon
+    link_directories(${CMAKE_PREFIX_PATH}/lib)
+
+    # Windows icons
     enable_language(RC)
     set(WINDOWS_ICON src/windows/utox.rc)
 
@@ -354,6 +366,7 @@ add_executable(utox ${GUI_TYPE}
     src/main.c
     src/messages.c
     src/notify.c
+    src/qr.c
     src/screen_grab.c
     src/self.c
     src/settings.c
@@ -368,6 +381,8 @@ add_executable(utox ${GUI_TYPE}
     src/updater.c
     src/utox.c
     src/window.c
+    third-party/minini/dev/minIni.c
+    third-party/qrcodegen/c/qrcodegen.c
 
     ${WINDOWS_ICON}
     ${APPLE_FILES}

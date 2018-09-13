@@ -92,10 +92,10 @@ bool maybe_i18nal_string_is_valid(MAYBE_I18NAL_STRING *mis) {
 static void sidepanel_USERBADGE(void) {
     // Converting DEFINES to magic becaues this will be moved to layout/
     // and will then get a different format/selection
-    CREATE_BUTTON(avatar,     10, SIDEBAR_AVATAR_TOP, 40, 40);
-    CREATE_BUTTON(name,       64, SIDEBAR_NAME_TOP, SIDEBAR_NAME_WIDTH, SIDEBAR_NAME_HEIGHT - 2);
-    CREATE_BUTTON(status_msg, 64, SIDEBAR_STATUSMSG_TOP, SIDEBAR_STATUSMSG_WIDTH, SIDEBAR_STATUSMSG_HEIGHT - 2);
-    CREATE_BUTTON(usr_state,  210, 10, 20, 40);
+    CREATE_BUTTON(avatar, SIDEBAR_AVATAR_LEFT, SIDEBAR_AVATAR_TOP, 40, 40);
+    CREATE_BUTTON(name, SIDEBAR_NAME_LEFT, SIDEBAR_NAME_TOP, SIDEBAR_NAME_WIDTH, SIDEBAR_NAME_HEIGHT - 2);
+    CREATE_BUTTON(status_msg, SIDEBAR_STATUSMSG_LEFT, SIDEBAR_STATUSMSG_TOP, SIDEBAR_STATUSMSG_WIDTH, SIDEBAR_STATUSMSG_HEIGHT - 2);
+    CREATE_BUTTON(usr_state, 200, 10, 25, 45);
 }
 
 static void sidepanel_FLIST(void) {
@@ -128,28 +128,26 @@ static void settings_PROFILE(void) {
 
     CREATE_EDIT(toxid, 10, 140, -10, 24);
     CREATE_BUTTON(copyid, 66, 117, _BM_SBUTTON_WIDTH, _BM_SBUTTON_HEIGHT);
-
-    CREATE_DROPDOWN(language, 10, 195, 24, -10);
 }
 
 static void settings_UI(void) {
     panel_settings_ui.y            = 32;
 
-    CREATE_DROPDOWN(theme, 10, 30, 24, 120);
+    CREATE_DROPDOWN(theme, 10, 85, 24, 120);
 
-    CREATE_DROPDOWN(dpi,   150, 30, 24, 200);
+    CREATE_DROPDOWN(dpi,   150, 85, 24, 200);
 
-    CREATE_SWITCH(save_chat_history, 10, 60,  _BM_SWITCH_WIDTH, _BM_SWITCH_HEIGHT);
-    CREATE_SWITCH(close_to_tray,     10, 90,  _BM_SWITCH_WIDTH, _BM_SWITCH_HEIGHT);
-    CREATE_SWITCH(start_in_tray,     10, 120, _BM_SWITCH_WIDTH, _BM_SWITCH_HEIGHT);
-    CREATE_SWITCH(auto_startup,      10, 150, _BM_SWITCH_WIDTH, _BM_SWITCH_HEIGHT);
-    CREATE_SWITCH(mini_contacts,     10, 180, _BM_SWITCH_WIDTH, _BM_SWITCH_HEIGHT);
+    CREATE_SWITCH(save_chat_history, 10, 115,  _BM_SWITCH_WIDTH, _BM_SWITCH_HEIGHT);
+    CREATE_SWITCH(close_to_tray,     10, 145,  _BM_SWITCH_WIDTH, _BM_SWITCH_HEIGHT);
+    CREATE_SWITCH(start_in_tray,     10, 175, _BM_SWITCH_WIDTH, _BM_SWITCH_HEIGHT);
+    CREATE_SWITCH(auto_startup,      10, 205, _BM_SWITCH_WIDTH, _BM_SWITCH_HEIGHT);
+    CREATE_SWITCH(mini_contacts,     10, 235, _BM_SWITCH_WIDTH, _BM_SWITCH_HEIGHT);
 }
 
 static void settings_AV(void) {
     panel_settings_av.y = 32;
 
-    CREATE_SWITCH(push_to_talk, 10, 9, _BM_SWITCH_WIDTH, _BM_SWITCH_HEIGHT);
+    CREATE_SWITCH(push_to_talk, 10, 10, _BM_SWITCH_WIDTH, _BM_SWITCH_HEIGHT);
 
     #ifndef AUDIO_FILTERING
         const uint16_t start_draw_y = 30;
@@ -195,11 +193,15 @@ static void settings_ADV(void) {
     CREATE_SWITCH(block_friend_requests, 10, 177, _BM_SWITCH_WIDTH, _BM_SWITCH_HEIGHT);
 
     CREATE_BUTTON(show_password_settings, 10,  207, _BM_SBUTTON_WIDTH, _BM_SBUTTON_HEIGHT);
-    CREATE_BUTTON(show_nospam,            300, 207, _BM_SBUTTON_WIDTH, _BM_SBUTTON_HEIGHT);
+
+    const int show_nospam_x = 30 + UN_SCALE(MAX(UTOX_STR_WIDTH(SHOW_UI_PASSWORD), UTOX_STR_WIDTH(HIDE_UI_PASSWORD)));
+    CREATE_BUTTON(show_nospam, show_nospam_x, 207, _BM_SBUTTON_WIDTH, _BM_SBUTTON_HEIGHT);
 
     CREATE_EDIT(nospam,           10,  265, -10, 24);
     CREATE_BUTTON(change_nospam,  10,  295, _BM_SBUTTON_WIDTH, _BM_SBUTTON_HEIGHT);
-    CREATE_BUTTON(revert_nospam,  300, 295, _BM_SBUTTON_WIDTH, _BM_SBUTTON_HEIGHT);
+
+    const int revert_nospam_x = 30 + UN_SCALE(UTOX_STR_WIDTH(RANDOMIZE_NOSPAM));
+    CREATE_BUTTON(revert_nospam, revert_nospam_x, 295, _BM_SBUTTON_WIDTH, _BM_SBUTTON_HEIGHT);
 
     CREATE_EDIT(profile_password, 10,  85, -10, 24);
     CREATE_BUTTON(lock_uTox,      10,  295, _BM_SBUTTON_WIDTH, _BM_SBUTTON_HEIGHT);
@@ -662,6 +664,12 @@ bool panel_mwheel(PANEL *p, int x, int y, int width, int height, double d, bool 
 }
 
  bool panel_mup(PANEL *p) {
+    if (p == &panel_root && contextmenu_mup()) {
+        tooltip_mup();
+        redraw();
+        return true;
+    }
+
     bool draw = p->type ? mupfunc[p->type - 1](p) : false;
     PANEL **pp = p->child;
     if (pp) {
@@ -674,7 +682,6 @@ bool panel_mwheel(PANEL *p, int x, int y, int width, int height, double d, bool 
     }
 
     if (p == &panel_root) {
-        draw |= contextmenu_mup();
         tooltip_mup();
         if (draw) {
             redraw();
