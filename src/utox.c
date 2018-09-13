@@ -424,7 +424,9 @@ void utox_message_dispatch(UTOX_MSG utox_msg_id, uint16_t param1, uint16_t param
         }
         case FRIEND_MESSAGE: {
             // TODO implement notification
-            //notify_new(NULL, NULL); // Intentional fallthrough
+            //notify_new(NULL, NULL);
+            redraw();
+            break;
         }
         case FRIEND_MESSAGE_UPDATE: {
             redraw();
@@ -453,7 +455,8 @@ void utox_message_dispatch(UTOX_MSG utox_msg_id, uint16_t param1, uint16_t param
             redraw();
             break;
         }
-        case FRIEND_SEND_REQUEST: {
+
+        case FRIEND_ADD_NO_REQ: {
             /* confirmation that friend has been added to friend list (add) */
             if (param1) {
                 /* friend was not added */
@@ -466,13 +469,51 @@ void utox_message_dispatch(UTOX_MSG utox_msg_id, uint16_t param1, uint16_t param
                 FRIEND *f = get_friend(param2);
                 if (!f) {
                     LOG_ERR("uTox", "Could not get friend with number: %u", param2);
+                    free(data);
                     return;
                 }
 
-                memcpy(f->cid, data, sizeof(f->cid));
-                flist_add_friend(f);
+                flist_add_friend(f, NULL, 0);
+                flist_selectchat(f->number);
 
+                addfriend_status = ADDF_NOFREQUESTSENT;
+            }
+            free(data);
+            redraw();
+            break;
+        }
+
+        case FRIEND_SEND_REQUEST: {
+            /* confirmation that friend has been added to friend list (add) */
+            if (param1) {
+                /* friend was not added */
+                addfriend_status = param2;
+            } else {
+                /* friend was added */
+                FRIEND *f = get_friend(param2);
+                if (!f) {
+                    edit_add_new_friend_id.length  = 0;
+                    edit_add_new_friend_msg.length = 0;
+                    LOG_ERR("uTox", "Could not get friend with number: %u", param2);
+                    free(data);
+                    return;
+                }
+
+                memcpy(f->id_bin, data, TOX_PUBLIC_KEY_SIZE);
+
+                char *request_message = strdup(edit_add_new_friend_msg.data);
+                if (request_message) {
+                    flist_add_friend(f, request_message, edit_add_new_friend_msg.length);
+                    free(request_message);
+                } else {
+                    LOG_ERR("uTox", "Could not allocate memory for request message.");
+                }
+
+                flist_selectchat(f->number);
                 addfriend_status = ADDF_SENT;
+
+                edit_add_new_friend_id.length  = 0;
+                edit_add_new_friend_msg.length = 0;
             }
             free(data);
             redraw();
@@ -546,7 +587,8 @@ void utox_message_dispatch(UTOX_MSG utox_msg_id, uint16_t param1, uint16_t param
             video_frame(param1, frame->img, frame->w, frame->h, 0);
             free(frame->img);
             free(data);
-            // Intentional fall through
+            redraw();
+            break;
         }
         case AV_INLINE_FRAME: {
             redraw();
@@ -599,9 +641,13 @@ void utox_message_dispatch(UTOX_MSG utox_msg_id, uint16_t param1, uint16_t param
 
             break;
         }
+
         case GROUP_PEER_ADD:
         case GROUP_PEER_NAME:
         case GROUP_PEER_CHANGE: {
+            /* param1: group number
+             * param2: peer number
+             */
             GROUPCHAT *g = get_group(param1);
             if (!g) {
                 return;

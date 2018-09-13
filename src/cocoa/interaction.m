@@ -12,6 +12,7 @@
 #include "../messages.h"
 #include "../self.h"
 #include "../settings.h"
+#include "../stb.h"
 #include "../text.h"
 #include "../tox.h"
 #include "../ui.h"
@@ -736,7 +737,7 @@ static inline void select_right_to_char(char c) {
 @end
 
 // FIXME: asda
-static char clip_data[65536];
+static char clip_data[UINT16_MAX];
 
 void setselection(char *data, uint16_t length) {}
 
@@ -896,20 +897,28 @@ void native_export_chatlog_init(uint32_t fid) {
     }
 
     NSSavePanel *picker = [NSSavePanel savePanel];
-    NSString *fname     = [[NSString alloc] initWithBytesNoCopy:f->name
-                                                     length:f->name_length
-                                                   encoding:NSUTF8StringEncoding
-                                               freeWhenDone:NO];
-    picker.message = [NSString
-        stringWithFormat:NSSTRING_FROM_LOCALIZED(WHERE_TO_SAVE_FILE_PROMPT), f->name_length, f->name];
+    NSString *fname = [[NSString alloc]
+        initWithBytesNoCopy:f->name
+        length:f->name_length
+        encoding:NSUTF8StringEncoding
+        freeWhenDone:NO];
+
+    picker.message = [NSString stringWithFormat:NSSTRING_FROM_LOCALIZED(WHERE_TO_SAVE_FILE_PROMPT),
+            f->name_length,
+            f->name];
+
     picker.nameFieldStringValue = fname;
     [fname release];
     int ret = [picker runModal];
 
     if (ret == NSFileHandlingPanelOKButton) {
         NSURL *destination = picker.URL;
-        // FIXME: might be leaking
-        utox_export_chatlog(fid, strdup(destination.path.UTF8String));
+        FILE *file = utox_get_file_simple(destination.path.UTF8String, UTOX_FILE_OPTS_WRITE | UTOX_FILE_OPTS_MKDIR);
+        if (!file) {
+            LOG_ERR("Cocoa", "Could not write to file: %s", destination.path.UTF8String);
+            return;
+        }
+        utox_export_chatlog(f->id_str, file);
     }
 }
 
@@ -968,6 +977,29 @@ void file_save_inline_image_png(MSG_HEADER *msg) {
         msg->via.ft.inline_png = false;
     }
 }
+
+bool native_save_image_png(const char *name, const uint8_t *image, const int image_size) {
+    NSSavePanel *picker = [NSSavePanel savePanel];
+    NSString *fname =
+        [[NSString alloc] initWithBytes:name length:strlen(name) encoding:NSUTF8StringEncoding];
+    picker.message = [NSString
+        stringWithFormat:NSSTRING_FROM_LOCALIZED(WHERE_TO_SAVE_FILE_PROMPT), strlen(name), name];
+    picker.nameFieldStringValue = fname;
+    picker.allowedFileTypes = @[ @"png" ];
+    [fname release];
+    int ret = [picker runModal];
+
+    if (ret == NSFileHandlingPanelOKButton) {
+        NSURL  *destination = picker.URL;
+        NSData *d = [NSData dataWithBytesNoCopy:image length:image_size freeWhenDone:NO];
+        [d writeToURL:destination atomically:YES];
+
+        return true;
+    }
+
+    return false;
+}
+
 //@"Select one or more files to send."
 void openfilesend(void) {
     NSOpenPanel *picker            = [NSOpenPanel openPanel];
@@ -977,13 +1009,42 @@ void openfilesend(void) {
     int ret                        = [picker runModal];
 
     if (ret == NSFileHandlingPanelOKButton) {
-        NSArray *        urls = picker.URLs;
-        NSMutableString *s    = [NSMutableString string];
-        for (NSURL *url in urls) {
-            [s appendFormat:@"%@\n", url.path];
+        NSArray *urls = picker.URLs;
+        FRIEND *f = flist_get_friend();
+        if (!f) {
+            LOG_ERR("Cocoa", "Could not get friend.");
+            return;
         }
-        //postmessage_toxcore(TOX_FILE_SEND_NEW, (FRIEND *)selected_item->data - friend, 0xFFFF, strdup(s.UTF8String));
+
+        for (NSURL *url in urls) {
+            UTOX_MSG_FT *msg = calloc(1, sizeof(UTOX_MSG_FT));
+            if (!msg) {
+                LOG_ERR("Cocoa", "Failed to malloc for file sending.");
+                return;
+            }
+            msg->file = fopen(url.path.UTF8String, "r");
+            msg->name = (uint8_t*)strdup(url.path.UTF8String);
+            postmessage_toxcore(TOX_FILE_SEND_NEW, f->number, 0, msg);
+            LOG_INFO("Cocoa", "File %s sent!", url.path.UTF8String);
+        }
     }
+}
+
+void show_messagebox(const char *caption, uint16_t caption_length, const char *message, uint16_t message_length) {
+    NSString *message_native = [[NSString alloc] initWithBytes:message length:message_length encoding:NSUTF8StringEncoding];
+    NSString *caption_native = [[NSString alloc] initWithBytes:caption length:caption_length encoding:NSUTF8StringEncoding];
+
+    NSString *emsg = [[NSString alloc] initWithFormat:@"%@%@", caption_native, message_native];
+    [caption_native release];
+    [message_native release];
+
+    NSAlert *alert    = [[NSAlert alloc] init];
+    alert.alertStyle  = NSWarningAlertStyle;
+    alert.messageText = emsg;
+
+    [emsg release];
+    [alert runModal];
+    [alert release];
 }
 
 void openfileavatar(void) {
@@ -996,32 +1057,26 @@ void openfileavatar(void) {
     int ret                 = [picker runModal];
 
     if (ret == NSFileHandlingPanelOKButton) {
-        NSURL *  url       = picker.URL;
-        uint32_t fsize     = 0;
-        void *   file_data = file_raw((char *)url.path.UTF8String, &fsize);
-        if (fsize > UTOX_AVATAR_MAX_DATA_LENGTH) {
-            free(file_data);
+        int width, height, bpp, size;
+        uint8_t *file_data = stbi_load((char *)picker.URL.path.UTF8String, &width, &height, &bpp, 0);
+        uint8_t *img = stbi_write_png_to_mem(file_data, 0, width, height, bpp, &size);
+        free(file_data);
+
+        if (!img) {
+            show_messagebox(S(CANT_FIND_FILE_OR_EMPTY), SLEN(CANT_FIND_FILE_OR_EMPTY),
+                            (char *)picker.URL.path.UTF8String, sizeof((char *)picker.URL.path.UTF8String));
+            return;
+        }
+
+        if (size > UTOX_AVATAR_MAX_DATA_LENGTH) {
+            free(img);
 
             char size_str[16];
             int  len = sprint_humanread_bytes(size_str, sizeof(size_str), UTOX_AVATAR_MAX_DATA_LENGTH);
 
-            NSString *bytess = [[NSString alloc] initWithBytes:size_str length:len encoding:NSUTF8StringEncoding];
-            NSString *title  = [[NSString alloc] initWithBytes:S(AVATAR_TOO_LARGE_MAX_SIZE_IS)
-                                                       length:SLEN(AVATAR_TOO_LARGE_MAX_SIZE_IS)
-                                                     encoding:NSUTF8StringEncoding];
-
-            NSString *emsg = [[NSString alloc] initWithFormat:@"%@%@", title, bytess];
-            [title release];
-            [bytess release];
-
-            NSAlert *alert    = [[NSAlert alloc] init];
-            alert.alertStyle  = NSWarningAlertStyle;
-            alert.messageText = emsg;
-            [emsg release];
-            [alert runModal];
-            [alert release];
+            show_messagebox(S(AVATAR_TOO_LARGE_MAX_SIZE_IS), SLEN(AVATAR_TOO_LARGE_MAX_SIZE_IS), size_str, len);
         } else {
-            postmessage_utox(SELF_AVATAR_SET, fsize, 0, file_data);
+            postmessage_utox(SELF_AVATAR_SET, size, 0, img);
         }
     }
 }

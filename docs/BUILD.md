@@ -5,13 +5,27 @@ probably help you out.
 
 If you're looking for it to "just work" you're going to want [these instructions](INSTALL.md).
 
+## Instructions
+
+- [Unix Like](#unix-like)
+  * [Linux](#linux)
+  * [Ubuntu](#ubuntu)
+  * [OpenBSD](#openbsd)
+  * [FreeBSD and DragonFlyBSD](#freebsd-and-dragonflybsd)
+  * [NetBSD](#netbsd)
+- [Windows](#windows)
+- [macOS](#macos)
+- [Android](#android)
+
 ## Unix Like
 
 ### Linux
 
+Before compiling make sure you have all of the [dependencies](DEPENDENCIES.md#linux) installed.
+
 The easy way out is:
 ```sh
-git clone git://github.com/uTox/uTox.git
+git clone --recursive git://github.com/uTox/uTox.git
 cd uTox/
 mkdir build
 cd build
@@ -27,7 +41,7 @@ make install
 
 or if you built toxcore statically:
 ```sh
-git clone git://github.com/uTox/uTox.git
+git clone --recursive git://github.com/uTox/uTox.git
 cd uTox/
 mkdir build
 cd build
@@ -40,8 +54,10 @@ For the build to pass you need to install the following from sources: [filteraud
 
 For base emoji ids support you need: [base_emoji](https://github.com/irungentoo/base_emoji)
 
-## Ubuntu
-### Tested on Ubuntu 15.10
+### Ubuntu
+
+Tested on Ubuntu 16.04
+
 ```bash
 sudo apt-get install build-essential libtool autotools-dev automake checkinstall check git yasm libopus-dev libvpx-dev pkg-config libfontconfig1-dev libdbus-1-dev libv4l-dev libxrender-dev libopenal-dev libxext-dev cmake
 
@@ -70,7 +86,7 @@ cd ..
 
 sudo ldconfig
 
-git clone git://github.com/uTox/uTox.git
+git clone --recursive git://github.com/uTox/uTox.git
 cd uTox/
 mkdir build
 cd build
@@ -83,107 +99,136 @@ Have fun!
 
 If you're looking for a good IDE, Netbeans is very easy to set up for uTox. In fact, you can just create a new project from the existing sources and everything should work fine.
 
-## OpenBSD
+### OpenBSD
 
-uTox will compile on OpenBSD although not everything works.
-
-First install the dependencies:
+First install the [dependencies](DEPENDENCIES.md#openbsd-and-netbsd):
 
 ```bash
-sudo pkg_add -Iv opus libvpx openal
+doas pkg_add openal cmake libv4l toxcore git check
 ```
 
-You will have to compile toxcore from source:
-
+Optionally install D-Bus and GTK+3:
 ```bash
-git clone git://github.com/TokTok/c-toxcore.git
-cd c-toxcore
-cmake .
-make
-sudo make install
-cd ..
+doas pkg_add dbus gtk+3
 ```
 
 Now compile uTox:
 
 ```bash
-git clone https://github.com/uTox/uTox.git
+git clone --recursive git://github.com/uTox/uTox.git
 cd uTox/
 mkdir build
 cd build
 cmake ..
-make
-sudo make install
+make -j `sysctl -n hw.ncpu`
+make test
+doas make install
 ```
 
-## FreeBSD
+### FreeBSD and DragonFlyBSD
 
-Install the dependencies:
+Install the [dependencies](DEPENDENCIES.md#freebsd-and-dragonflybsd):
 
 ```bash
-sudo pkg install libv4l v4l_compat openal-soft libvpx opus
+sudo pkg install libv4l v4l_compat openal-soft toxcore git check
 ```
 
-You will have to compile toxcore from source:
-
+Optionally install D-Bus, GTK+3 and filteraudio:
 ```bash
-git clone git://github.com/TokTok/c-toxcore.git
-cd c-toxcore
-cmake .
-make
-sudo make install
-cd ..
+sudo pkg install dbus libfilteraudio gtk3
 ```
+
 Now compile uTox:
 
 ```bash
-git clone https://github.com/uTox/uTox.git
+git clone --recursive git://github.com/uTox/uTox.git
 cd uTox/
 mkdir build
 cd build
 cmake ..
 make
+make test
+sudo make install
+```
+
+### NetBSD
+
+Install the [dependencies](DEPENDENCIES.md#openbsd-and-netbsd):
+
+```bash
+sudo pkgin install openal-soft cmake libv4l toxcore git check
+```
+
+Optionally install D-Bus and GTK+3:
+```base
+sudo pkgin install dbus gtk3
+```
+
+Now compile uTox:
+```bash
+git clone --recursive git://github.com/uTox/uTox.git
+cd uTox/
+mkdir build
+cd build
+cmake ..
+make
+make test
 sudo make install
 ```
 
 ## Windows
 
-### Compiling for Windows
-
-Dependencies:
-
-|   Name       | Required |
-|--------------|----------|
-| cmake >= 3.2 |   yes    |
-| filter_audio |   no     |
-| libvpx       |   yes    |
-| openal       |   yes    |
-| opus         |   yes    |
-| toxcore      |   yes    |
-
-The dependencies can be downloaded from here: https://build.tox.chat/ (Make sure you grab the right bit version.) All the libraries should be place in $UTOX_ROOT/libs/windows-x64/.
-
 You will need a working Cygwin environment or Unix desktop to compile windows.
 
-For 32 bit:
+Before compiling please make sure you have all of the [dependencies](DEPENDENCIES.md#windows). Dependencies can be downloaded from [here](https://build.tox.chat/). Make sure you grab the right bit version.
+
+### Cygwin setup
+
+- Download Cygwin ([x86](https://cygwin.com/setup-x86.exe)/[x64](https://cygwin.com/setup-x86_64.exe))
+- Search and select exactly these packages in Devel category:
+  - mingw64-i686-gcc-core (x86) / mingw64-x86_64-gcc-core (x64)
+  - make
+  - cmake
+  - gdb
+
+In case of Cygwin all following commands should be executed in Cygwin Terminal.
+
 ```bash
-git clone https://github.com/uTox/uTox.git
-cd uTox/
+cd /cygdrive/c
+mkdir projects
+cd projects/
+git clone --recursive git://github.com/uTox/uTox.git
+mkdir libs
+cd libs/
+mkdir windows-x64
+cd ../uTox/
 mkdir build
 cd build
-cmake -DCMAKE_TOOLCHAIN_FILE="../cmake/toolchain-win32.cmake" -DTOXCORE_STATIC=ON ..
-make
 ```
 
-For 64 bit:
-```bash
-git clone https://github.com/uTox/uTox.git
-cd uTox/
-mkdir build
-cd build
-cmake -DCMAKE_TOOLCHAIN_FILE="../cmake/toolchain-win64.cmake" -DTOXCORE_STATIC=ON ..
-make
-```
+Download .zip files and place them into `windows-x64` folder.
+Extract here with your archiver and merge when it'll ask for replacement:
+
+- toxcore ([x86](https://build.tox.chat/view/libtoxcore/job/libtoxcore-toktok_build_windows_x86_static_release/lastSuccessfulBuild/artifact/libtoxcore-toktok_build_windows_x86_static_release.zip)/[x64](https://build.tox.chat/view/libtoxcore/job/libtoxcore-toktok_build_windows_x86-64_static_release/lastSuccessfulBuild/artifact/libtoxcore-toktok_build_windows_x86-64_static_release.zip))
+- openal ([x86](https://build.tox.chat/view/libopenal/job/libopenal_build_windows_x86_static_release/lastSuccessfulBuild/artifact/libopenal_build_windows_x86_static_release.zip)/[x64](https://build.tox.chat/view/libopenal/job/libopenal_build_windows_x86-64_static_release/lastSuccessfulBuild/artifact/libopenal_build_windows_x86-64_static_release.zip))
+- sodium ([x86](https://build.tox.chat/view/libsodium/job/libsodium_build_windows_x86_static_release/lastSuccessfulBuild/artifact/libsodium_build_windows_x86_static_release.zip)/[x64](https://build.tox.chat/view/libsodium/job/libsodium_build_windows_x86-64_static_release/lastSuccessfulBuild/artifact/libsodium_build_windows_x86-64_static_release.zip))
+- libvpx ([x86](https://build.tox.chat/view/libvpx/job/libvpx_build_windows_x86_static_release/lastSuccessfulBuild/artifact/libvpx_build_windows_x86_static_release.zip)/[x64](https://build.tox.chat/view/libvpx/job/libvpx_build_windows_x86-64_static_release/lastSuccessfulBuild/artifact/libvpx_build_windows_x86-64_static_release.zip))
+- opus ([x86](https://build.tox.chat/view/libopus/job/libopus_build_windows_x86_static_release/lastSuccessfulBuild/artifact/libopus_build_windows_x86_static_release.zip)/[x64](https://build.tox.chat/view/libopus/job/libopus_build_windows_x86-64_static_release/lastSuccessfulBuild/artifact/libopus_build_windows_x86-64_static_release.zip))
+- filter_audio ([x86](https://build.tox.chat/view/libfilteraudio/job/libfilteraudio_build_windows_x86_static_release/lastSuccessfulBuild/artifact/libfilteraudio.zip)/[x64](https://build.tox.chat/view/libfilteraudio/job/libfilteraudio_build_windows_x86-64_static_release/lastSuccessfulBuild/artifact/libfilteraudio.zip))
+
+And go back to terminal (make sure you're still in `build` folder):
+
+- For 32 bit:
+    ```bash
+    cmake -DCMAKE_TOOLCHAIN_FILE="../cmake/toolchain-win32.cmake" -DTOXCORE_STATIC=ON ..
+    make
+    ```
+
+- For 64 bit:
+    ```bash
+    cmake -DCMAKE_TOOLCHAIN_FILE="../cmake/toolchain-win64.cmake" -DTOXCORE_STATIC=ON ..
+    make
+    ```
 
 ## macOS
 

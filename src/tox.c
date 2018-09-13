@@ -721,6 +721,25 @@ static void tox_thread_message(Tox *tox, ToxAV *av, uint64_t time, uint8_t msg, 
             break;
         }
 
+        case TOX_FRIEND_NEW_NO_REQ: {
+            /* data: friend's public key
+             */
+            TOX_ERR_FRIEND_ADD f_err;
+            uint32_t fid = tox_friend_add_norequest(tox, data, &f_err);
+
+            if (!f_err) {
+                utox_friend_init(tox, fid);
+                postmessage_utox(FRIEND_ADD_NO_REQ, 0, fid, data);
+            } else {
+                char hex_id[TOX_ADDRESS_SIZE * 2];
+                id_to_string(hex_id, data);
+                LOG_TRACE("Toxcore", "Unable to accept friend %s, error num = %i" , hex_id, fid);
+                free(data);
+            }
+            save_needed = 1;
+            break;
+        }
+
         case TOX_FRIEND_ACCEPT: {
             /* data: FREQUEST
              */
@@ -977,7 +996,7 @@ static void tox_thread_message(Tox *tox, ToxAV *av, uint64_t time, uint8_t msg, 
         }
         case TOX_CALL_PAUSE_AUDIO: {
             /* param1: friend # */
-            LOG_TRACE("TToxcore", "ODO bug, please report 001!!" );
+            LOG_TRACE("Toxcore", "TODO bug, please report 001!!" );
             break;
         }
         case TOX_CALL_PAUSE_VIDEO: {
@@ -1031,7 +1050,7 @@ static void tox_thread_message(Tox *tox, ToxAV *av, uint64_t time, uint8_t msg, 
                 GROUPCHAT *g = get_group(g_num);
                 if (!g) {
                     if (!group_create(g_num, param2)) {
-                        LOG_ERR("Tox", "Failed creating group %u", g_num);
+                        LOG_ERR("Toxcore", "Failed creating group %u", g_num);
                         break;
                     }
                 } else {
@@ -1102,17 +1121,22 @@ static void tox_thread_message(Tox *tox, ToxAV *av, uint64_t time, uint8_t msg, 
             TOX_ERR_CONFERENCE_SEND_MESSAGE error = 0;
             tox_conference_send_message(tox, param1, type, data, param2, &error);
             free(data);
+
+            if (error) {
+                LOG_ERR("Toxcore", "Error sending groupchat message... %u" , error);
+            }
+
             break;
         }
         case TOX_GROUP_AUDIO_START: {
             // We have to take the long way around, because the UI shouldn't depend on AV
-            LOG_INFO("Tox", "Staring call in groupchat %u", param1);
+            LOG_INFO("Toxcore", "Staring call in groupchat %u", param1);
             postmessage_utox(GROUP_AUDIO_START, param1, 0, NULL);
             break;
         }
         case TOX_GROUP_AUDIO_END: {
             // We have to take the long way around, because the UI shouldn't depend on AV
-            LOG_INFO("Tox", "Ending call in groupchat %u", param1);
+            LOG_INFO("Toxcore", "Ending call in groupchat %u", param1);
             postmessage_utox(GROUP_AUDIO_END, param1, 0, NULL);
             break;
         }

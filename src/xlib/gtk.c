@@ -25,6 +25,7 @@
 #include <string.h>
 
 #define LIBGTK_FILENAME "libgtk-3.so"
+#define LIBGTK_FILENAME_FALLBACK "libgtk-3.so.0"
 
 #define GTK_FILE_CHOOSER_ACTION_OPEN 0
 #define GTK_FILE_CHOOSER_ACTION_SAVE 1
@@ -214,6 +215,21 @@ static void ugtk_openavatarthread(void *UNUSED(args)) {
     utoxGTK_open = false;
 }
 
+void show_messagebox(const char *UNUSED(caption), uint16_t UNUSED(caption_length),
+                     const char *message, uint16_t UNUSED(message_length)) {
+    utoxGTK_open = true;
+
+    void *dialog = utoxGTK_message_dialog_new(NULL, 0, 1, 1, message);
+    utoxGTK_dialog_run(dialog);
+    utoxGTK_widget_destroy(dialog);
+
+    while (utoxGTK_events_pending()) {
+        utoxGTK_main_iteration();
+    }
+
+    utoxGTK_open = false;
+}
+
 static void ugtk_savethread(void *args) {
     FILE_TRANSFER *file = args;
 
@@ -254,18 +270,19 @@ static void ugtk_savethread(void *args) {
                     utoxGTK_widget_destroy(dialog);
                     free(path);
                     continue;
-                } else {
-                    LOG_TRACE("GTK", "Unknown file write error..." );
                 }
-            } else {
-                fclose(fp);
-                /* write test passed, we're done! */
-                utoxGTK_widget_destroy(dialog);
-                utoxGTK_main_iteration();
-                utoxGTK_widget_destroy(dialog);
-                postmessage_utox(FILE_INCOMING_ACCEPT, file->friend_number, (file->file_number >> 16), path);
+                LOG_TRACE("GTK", "Unknown file write error..." );
+                free(path);
                 break;
             }
+
+            fclose(fp);
+            /* write test passed, we're done! */
+            utoxGTK_widget_destroy(dialog);
+            utoxGTK_main_iteration();
+            utoxGTK_widget_destroy(dialog);
+            postmessage_utox(FILE_INCOMING_ACCEPT, file->friend_number, (file->file_number >> 16), path);
+            break;
         } else if (result == GTK_RESPONSE_CANCEL) {
             LOG_TRACE("GTK", "Aborting in progress file..." );
         }
@@ -320,6 +337,7 @@ static void ugtk_save_chatlog_thread(void *args) {
     FRIEND *f = get_friend(friend_number);
     if (!f) {
         LOG_ERR("GTK", "Could not get friend with number: %u", friend_number);
+        utoxGTK_open = false;
         return;
     }
 
@@ -347,17 +365,56 @@ static void ugtk_save_chatlog_thread(void *args) {
     utoxGTK_open = false;
 }
 
+static void ugtk_save_image_png_thread(void *args) {
+    FILE_IMAGE *image = args;
+
+    char name[TOX_MAX_NAME_LENGTH + sizeof ".png"] = { 0 };
+    snprintf(name, sizeof name, "%s.png", image->name);
+
+    void *dialog = utoxGTK_file_chooser_dialog_new((const char *)S(SAVE_FILE), NULL, GTK_FILE_CHOOSER_ACTION_SAVE,
+                                                   "_Cancel", GTK_RESPONSE_CANCEL, "_Save", GTK_RESPONSE_ACCEPT, NULL);
+    void *filter = utoxGTK_file_filter_new();
+    utoxGTK_file_filter_add_mime_type(filter, "image/png");
+    utoxGTK_file_chooser_set_filter(dialog, filter);
+
+    utoxGTK_file_chooser_set_current_name(dialog, name);
+    int result = utoxGTK_dialog_run(dialog);
+    if (result == GTK_RESPONSE_ACCEPT) {
+        char *file_name = utoxGTK_file_chooser_get_filename(dialog);
+
+        FILE *file = fopen(file_name, "wb");
+        if (file) {
+            fwrite(image->data, image->data_size, 1, file);
+            fclose(file);
+        } else {
+            LOG_ERR("GTK", "Could not open file %s for write.", file_name);
+        }
+
+        free(file_name);
+    }
+
+    utoxGTK_widget_destroy(dialog);
+
+    while (utoxGTK_events_pending()) {
+        utoxGTK_main_iteration();
+    }
+
+    utoxGTK_open = false;
+    free(image);
+}
+
 void ugtk_openfilesend(void) {
     if (utoxGTK_open) {
         return;
     }
-    utoxGTK_open = true;
+
     FRIEND *f = flist_get_friend();
     if (!f) {
         LOG_ERR("GTK", "Unable to get friend from flist.");
         return;
     }
 
+    utoxGTK_open = true;
     uint32_t number = f->number;
     thread(ugtk_opensendthread, (void*)(size_t)number);
 }
@@ -374,7 +431,7 @@ void ugtk_native_select_dir_ft(uint32_t UNUSED(fid), FILE_TRANSFER *file) {
     if (utoxGTK_open) {
         return;
     }
-    utoxGTK_open   = true;
+    utoxGTK_open = true;
     thread(ugtk_savethread, file);
 }
 
@@ -384,6 +441,14 @@ void ugtk_file_save_inline(MSG_HEADER *msg) {
     }
     utoxGTK_open = true;
     thread(ugtk_save_data_thread, msg);
+}
+
+void ugtk_file_save_image_png(FILE_IMAGE *image) {
+    if (utoxGTK_open) {
+        return;
+    }
+    utoxGTK_open = true;
+    thread(ugtk_save_image_png_thread, image);
 }
 
 void ugtk_save_chatlog(uint32_t friend_number) {
@@ -424,6 +489,11 @@ void ugtk_save_chatlog(uint32_t friend_number) {
 void *ugtk_load(void) {
     // return NULL;
     void *lib = dlopen(LIBGTK_FILENAME, RTLD_LAZY);
+    if (!lib) { //try again with libgtk-3.so.0 if the first one failed
+        LOG_INFO("GTK", "Failed loading: %s. Falling back to %s", LIBGTK_FILENAME, LIBGTK_FILENAME_FALLBACK);
+        lib = dlopen(LIBGTK_FILENAME_FALLBACK, RTLD_LAZY);
+    }
+
     if (lib) {
         LOG_TRACE("GTK", "have GTK" );
 

@@ -15,16 +15,17 @@ typedef enum {
     ADDF_NONE,
     ADDF_SENT,
     ADDF_DISCOVER,
-    ADDF_BADNAME,
+    ADDF_BADNAME,        // either invalid tox id or just friend's public key (missing nospam)
     ADDF_NONAME,
-    ADDF_TOOLONG,      // if message length is too long.
-    ADDF_NOMESSAGE,    // if no message (message length must be >= 1 byte).
-    ADDF_OWNKEY,       // if user's own key.
-    ADDF_ALREADYSENT,  // if friend request already sent or already a friend.
-    ADDF_UNKNOWN,      // for unknown error.
-    ADDF_BADCHECKSUM,  // if bad checksum in address.
-    ADDF_SETNEWNOSPAM, // if the friend was already there but the nospam was different.
-    ADDF_NOMEM,        // if increasing the friend list size fails.
+    ADDF_TOOLONG,        // if message length is too long.
+    ADDF_NOMESSAGE,      // if no message (message length must be >= 1 byte).
+    ADDF_OWNKEY,         // if user's own key.
+    ADDF_ALREADYSENT,    // if friend request already sent or already a friend.
+    ADDF_UNKNOWN,        // for unknown error.
+    ADDF_BADCHECKSUM,    // if bad checksum in address.
+    ADDF_SETNEWNOSPAM,   // if the friend was already there but the nospam was different.
+    ADDF_NOMEM,          // if increasing the friend list size fails.
+    ADDF_NOFREQUESTSENT, // friend added but no frequest sent
 } DNS_STATE;
 
 typedef struct friend_meta_data {
@@ -52,8 +53,6 @@ typedef struct friend_meta_data_old {
 
 
 typedef struct utox_friend {
-    uint8_t cid[TOX_PUBLIC_KEY_SIZE]; // TODO DEPERCATED REMOVE!
-
     uint8_t id_bin[TOX_PUBLIC_KEY_SIZE];
     char    id_str[TOX_PUBLIC_KEY_SIZE * 2];
     uint8_t number;
@@ -88,6 +87,7 @@ typedef struct utox_friend {
     int32_t  call_state_self, call_state_friend;
     uint16_t video_width, video_height;
     ALuint   audio_dest;
+    time_t call_started;
 
     /* File transfers */
     bool ft_autoaccept;
@@ -119,6 +119,8 @@ uint8_t addfriend_status;
  * Gets the friend at position friend_number
  */
 FRIEND *get_friend(uint32_t friend_number);
+
+FRIEND *get_friend_by_id(const char *id_str);
 
 FREQUEST *get_frequest(uint16_t frequest_number);
 

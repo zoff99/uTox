@@ -1,5 +1,4 @@
 #include "main.h"
-
 #include "notify.h"
 #include "screen_grab.h"
 #include "utf8.h"
@@ -43,6 +42,15 @@
 
 #include <windowsx.h>
 #include <io.h>
+#include <libgen.h>
+
+/**
+ * A null-terminated string that specifies the text for a standard tooltip.
+ * For Windows 2000 and later, szTip can have a maximum of 128 characters,
+ * including the terminating null character.
+ * https://msdn.microsoft.com/en-us/library/windows/desktop/bb773352(v=vs.85).aspx
+ */
+static const uint8_t MAX_TIP_LENGTH = 128 - 1;
 
 bool flashing = false;
 bool hidden = false;
@@ -90,6 +98,18 @@ void openfilesend(void) {
         LOG_ERR("Windows", "GetOpenFileName() failed.");
     }
     SetCurrentDirectoryW(dir);
+}
+
+void show_messagebox(const char *caption, uint16_t caption_length, const char *message, uint16_t message_length) {
+    wchar_t message_native[message_length];
+    memset(message_native, 0, message_length);
+    utf8_to_nativestr(message, message_native, message_length * 2);
+
+    wchar_t caption_native[caption_length];
+    memset(caption_native, 0, caption_length);
+    utf8_to_nativestr(caption, caption_native, caption_length * 2);
+
+    MessageBoxW(NULL, message ? message_native : NULL, caption ? caption_native : NULL, MB_ICONWARNING);
 }
 
 void openfileavatar(void) {
@@ -160,39 +180,93 @@ void openfileavatar(void) {
 }
 
 void file_save_inline_image_png(MSG_HEADER *msg) {
-    char *path = calloc(1, UTOX_FILE_NAME_LENGTH);
-    if (!path) {
-        LOG_FATAL_ERR(EXIT_MALLOC, "file_save_inline_image_png", "Could not allocate memory for path.");
-    }
+    wchar_t filepath[UTOX_FILE_NAME_LENGTH] = { 0 };
+    utf8_to_nativestr((char *)msg->via.ft.name, filepath, msg->via.ft.name_length * 2);
 
-    snprintf(path, UTOX_FILE_NAME_LENGTH, "%.*s", (int)msg->via.ft.name_length, (char *)msg->via.ft.name);
-
-    OPENFILENAME ofn = {
-        .lStructSize    = sizeof(OPENFILENAME),
+    OPENFILENAMEW ofn = {
+        .lStructSize    = sizeof(OPENFILENAMEW),
         .hwndOwner      = main_window.window,
-        .lpstrFile      = path,
+        .lpstrFile      = filepath,
         .nMaxFile       = UTOX_FILE_NAME_LENGTH,
-        .lpstrDefExt    = "png",
-        .nFileExtension = strlen(path) - 3,
-        .Flags          = OFN_EXPLORER | OFN_NOCHANGEDIR | OFN_NOREADONLYRETURN | OFN_OVERWRITEPROMPT,
+        .lpstrDefExt    = L"png",
+        .lpstrFilter    = L"PNG Files\0*.png\0",
+        .Flags          = OFN_EXPLORER | OFN_NOCHANGEDIR | OFN_NOREADONLYRETURN | OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST,
     };
 
-    if (GetSaveFileName(&ofn)) {
-        FILE *fp = fopen(path, "wb");
-        if (fp) {
-            fwrite(msg->via.ft.data, msg->via.ft.data_size, 1, fp);
-            fclose(fp);
+    if (GetSaveFileNameW(&ofn)) {
+        char *path = calloc(1, UTOX_FILE_NAME_LENGTH);
+        if (!path){
+            LOG_ERR("NATIVE", "Could not allocate memory for path." );
+            return;
+        }
 
-            snprintf((char *)msg->via.ft.path, UTOX_FILE_NAME_LENGTH, "%s", path);
+        native_to_utf8str(filepath, path, UTOX_FILE_NAME_LENGTH);
+
+        FILE *file = utox_get_file_simple(path, UTOX_FILE_OPTS_WRITE);
+        if (file) {
+            fwrite(msg->via.ft.data, msg->via.ft.data_size, 1, file);
+            fclose(file);
+
+            msg->via.ft.path = calloc(1, UTOX_FILE_NAME_LENGTH);
+            if (!msg->via.ft.path) {
+                LOG_ERR("NATIVE", "Could not allocate memory for path." );
+                free(path);
+                return;
+            }
+
+            msg->via.ft.path = (uint8_t *)strdup(path);
+            msg->via.ft.name = basename(strdup(path));
+            msg->via.ft.name_length = strlen((char *) msg->via.ft.name);
+
             msg->via.ft.inline_png = false;
         } else {
             LOG_ERR("NATIVE", "file_save_inline_image_png:\tCouldn't open path: `%s` to save inline file.", path);
         }
+
+        free(path);
     } else {
         LOG_ERR("NATIVE", "GetSaveFileName() failed");
     }
+}
 
-    free(path);
+bool native_save_image_png(const char *name, const uint8_t *image, const int image_size) {
+    wchar_t filepath[UTOX_FILE_NAME_LENGTH] = { 0 };
+    size_t length = strlen(name);
+    utf8_to_nativestr(name, filepath, length * 2);
+
+    OPENFILENAMEW ofn = {
+        .lStructSize    = sizeof(OPENFILENAMEW),
+        .hwndOwner      = main_window.window,
+        .lpstrFile      = filepath,
+        .nMaxFile       = UTOX_FILE_NAME_LENGTH,
+        .lpstrDefExt    = L"png",
+        .lpstrFilter    = L"PNG Files\0*.png\0",
+        .Flags          = OFN_EXPLORER | OFN_NOCHANGEDIR | OFN_NOREADONLYRETURN | OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST,
+    };
+
+    if (GetSaveFileNameW(&ofn)) {
+        char *path = calloc(1, UTOX_FILE_NAME_LENGTH);
+        if (!path){
+            LOG_ERR("NATIVE", "Could not allocate memory for path.");
+            return false;
+        }
+
+        native_to_utf8str(filepath, path, UTOX_FILE_NAME_LENGTH);
+
+        FILE *file = utox_get_file_simple(path, UTOX_FILE_OPTS_WRITE);
+        if (!file) {
+            LOG_ERR("NATIVE", "Could not open file %s for write.", path);
+            free(path);
+            return false;
+        }
+
+        fwrite(image, image_size, 1, file);
+        fclose(file);
+        free(path);
+        return true;
+    }
+
+    return false;
 }
 
 void postmessage_utox(UTOX_MSG msg, uint16_t param1, uint16_t param2, void *data) {
@@ -232,19 +306,14 @@ uint64_t get_time(void) {
     return ((uint64_t)clock() * 1000 * 1000);
 }
 
-void openurl(char *str) {
-    wchar_t url[UTOX_FILE_NAME_LENGTH] = { 0 };
-    utf8tonative(str, url, UTOX_FILE_NAME_LENGTH);
-    ShellExecuteW(NULL, L"open", url, NULL, NULL, SW_SHOW);
-}
-
 void setselection(char *UNUSED(data), uint16_t UNUSED(length)) {
     // TODO: Implement.
 }
 
 void copy(int value) {
-    const uint16_t max_size = INT16_MAX + 1;
+    const uint32_t max_size = UINT16_MAX + 1;
     char data[max_size]; //! TODO: De-hardcode this value.
+    memset(data, 0, sizeof(data));
     int len = 0;
 
     if (edit_active()) {
@@ -487,14 +556,14 @@ void redraw(void) {
  * sets struct .cbSize, and resets the tibtab to native self.name;
  */
 void update_tray(void) {
-    // FIXME: this is likely to over/under-run
-    char *tip = calloc(1, 128); // 128 is the max length of nid.szTip
-    if (tip == NULL) {
-        LOG_TRACE("update_trip", " Could not allocate memory." );
-        return;
-    }
+    uint16_t length = self.name_length + sizeof(" : ") + self.statusmsg_length;
 
-    uint32_t tip_length = MIN(snprintf(tip, 127, "%s : %s", self.name, self.statusmsg), 127);
+    char tip[length];
+    memset(tip, 0, length);
+
+    length = snprintf(tip, length, "%.*s : %.*s",
+                      self.name_length, self.name,
+                      self.statusmsg_length, self.statusmsg);
 
     NOTIFYICONDATAW nid = {
         .uFlags = NIF_TIP,
@@ -502,15 +571,25 @@ void update_tray(void) {
         .cbSize = sizeof(nid),
     };
 
-    utf8_to_nativestr((char *)tip, nid.szTip, tip_length);
+    uint16_t msg_len = safe_shrink(tip, length, MAX_TIP_LENGTH);
+    utf8_to_nativestr(tip, nid.szTip, msg_len);
 
     Shell_NotifyIconW(NIM_MODIFY, &nid);
-
-    free(tip);
 }
 
 void force_redraw(void) {
     redraw();
+}
+
+void openurl(char *str) {
+    if (try_open_tox_uri(str)) {
+        redraw();
+        return;
+    }
+
+    wchar_t url[UTOX_FILE_NAME_LENGTH] = { 0 };
+    utf8tonative(str, url, UTOX_FILE_NAME_LENGTH);
+    ShellExecuteW(NULL, L"open", url, NULL, NULL, SW_SHOW);
 }
 
 void freefonts() {
@@ -646,7 +725,7 @@ static PCHAR *CommandLineToArgvA(PCHAR CmdLine, int *_argc) {
     return argv;
 }
 
-static void tray_icon_init(HWND parent, HICON icon) {
+void tray_icon_init(HWND parent, HICON icon) {
     NOTIFYICONDATA nid = {
         .uFlags           = NIF_MESSAGE | NIF_ICON | NIF_TIP,
         .uCallbackMessage = WM_NOTIFYICON,
@@ -764,8 +843,8 @@ static bool pending_update(void) {
     return false;
 }
 
-static bool win_init_mutex(HANDLE *mutex, HINSTANCE hInstance, PSTR cmd) {
-    *mutex = CreateMutex(NULL, 0, TITLE);
+static bool win_init_mutex(HANDLE *mutex, HINSTANCE hInstance, PSTR cmd, const char *instance_id) {
+    *mutex = CreateMutex(NULL, false, instance_id);
 
     if (!mutex) {
         LOG_FATAL_ERR(-4, "Win Mutex", "Unable to create windows mutex.");
@@ -810,18 +889,22 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE UNUSED(hPrevInstance), PSTR cm
     parse_args(argc, argv, &skip_updater, &should_launch_at_startup, &set_show_window);
     GlobalFree(argv);
 
+    char instance_id[MAX_PATH];
     if (settings.portable_mode == true) {
         /* force the working directory if opened with portable command */
         const HMODULE hModule = GetModuleHandle(NULL);
-        char          path[MAX_PATH];
-        const int     len = GetModuleFileName(hModule, path, MAX_PATH);
-        unsigned int i;
-        for (i = len - 1; path[i] != '\\'; --i) {
-            // Do nothing until we reach the folder separator.
-        }
-        path[i] = 0;
-        SetCurrentDirectory(path);
-        strcpy(portable_mode_save_path, path);
+        GetModuleFileName(hModule, instance_id, MAX_PATH);
+
+        char *utox_path = strdup(instance_id);
+        char *utox_folder = dirname(utox_path);
+
+        SetCurrentDirectory(utox_folder);
+        strcpy(portable_mode_save_path, utox_folder);
+
+        free(utox_path);
+        sanitize_filename((uint8_t *)instance_id);
+    } else {
+        strcpy(instance_id, TITLE);
     }
 
     // We call utox_init after parse_args()
@@ -839,7 +922,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE UNUSED(hPrevInstance), PSTR cm
 
     /* if opened with argument, check if uTox is already open and pass the argument to the existing process */
     HANDLE utox_mutex;
-    win_init_mutex(&utox_mutex, hInstance, cmd);
+    win_init_mutex(&utox_mutex, hInstance, cmd, instance_id);
 
     if (!skip_updater) {
         LOG_NOTE("WinMain", "Not skipping updater");

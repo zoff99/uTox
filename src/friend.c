@@ -240,21 +240,11 @@ void utox_friend_init(Tox *tox, uint32_t friend_number) {
         return;
     }
     self.friend_list_count++;
-
     uint8_t name[TOX_MAX_NAME_LENGTH];
 
     memset(f, 0, sizeof(FRIEND));
 
-    // Set scroll position to bottom of window.
-    f->msg.scroll               = 1.0;
-    f->msg.panel.type           = PANEL_MESSAGES;
-    f->msg.panel.content_scroll = &scrollbar_friend;
-    f->msg.panel.y              = MAIN_TOP;
-    f->msg.panel.height         = CHAT_BOX_TOP;
-    f->msg.panel.width          = -SCROLL_WIDTH;
-
     // Get and set the public key for this friend number and set it.
-    tox_friend_get_public_key(tox, friend_number, f->cid, 0);
     tox_friend_get_public_key(tox, friend_number, f->id_bin, 0);
     cid_to_string(f->id_str, f->id_bin);
 
@@ -283,7 +273,13 @@ void utox_friend_init(Tox *tox, uint32_t friend_number) {
 
     MESSAGES *m = &f->msg;
     messages_init(m, friend_number);
-
+    // Set scroll position to bottom of window.
+    f->msg.scroll               = 1.0;
+    f->msg.panel.type           = PANEL_MESSAGES;
+    f->msg.panel.content_scroll = &scrollbar_friend;
+    f->msg.panel.y              = MAIN_TOP;
+    f->msg.panel.height         = CHAT_BOX_TOP;
+    f->msg.panel.width          = -SCROLL_WIDTH;
     // Get the chat backlog
     messages_read_from_log(friend_number);
 
@@ -323,9 +319,9 @@ void friend_setname(FRIEND *f, uint8_t *name, size_t length) {
     }
 
     if (length == 0) {
-        f->name = calloc(1, sizeof(f->cid) * 2 + 1);
-        cid_to_string(f->name, f->cid);
-        f->name_length = sizeof(f->cid) * 2;
+        f->name = calloc(1, TOX_PUBLIC_KEY_SIZE * 2 + 1);
+        cid_to_string(f->name, f->id_bin);
+        f->name_length = TOX_PUBLIC_KEY_SIZE * 2;
     } else {
         f->name = calloc(1, length + 1);
         memcpy(f->name, name, length);
@@ -476,6 +472,18 @@ void friend_add(char *name, uint16_t length, char *msg, uint16_t msg_length) {
     uint8_t id[TOX_ADDRESS_SIZE];
     if (length_cleaned == TOX_ADDRESS_SIZE * 2 && string_to_id(id, (char *)name_cleaned)) {
         friend_addid(id, msg, msg_length);
+    } else if (length_cleaned == TOX_PUBLIC_KEY_SIZE * 2) {
+        string_to_id(id, (char*)name_cleaned);
+        uint8_t *data = calloc(sizeof(uint8_t), TOX_PUBLIC_KEY_SIZE);
+
+        if (!data) {
+            LOG_ERR("Calloc", "Memory allocation failed!");
+            return;
+        }
+
+        memcpy(data, id, TOX_PUBLIC_KEY_SIZE);
+        postmessage_toxcore(TOX_FRIEND_NEW_NO_REQ, TOX_PUBLIC_KEY_SIZE, 0, data);
+        addfriend_status = ADDF_NOFREQUESTSENT;
     } else {
         addfriend_status = ADDF_BADNAME;
     }
@@ -537,13 +545,30 @@ FRIEND *find_friend_by_name(uint8_t *name) {
     return NULL;
 }
 
+FRIEND *get_friend_by_id(const char *id_str) {
+    for (size_t i = 0; i < self.friend_list_count; i++) {
+        FRIEND *f = get_friend(i);
+        if (!f) {
+            LOG_ERR("Friend", "Could not get friend %u", i);
+            continue;
+        }
+
+        if (strncmp(f->id_str, id_str, TOX_PUBLIC_KEY_SIZE * 2) == 0) {
+            return f;
+        }
+    }
+
+    return NULL;
+}
+
 void friend_notify_status(FRIEND *f, const uint8_t *msg, size_t msg_length, char *state) {
     if (!settings.status_notifications) {
         return;
     }
 
-    char title[UTOX_FRIEND_NAME_LENGTH(f) + 20];
-    size_t  title_length = snprintf((char *)title, UTOX_FRIEND_NAME_LENGTH(f) + 20, "uTox %.*s is now %s.",
+    const int size = UTOX_FRIEND_NAME_LENGTH(f) + SLEN(STATUS_MESSAGE) + strlen(state);
+    char title[size];
+    size_t  title_length = snprintf(title, size, S(STATUS_MESSAGE),
                                    (int)UTOX_FRIEND_NAME_LENGTH(f), UTOX_FRIEND_NAME(f), state);
 
     notify(title, title_length, (char *)msg, msg_length, f, 0);

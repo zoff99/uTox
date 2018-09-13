@@ -7,31 +7,32 @@ typedef struct sized_string STRING;
 
 typedef enum {
     LANG_EN,
-    LANG_BG,
-    LANG_DE,
-    LANG_ES,
-    LANG_FR,
-    LANG_HI, // 5
-    LANG_JA,
-    LANG_IT,
-    LANG_LV,
-    LANG_NL,
-    LANG_NO, // 10
-    LANG_BR,
-    LANG_PL,
-    LANG_RO,
-    LANG_RU,
-    LANG_TR, // 15
-    LANG_UA,
-    LANG_CN,
-    LANG_TW,
     LANG_CS,
     LANG_DK,
-    LANG_SV,
-    LANG_HU,
-    LANG_PT,
+    LANG_DE,
+    LANG_ET,
+    LANG_ES, // 5
     LANG_EO,
+    LANG_FR,
+    LANG_HI,
     LANG_HR,
+    LANG_IT, // 10
+    LANG_LV,
+    LANG_HU,
+    LANG_NL,
+    LANG_NO,
+    LANG_PL, // 15
+    LANG_PT,
+    LANG_BR,
+    LANG_RO,
+    LANG_SV,
+    LANG_TR, // 20
+    LANG_BG,
+    LANG_RU,
+    LANG_UK,
+    LANG_JA,
+    LANG_CN, // 25
+    LANG_TW,
 
     NUM_LANGS // add langs before this line
 } UTOX_LANG;
@@ -61,6 +62,7 @@ typedef enum {
     STR_REQ_BAD_CHECKSUM,
     STR_REQ_BAD_NOSPAM,
     STR_REQ_NO_MEMORY,
+    STR_REQ_ADDED_NO_FREQ_SENT,
 
     STR_SEND_FILE,
     STR_SAVE_FILE,
@@ -92,6 +94,7 @@ typedef enum {
     /* Group chat strings */
     STR_GROUP_CREATE_TEXT,
     STR_GROUP_CREATE_VOICE,
+    STR_GROUP_CREATE_WITH_AUDIO,
     STR_GROUPCHAT_SETTINGS,
     STR_GROUP_NOTIFICATIONS,
     STR_GROUP_NOTIFICATIONS_ON,
@@ -110,6 +113,7 @@ typedef enum {
     STR_CALL_INVITED,
     STR_CALL_RINGING,
     STR_CALL_STARTED,
+    STR_CALL_ENDED,
     STR_CALL_FRIEND_HAD_ENDED_CALL,
     STR_CALL_VIDEO_SHOW_INLINE,
 
@@ -134,6 +138,9 @@ typedef enum {
     /* TODO REMOVE OLD ONES! */
     STR_ADDFRIENDS,
     STR_TOXID,
+    STR_SHOW_QR,
+    STR_HIDE_QR,
+    STR_SAVE_QR,
     STR_MESSAGE,
     STR_FILTER_ALL,
     STR_FILTER_ONLINE,
@@ -158,6 +165,8 @@ typedef enum {
     STR_STATUS_ONLINE,
     STR_STATUS_AWAY,
     STR_STATUS_BUSY,
+    STR_STATUS_OFFLINE,
+    STR_STATUS_MESSAGE,
 
     // Settings Strings
     STR_SETTINGS_UI_MINI_ROSTER,
@@ -181,6 +190,7 @@ typedef enum {
     STR_SHOW_UI_PASSWORD_TOOLTIP,
     STR_HIDE_UI_PASSWORD,
     STR_HIDE_UI_PASSWORD_TOOLTIP,
+    STR_PASSWORD_TOO_SHORT,
 
     STR_DPI,
     STR_SAVELOCATION,
@@ -209,7 +219,7 @@ typedef enum {
 
     // Interact with texts / clipboard
     STR_COPY,
-    STR_COPY_TOX_ID = STR_COPY,
+    STR_COPY_TOX_ID,
     STR_COPYWITHOUTNAMES,
     STR_COPY_WITH_NAMES,
     STR_CUT,

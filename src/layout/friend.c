@@ -167,6 +167,9 @@ static void draw_add_friend(int x, int UNUSED(y), int UNUSED(w), int height) {
         case ADDF_NOMEM: // if increasing the friend list size fails.
             str = SPTR(REQ_NO_MEMORY);
             break;
+        case ADDF_NOFREQUESTSENT:
+            str = SPTR(REQ_ADDED_NO_FREQ_SENT);
+            break;
         case ADDF_UNKNOWN: // for unknown error.
         case ADDF_NONE:    // this case must never be rendered, but if it does, assume it's an error
         default:
@@ -311,12 +314,10 @@ static void button_call_decline_update(BUTTON *b) {
 
     if (UTOX_AVAILABLE_AUDIO(f->number) && !UTOX_SENDING_AUDIO(f->number)) {
         button_setcolors_danger(b);
-        b->nodraw   = false;
-        b->disabled = false;
+        b->nodraw = b->disabled = b->panel.disabled = false;
     } else {
         button_setcolors_disabled(b);
-        b->nodraw   = true;
-        b->disabled = true;
+        b->nodraw = b->disabled = b->panel.disabled = true;
     }
 }
 
@@ -581,34 +582,6 @@ static void switchfxn_autoaccept_ft(void) {
 
 #include "../ui/switch.h"
 
-static void switch_set_colors(UISWITCH *s) {
-    if (s->switch_on) {
-        s->bg_color    = COLOR_BTN_SUCCESS_BKGRND;
-        s->sw_color    = COLOR_BTN_SUCCESS_TEXT;
-        s->press_color = COLOR_BTN_SUCCESS_BKGRND_HOVER;
-        s->hover_color = COLOR_BTN_SUCCESS_BKGRND_HOVER;
-    } else {
-        s->bg_color    = COLOR_BTN_DISABLED_BKGRND;
-        s->sw_color    = COLOR_BTN_DISABLED_FORGRND;
-        s->hover_color = COLOR_BTN_DISABLED_BKGRND_HOVER;
-        s->press_color = COLOR_BTN_DISABLED_BKGRND_HOVER;
-    }
-}
-
-static void switch_set_size(UISWITCH *s) {
-    s->toggle_w   = BM_SWITCH_TOGGLE_WIDTH;
-    s->toggle_h   = BM_SWITCH_TOGGLE_HEIGHT;
-    s->icon_off_w = BM_FB_WIDTH;
-    s->icon_off_h = BM_FB_HEIGHT;
-    s->icon_on_w  = BM_FB_WIDTH;
-    s->icon_on_h  = BM_FB_HEIGHT;
-}
-
-static void switch_update(UISWITCH *s) {
-    switch_set_colors(s);
-    switch_set_size(s);
-}
-
 UISWITCH switch_friend_autoaccept_ft = {
     .style_outer    = BM_SWITCH,
     .style_toggle   = BM_SWITCH_TOGGLE,
@@ -760,23 +733,18 @@ EDIT edit_chat_msg_friend = {
 
 /* Button to send chat message */
 static void button_chat_send_friend_on_mup(void) {
-    FRIEND *f = flist_get_friend();
-    if (f && f->online) {
-        // TODO clear the chat bar with a /slash command
-        e_chat_msg_onenter(&edit_chat_msg_friend);
-        // reset focus to the chat window on send to prevent segfault. May break on android.
-        edit_setfocus(&edit_chat_msg_friend);
-    }
+    // TODO clear the chat bar with a /slash command
+    e_chat_msg_onenter(&edit_chat_msg_friend);
+    // reset focus to the chat window on send to prevent segfault. May break on android.
+    edit_setfocus(&edit_chat_msg_friend);
 }
 
 static void button_chat_send_friend_update(BUTTON *b) {
     FRIEND *f = flist_get_friend();
     if (f) {
         if (f->online) {
-            b->disabled = false;
             button_setcolors_success(b);
         } else {
-            b->disabled = true;
             button_setcolors_disabled(b);
         }
     }

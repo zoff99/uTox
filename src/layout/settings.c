@@ -11,11 +11,14 @@
 #include "../av/video.h"
 
 #include "../native/clipboard.h"
+#include "../native/dialog.h"
+#include "../native/filesys.h"
 #include "../native/keyboard.h"
 #include "../native/notify.h"
 #include "../native/os.h"
 
 #include "../ui/button.h"
+#include "../ui/contextmenu.h"
 #include "../ui/draw.h"
 #include "../ui/dropdown.h"
 #include "../ui/edit.h"
@@ -145,7 +148,18 @@ static void draw_settings_text_profile(int x, int y, int UNUSED(w), int UNUSED(h
     drawstr(x + SCALE(10), y + SCALE(10), NAME);
     drawstr(x + SCALE(10), y + SCALE(65), STATUSMESSAGE);
     drawstr(x + SCALE(10), y + SCALE(120), TOXID);
-    drawstr(x + SCALE(10), y + SCALE(175), LANGUAGE);
+
+    if (self.qr_image && !button_qr.disabled) {
+        // Enlarge original QR for better recognition
+        const double image_scale = SCALE(4);
+        const uint32_t image_size = self.qr_image_size * image_scale;
+
+        button_qr.panel.width = button_qr.panel.height = UN_SCALE(self.qr_image_size * image_scale);
+
+        image_set_scale(self.qr_image, image_scale);
+        draw_image(self.qr_image, x + SCALE(10), y + SCALE(175), image_size, image_size, 0, 0);
+        image_set_scale(self.qr_image, 1.0);
+    }
 }
 
 // Devices settings page
@@ -188,15 +202,16 @@ static void draw_nospam_settings(int x, int y, int UNUSED(w), int UNUSED(h)){
 static void draw_settings_text_ui(int x, int y, int UNUSED(w), int UNUSED(height)) {
     setcolor(COLOR_MAIN_TEXT);
     setfont(FONT_SELF_NAME);
-    drawstr(x + SCALE(150), y + SCALE(10),  DPI);
-    drawstr(x + SCALE(10),  y + SCALE(10),  THEME);
-    drawstr(x + SCALE(20) + BM_SWITCH_WIDTH,  y + SCALE(65),  SAVE_CHAT_HISTORY);
-    drawstr(x + SCALE(20) + BM_SWITCH_WIDTH,  y + SCALE(95),  CLOSE_TO_TRAY);
-    drawstr(x + SCALE(20) + BM_SWITCH_WIDTH,  y + SCALE(125), START_IN_TRAY);
-    drawstr(x + SCALE(20) + BM_SWITCH_WIDTH,  y + SCALE(155), AUTO_STARTUP);
-    drawstr(x + SCALE(20) + BM_SWITCH_WIDTH,  y + SCALE(185), SETTINGS_UI_MINI_ROSTER);
+    drawstr(x + SCALE(10), y + SCALE(10), LANGUAGE);
+    drawstr(x + SCALE(150), y + SCALE(65),  DPI);
+    drawstr(x + SCALE(10),  y + SCALE(65),  THEME);
+    drawstr(x + SCALE(20) + BM_SWITCH_WIDTH,  y + SCALE(120),  SAVE_CHAT_HISTORY);
+    drawstr(x + SCALE(20) + BM_SWITCH_WIDTH,  y + SCALE(150),  CLOSE_TO_TRAY);
+    drawstr(x + SCALE(20) + BM_SWITCH_WIDTH,  y + SCALE(180), START_IN_TRAY);
+    drawstr(x + SCALE(20) + BM_SWITCH_WIDTH,  y + SCALE(210), AUTO_STARTUP);
+    drawstr(x + SCALE(20) + BM_SWITCH_WIDTH,  y + SCALE(240), SETTINGS_UI_MINI_ROSTER);
     #if PLATFORM_ANDROID
-        drawstr(x + SCALE(20) + BM_SWITCH_WIDTH, y + SCALE(215), SETTINGS_UI_AUTO_HIDE_SIDEBAR);
+        drawstr(x + SCALE(20) + BM_SWITCH_WIDTH, y + SCALE(270), SETTINGS_UI_AUTO_HIDE_SIDEBAR);
     #endif
 }
 
@@ -367,7 +382,8 @@ panel_settings_master = {
             // Text: Tox ID
             (PANEL*)&edit_toxid,
             (PANEL*)&button_copyid,
-            (PANEL*)&dropdown_language,
+            (PANEL*)&button_show_qr,
+            (PANEL*)&button_qr,
             NULL
         }
     },
@@ -385,6 +401,7 @@ panel_settings_master = {
         .disabled = 1,
         .content_scroll = &scrollbar_settings,
         .child = (PANEL*[]) {
+            (PANEL*)&dropdown_language,
             (PANEL*)&dropdown_dpi,
             (PANEL*)&dropdown_theme,
             (PANEL*)&switch_save_chat_history,
@@ -616,6 +633,10 @@ static void button_lock_uTox_on_mup(void) {
         panel_profile_password.disabled = false;
         panel_settings_master.disabled  = true;
         tox_settingschanged();
+    } else {
+        show_messagebox(NULL, 0, S(PASSWORD_TOO_SHORT), SLEN(PASSWORD_TOO_SHORT));
+        memset(edit_profile_password.data, 0, edit_profile_password.maxlength);
+        edit_profile_password.length = 0;
     }
     button_show_password_settings.disabled = false;
     button_show_password_settings.nodraw = false;
@@ -650,12 +671,24 @@ static void button_change_nospam_on_mup(void) {
 }
 
 static void button_revert_nospam_on_mup(void) {
+    if (button_revert_nospam.disabled) {
+        return;
+    }
+
     if (self.old_nospam == 0 || self.nospam == self.old_nospam) { //nospam can not be 0
         LOG_ERR("Settings", "Invalid or current nospam: %u.", self.old_nospam);
         return;
     }
     postmessage_toxcore(TOX_SELF_CHANGE_NOSPAM, self.old_nospam, 0, NULL);
     button_revert_nospam.disabled = true;
+}
+
+static void button_revert_nospam_on_update(BUTTON *b) {
+    if (button_revert_nospam.disabled) {
+        button_setcolors_disabled(b);
+    } else {
+        button_setcolors_success(b);
+    }
 }
 
 static void button_show_nospam_on_mup(void) {
@@ -668,6 +701,30 @@ static void button_show_nospam_on_mup(void) {
 static void button_copyid_on_mup(void) {
     edit_setfocus(&edit_toxid);
     copy(0);
+}
+
+static void button_show_qr_on_mup(void) {
+    if (button_qr.disabled) {
+        maybe_i18nal_string_set_i18nal(&button_show_qr.button_text, STR_HIDE_QR);
+    } else {
+        maybe_i18nal_string_set_i18nal(&button_show_qr.button_text, STR_SHOW_QR);
+    }
+
+    button_qr.disabled = !button_qr.disabled;
+    button_qr.panel.disabled = button_qr.disabled;
+}
+
+static void contextmenu_qr_onselect(uint8_t i) {
+    if (i == 0) {
+        if (!native_save_image_png(self.name, self.qr_data, self.qr_data_size)) {
+            LOG_ERR("Self", "Unable to save QR code.");
+        }
+    }
+}
+
+static void button_qr_on_mright(void) {
+    static UTOX_I18N_STR menu[] = { STR_SAVE_QR };
+    contextmenu_new(COUNTOF(menu), menu, contextmenu_qr_onselect);
 }
 
 #include "../settings.h"
@@ -707,12 +764,45 @@ static void button_videopreview_update(BUTTON *b) {
         button_setcolors_success(b);
     }
 }
+
+static void button_show_qr_update(BUTTON *b) {
+    button_setcolors_success(b);
+    b->panel.x = 85 + UN_SCALE(UTOX_STR_WIDTH(COPY_TOX_ID));
+}
+
 BUTTON button_copyid = {
     .bm_fill  = BM_SBUTTON,
     .update   = button_setcolors_success,
     .on_mup   = button_copyid_on_mup,
     .disabled = false,
     .button_text = {.i18nal = STR_COPY_TOX_ID },
+};
+
+BUTTON button_show_qr = {
+    .panel = {
+        .type   = PANEL_BUTTON,
+        .x      = 85 + _BM_SBUTTON_WIDTH,
+        .y      = 117,
+        .width  = _BM_SBUTTON_WIDTH,
+        .height = _BM_SBUTTON_HEIGHT
+    },
+    .bm_fill  = BM_SBUTTON,
+    .update   = button_show_qr_update,
+    .on_mup   = button_show_qr_on_mup,
+    .disabled = false,
+    .button_text = {.i18nal = STR_SHOW_QR },
+};
+
+BUTTON button_qr = {
+    .panel = {
+        .type   = PANEL_BUTTON,
+        .x      = 10,
+        .y      = 230,
+        .disabled = true,
+    },
+    .nodraw   = true,
+    .disabled = true,
+    .onright  = button_qr_on_mright,
 };
 
 BUTTON button_callpreview = {
@@ -770,7 +860,7 @@ BUTTON button_change_nospam = {
 
 BUTTON button_revert_nospam = {
     .bm_fill      = BM_SBUTTON,
-    .update       = button_setcolors_success,
+    .update       = button_revert_nospam_on_update,
     .on_mup       = button_revert_nospam_on_mup,
     .disabled     = true,
     .button_text  = {.i18nal = STR_REVERT_NOSPAM},
@@ -784,34 +874,6 @@ BUTTON button_show_nospam = {
     .button_text  = {.i18nal = STR_SHOW_NOSPAM},
     .on_mup       = button_show_nospam_on_mup,
 };
-
-static void switch_set_colors(UISWITCH *s) {
-    if (s->switch_on) {
-        s->bg_color    = COLOR_BTN_SUCCESS_BKGRND;
-        s->sw_color    = COLOR_BTN_SUCCESS_TEXT;
-        s->press_color = COLOR_BTN_SUCCESS_BKGRND_HOVER;
-        s->hover_color = COLOR_BTN_SUCCESS_BKGRND_HOVER;
-    } else {
-        s->bg_color    = COLOR_BTN_DISABLED_BKGRND;
-        s->sw_color    = COLOR_BTN_DISABLED_FORGRND;
-        s->hover_color = COLOR_BTN_DISABLED_BKGRND_HOVER;
-        s->press_color = COLOR_BTN_DISABLED_BKGRND_HOVER;
-    }
-}
-
-static void switch_set_size(UISWITCH *s) {
-    s->toggle_w   = BM_SWITCH_TOGGLE_WIDTH;
-    s->toggle_h   = BM_SWITCH_TOGGLE_HEIGHT;
-    s->icon_off_w = BM_FB_WIDTH;
-    s->icon_off_h = BM_FB_HEIGHT;
-    s->icon_on_w  = BM_FB_WIDTH;
-    s->icon_on_h  = BM_FB_HEIGHT;
-}
-
-static void switch_update(UISWITCH *s) {
-    switch_set_colors(s);
-    switch_set_size(s);
-}
 
 static void switchfxn_logging(void) {
     settings.logging_enabled = !settings.logging_enabled;
@@ -1034,11 +1096,14 @@ UISWITCH switch_block_friend_requests = {
 
 static void switchfxn_proxy(void) {
     settings.use_proxy   = !settings.use_proxy;
+
     if (settings.use_proxy) {
-        settings.force_proxy = false;
         switch_proxy_force.panel.disabled = false;
     } else {
+        settings.force_proxy              = false;
+        switch_proxy_force.switch_on      = false;
         switch_proxy_force.panel.disabled = true;
+        switch_udp.panel.disabled         = false;
     }
 
     memcpy(proxy_address, edit_proxy_ip.data, edit_proxy_ip.length);
@@ -1054,8 +1119,11 @@ static void switchfxn_proxy_force(void) {
     settings.force_proxy = !settings.force_proxy;
 
     if (settings.force_proxy) {
-        switch_udp.disabled       = true;
+        switch_udp.switch_on      = false;
+        settings.enable_udp       = false;
         switch_udp.panel.disabled = true;
+    } else {
+        switch_udp.panel.disabled = false;
     }
 
     edit_proxy_port.data[edit_proxy_port.length] = 0;
@@ -1097,15 +1165,23 @@ static void dropdown_audio_out_onselect(uint16_t i, const DROPDOWN *dm) {
 }
 
 static void edit_video_fps_onlosefocus(EDIT *UNUSED(edit)) {
-    edit_video_fps.data[edit_video_fps.length] = 0;
-    long tmp = strtol((char *)edit_video_fps.data, NULL, 0);
-    if (tmp <= 0) {
-        settings.video_fps = 25;
-        edit_video_fps.length =
-            snprintf((char *)edit_video_fps.data, edit_video_fps.maxlength + 1, "25");
-    } else {
-        settings.video_fps = tmp;
+    edit_video_fps.data[edit_video_fps.length] = '\0';
+
+    char *temp;
+    uint16_t value = strtol((char *)edit_video_fps.data, &temp, 10);
+
+    if (*temp == '\0' && value >= 1 && value <= UINT8_MAX) {
+        settings.video_fps = value;
+        return;
     }
+
+    LOG_WARN("Settings", "FPS value (%s) is invalid. It must be integer in range of [1,%u]. Setting default value (%u).",
+             edit_video_fps.data, UINT8_MAX, DEFAULT_FPS);
+
+    settings.video_fps = DEFAULT_FPS;
+    snprintf((char *)edit_video_fps.data, edit_video_fps.maxlength + 1,
+             "%u", DEFAULT_FPS);
+    edit_video_fps.length = strnlen((char *)edit_video_fps.data, edit_video_fps.maxlength);
 }
 
 #include "../screen_grab.h"
@@ -1181,6 +1257,13 @@ DROPDOWN dropdown_dpi = {
 };
 
 DROPDOWN dropdown_language = {
+    .panel = {
+        .type   = PANEL_DROPDOWN,
+        .x      = 10,
+        .y      = 30,
+        .width  = -10,
+        .height = 24
+    },
     .ondisplay = dropdown_language_ondisplay,
     .onselect  = dropdown_language_onselect,
     .dropcount = NUM_LANGS,
@@ -1227,7 +1310,7 @@ static char edit_name_data[128],
             edit_status_msg_data[128],
             edit_proxy_ip_data[256],
             edit_proxy_port_data[8],
-            edit_video_fps_data[8],
+            edit_video_fps_data[3 + 1], /* range is [1-255] */
             edit_profile_password_data[65535],
             edit_nospam_data[(sizeof(uint32_t) * 2) + 1] = { 0 };
 #ifdef ENABLE_MULTIDEVICE
@@ -1314,7 +1397,7 @@ EDIT edit_proxy_port = {
 
 EDIT edit_video_fps = {
     .data = edit_video_fps_data,
-    .maxlength = sizeof edit_video_fps - 1,
+    .maxlength = sizeof edit_video_fps_data - 1,
     .onlosefocus = edit_video_fps_onlosefocus,
     /* .empty_str = {.i18nal = STR_PROXY_EDIT_HINT_PORT }, */
 };
