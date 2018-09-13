@@ -9,11 +9,11 @@ START_TIME=$SECONDS
 ## ----------------------
 full="1"
 O_OPTIONS=" -O3 "
-opus_sys=1
-vpx_sys=1
-x264_sys=1
-ffmpeg_sys=1
-numcpus_=12
+opus_sys=0
+vpx_sys=0
+x264_sys=0
+ffmpeg_sys=0
+numcpus_=8
 quiet_=1
 ## ----------------------
 
@@ -37,6 +37,10 @@ redirect_cmd() {
         "$@"
     fi
 }
+
+echo "cleanup ..."
+rm -Rf /script/build/
+rm -Rf /script/inst/
 
 echo "installing system packages ..."
 
@@ -70,6 +74,11 @@ echo "with system libs for: $syslibs_str__"
 
 echo "installing more system packages ..."
 
+redirect_cmd apt-get install $qqq -y --force-yes wget
+redirect_cmd apt-get install $qqq -y --force-yes git
+redirect_cmd apt-get install $qqq -y --force-yes cmake
+
+redirect_cmd apt-get install $qqq -y --force-yes python-software-properties
 redirect_cmd apt-get install $qqq -y --force-yes software-properties-common wget git cmake
 
 #dpkg -l|grep ffmpeg
@@ -124,11 +133,43 @@ done
 # cmake3 ?
 type -a cmake
 cmake --version
-#add-apt-repository -y ppa:george-edison55/cmake-3.x
-#apt-get update $qqq > /dev/null 2>&1
-#apt-get install $qqq -y --force-yes cmake > /dev/null 2>&1
-#type -a cmake
-#cmake --version
+
+cmake_version=$(cmake --version|grep 'make .ersion'|sed -e 's#.make .ersion ##'|tr -d " ")
+cmake_version_major=$(echo $cmake_version|cut -d"." -f 1|tr -d " ")
+cmake_version_minor=$(echo $cmake_version|cut -d"." -f 2|tr -d " ")
+need_newer_cmake=0
+if [ "$cmake_version_major""x" == "2x" ]; then
+    need_newer_cmake=1
+fi
+
+if [ "$cmake_version_major""x" == "3x" ]; then
+    if [ "$cmake_version_minor""x" == "0x" ]; then
+        need_newer_cmake=1
+    fi
+    if [ "$cmake_version_minor""x" == "1x" ]; then
+        need_newer_cmake=1
+    fi
+    if [ "$cmake_version_minor""x" == "2x" ]; then
+        need_newer_cmake=1
+    fi
+fi
+
+if [ "$need_newer_cmake""x" == "1x" ]; then
+    redirect_cmd apt-get install $qqq -y --force-yes build-essential
+    mkdir -p $_HOME_/build
+    cd $_HOME_/build/
+    mkdir cmake3
+    cd cmake3
+    wget http://www.cmake.org/files/v3.5/cmake-3.5.2.tar.gz
+    tar xf cmake-3.5.2.tar.gz
+    cd cmake-3.5.2
+    redirect_cmd ./configure --prefix=/usr
+    redirect_cmd make -j"$numcpus_"
+    redirect_cmd make install
+fi
+
+type -a cmake
+cmake --version
 
 
 
@@ -221,7 +262,7 @@ cd $_HOME_/build
 rm -Rf x264
 git clone git://git.videolan.org/x264.git > /dev/null 2>&1
 cd x264
-git checkout stable
+git checkout 0a84d986e7020f8344f00752e3600b9769cc1e85
 redirect_cmd ./configure --prefix=$_INST_ --disable-opencl --enable-shared --enable-static \
 --disable-avs --disable-cli
 redirect_cmd make -j"$numcpus_"
@@ -292,7 +333,7 @@ redirect_cmd ./configure --prefix=$_INST_ \
   --enable-error-concealment \
   --enable-better-hw-compatibility \
   --enable-postproc \
-  --enable-vp9-postproc
+  --enable-vp9-postproc \
   --enable-temporal-denoising \
   --enable-vp9-temporal-denoising
 redirect_cmd make -j"$numcpus_"
@@ -468,10 +509,6 @@ echo "###############"
 echo "###############"
 echo "###############"
 
-# so files can be accessed outside of docker
-chmod -R a+rw /script/
-chmod -R a+rw /artefacts/
-
 pwd
 
 ELAPSED_TIME=$(($SECONDS - $START_TIME))
@@ -481,3 +518,6 @@ echo "compile time: $(($ELAPSED_TIME/60)) min $(($ELAPSED_TIME%60)) sec"
 
 ls -hal utox && cp -av utox /artefacts/utox_"$system__"_"$version__""$syslibs_str__"
 
+# so files can be accessed outside of docker
+chmod -R a+rw /script/
+chmod -R a+rw /artefacts/
