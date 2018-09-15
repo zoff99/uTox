@@ -278,7 +278,7 @@ void utox_av_ctrl_thread(void *UNUSED(args)) {
             toxav_iterate(av);
             yieldcpu(toxav_iteration_interval(av));
         } else {
-            yieldcpu(10);
+            yieldcpu(8);
         }
     }
 

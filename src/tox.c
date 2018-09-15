@@ -558,7 +558,7 @@ void toxcore_thread(void *UNUSED(args)) {
             /* Ask toxcore how many ms to wait, then wait at the most 3ms */
             // uint32_t interval = tox_iteration_interval(tox);
             // Zoff: !!!!!!!!!!!------------
-            yieldcpu(4);
+            yieldcpu(8);
             // Zoff: !!!!!!!!!!!------------
         }
 
