@@ -14,15 +14,19 @@ mkdir -p $_HOME_/artefacts
 mkdir -p $_HOME_/script
 cat "$_HOME_"/do_it___external.sh > $_HOME_/script/do_it___external.sh
 chmod a+rx $_HOME_/script/do_it___external.sh
+cat "$_HOME_"/do_it___external_alpine.sh > $_HOME_/script/do_it___external_alpine.sh
+chmod a+rx $_HOME_/script/do_it___external_alpine.sh
 
-# debian:7
-# debian:8
-# debian:9
 
 systems__="
+debian:7
+debian:8
+debian:9
 ubuntu:16.04
 ubuntu:18.04
 "
+
+# systems__="frolvlad/alpine-bash"
 
 for i in $systems__ ; do
     echo "building for $i ..."
