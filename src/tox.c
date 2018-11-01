@@ -185,26 +185,29 @@ static void write_save(Tox *tox) {
     size_t clear_length     = tox_get_savedata_size(tox);
     size_t encrypted_length = clear_length + TOX_PASS_ENCRYPTION_EXTRA_LENGTH;
 
-    uint8_t clear_data[clear_length];
-    uint8_t encrypted_data[encrypted_length];
+    uint8_t *clear_data_p = calloc(1, clear_length);
+    uint8_t *encrypted_data_p = calloc(1, encrypted_length);
 
-    tox_get_savedata(tox, clear_data);
+    tox_get_savedata(tox, clear_data_p);
 
     if (edit_profile_password.length == 0) {
         // user doesn't use encryption
-        save_needed = utox_data_save_tox(clear_data, clear_length);
+        save_needed = utox_data_save_tox(clear_data_p, clear_length);
         LOG_TRACE("Toxcore", "Unencrypted save data written" );
     } else {
-        UTOX_ENC_ERR enc_err = utox_encrypt_data(clear_data, clear_length, encrypted_data);
+        UTOX_ENC_ERR enc_err = utox_encrypt_data(clear_data_p, clear_length, encrypted_data_p);
         if (enc_err) {
             /* encryption failed, write clear text data */
-            save_needed = utox_data_save_tox(clear_data, clear_length);
+            save_needed = utox_data_save_tox(clear_data_p, clear_length);
             LOG_TRACE("Toxcore", "\n\n\t\tWARNING UTOX WAS UNABLE TO ENCRYPT DATA!\n\t\tDATA WRITTEN IN CLEAR TEXT!\n" );
         } else {
-            save_needed = utox_data_save_tox(encrypted_data, encrypted_length);
+            save_needed = utox_data_save_tox(encrypted_data_p, encrypted_length);
             LOG_TRACE("Toxcore", "Encrypted save data written" );
         }
     }
+    
+    free(clear_data_p);
+    free(encrypted_data_p);
 }
 
 void tox_settingschanged(void) {
