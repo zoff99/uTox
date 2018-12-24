@@ -101,6 +101,10 @@ static LRESULT CALLBACK screen_grab_sys(HWND window, UINT msg, WPARAM wParam, LP
                        video_grab_x, video_grab_y, BLACKNESS);
             video_grab_w = p.x;
             video_grab_h = p.y;
+
+            video_grab_w = alwaysRoundDown(video_grab_w + 10, 64);
+            video_grab_h = alwaysRoundDown(video_grab_h + 10, 64);
+
             BitBlt(dc, video_grab_x, video_grab_y, video_grab_w - video_grab_x, video_grab_h - video_grab_y, dc,
                        video_grab_x, video_grab_y, WHITENESS);
             ReleaseDC(window, dc);
@@ -136,8 +140,8 @@ static LRESULT CALLBACK screen_grab_sys(HWND window, UINT msg, WPARAM wParam, LP
                 video_grab_h = h;
             }
 
-            video_grab_w = alwaysRoundDown(p.x, 64);
-            video_grab_h = alwaysRoundDown(p.y, 64);
+            video_grab_w = alwaysRoundDown(video_grab_w + 10, 64);
+            video_grab_h = alwaysRoundDown(video_grab_h + 10, 64);
 
             if (desktopgrab_video) {
                 DestroyWindow(window);
