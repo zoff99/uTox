@@ -77,6 +77,13 @@ static void sendbitmap(HDC mem, HBITMAP hbm, int width, int height) {
     friend_sendimage(flist_get_friend(), image, width, height, out, size);
 }
 
+static int alwaysRoundDown(int n, int multiple)
+{
+    n = (n / multiple) * multiple;
+
+    return n;
+}
+
 static LRESULT CALLBACK screen_grab_sys(HWND window, UINT msg, WPARAM wParam, LPARAM lParam) {
     POINT p = {.x = GET_X_LPARAM(lParam), .y = GET_Y_LPARAM(lParam) };
 
@@ -104,6 +111,7 @@ static LRESULT CALLBACK screen_grab_sys(HWND window, UINT msg, WPARAM wParam, LP
             mdown = true;
             video_grab_x = video_grab_w = p.x;
             video_grab_y = video_grab_h = p.y;
+
             SetCapture(window);
             return false;
         }
@@ -127,6 +135,9 @@ static LRESULT CALLBACK screen_grab_sys(HWND window, UINT msg, WPARAM wParam, LP
                 video_grab_y = video_grab_h;
                 video_grab_h = h;
             }
+
+            video_grab_w = alwaysRoundDown(p.x, 64);
+            video_grab_h = alwaysRoundDown(p.y, 64);
 
             if (desktopgrab_video) {
                 DestroyWindow(window);
