@@ -171,6 +171,34 @@ bool slash_vbr(void *object, char *arg, int arg_length)
 	return true;
 }
 
+// extern uint8_t global_congestion_control_used;
+extern int global_h264_enc_profile_high_enabled;
+extern int global_h264_enc_profile_high_enabled_switch;
+
+bool slash_cc(void *object, char *arg, int arg_length)
+{
+	FRIEND *f = object;
+
+	char arg1[300];
+	CLEAR(arg1);
+    snprintf(arg1, arg_length, "%s", arg);
+
+	LOG_ERR("slash_cc", "*arg=%s* len=%d" , arg1, arg_length);
+
+	int num_new = get_number_in_string(arg1, (int)1);
+
+	if ((num_new >= 0) && (num_new <= 1))
+	{
+        // global_congestion_control_used = num_new;
+        global_h264_enc_profile_high_enabled = num_new;
+        global_h264_enc_profile_high_enabled_switch = 1;
+        LOG_ERR("slash_cc", "cc new:%d", (int)1);
+	}
+
+	return true;
+}
+
+
 bool slash_maxdist(void *object, char *arg, int arg_length)
 {
 	FRIEND *f = object;
