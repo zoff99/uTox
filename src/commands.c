@@ -26,7 +26,7 @@ struct Command commands[MAX_NUM_CMDS] = {
  
     { "vpxxqt",   6, slash_vpxxqt    },
     //{ "vpxkfm",   6, slash_vpxkfm    },
-    //{ "rzup",     4, slash_rzup      },
+    { "rzup",     4, slash_rzup      },
     //{ "rzdn",     4, slash_rzdn      },
     //{ "enctime",  7, slash_enctime   },
 
