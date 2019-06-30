@@ -199,6 +199,14 @@ uint16_t native_video_detect(void) {
     return device_count;
 }
 
+static int alwaysRoundDown(int n, int multiple)
+{
+    n = (n / multiple) * multiple;
+
+    return n;
+}
+
+
 static uint16_t video_x, video_y;
 
 bool native_video_init(void *handle) {
@@ -210,6 +218,9 @@ bool native_video_init(void *handle) {
         video_y      = MIN(grab.dn_y, grab.up_y);
         video_width  = MAX(grab.dn_x, grab.up_x) - MIN(grab.dn_x, grab.up_x);
         video_height = MAX(grab.dn_y, grab.up_y) - MIN(grab.dn_y, grab.up_y);
+
+        video_width = alwaysRoundDown(video_width + 10, 64);
+        video_height = alwaysRoundDown(video_height + 10, 64);
 
         if (video_width & 1) {
             if (video_x & 1) {

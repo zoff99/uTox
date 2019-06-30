@@ -577,7 +577,14 @@ void toxcore_thread(void *UNUSED(args)) {
 
         // Stop toxcore.
         LOG_TRACE("Toxcore", "tox thread ending");
-        tox_kill(tox);
+        
+        yieldcpu(300); // wait for ToxAV kill to finish, hopefully?
+
+        postmessage_utoxav(UTOXAV_KILL, 0, 0, NULL);
+        postmessage_toxcore(TOX_KILL, 0, 0, NULL);
+
+        // toxav_kill(av);        
+        // tox_kill(tox);
     }
 
     tox_thread_init = UTOX_TOX_THREAD_INIT_NONE;
