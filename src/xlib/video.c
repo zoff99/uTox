@@ -291,8 +291,11 @@ int native_video_getframe(uint8_t *y, uint8_t *u, uint8_t *v, uint16_t width, ui
     if (utox_v4l_fd == -1) {
         static uint64_t lasttime;
         uint64_t        t = get_time();
-        if (t - lasttime >= (uint64_t)1000 * 1000 * 1000 / 24) {
+        //if (t - lasttime >= (uint64_t)1000 * 1000 * 1000 / 24) {
+
             XShmGetImage(deskdisplay, RootWindow(deskdisplay, deskscreen), screen_image, video_x, video_y, AllPlanes);
+            // screen_image = XGetImage(deskdisplay, RootWindow(deskdisplay, deskscreen), video_x, video_y, width, height, AllPlanes, ZPixmap);
+
             if (width != video_width || height != video_height) {
                 LOG_ERR("v4l", "width/height mismatch %u %u != %u %u", width, height, screen_image->width,
                       screen_image->height);
@@ -302,7 +305,7 @@ int native_video_getframe(uint8_t *y, uint8_t *u, uint8_t *v, uint16_t width, ui
             bgrxtoyuv420(y, u, v, (uint8_t *)screen_image->data, screen_image->width, screen_image->height);
             lasttime = t;
             return 1;
-        }
+        //}
         return 0;
     }
 
