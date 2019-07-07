@@ -62,4 +62,8 @@ void bgrxtoyuv420(uint8_t *plane_y, uint8_t *plane_u, uint8_t *plane_v, uint8_t 
 void scale_rgbx_image(uint8_t *old_rgbx, uint16_t old_width, uint16_t old_height, uint8_t *new_rgbx, uint16_t new_width,
                       uint16_t new_height);
 
+void scale_down_yuv420_image(uint8_t *old_y, uint8_t *old_u, uint8_t *old_v,
+                             uint32_t old_width, uint32_t old_height,
+                             uint8_t *new_y, uint8_t *new_u, uint8_t *new_v,
+                             uint32_t new_width, uint32_t new_height);
 #endif

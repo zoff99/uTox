@@ -326,8 +326,57 @@ void utox_video_thread(void *args) {
                         LOG_TRACE("uToxVideo", "sending video frame to friend %lu" , i);
                         active_video_count++;
                         TOXAV_ERR_SEND_FRAME error = 0;
-                        toxav_video_send_frame(av, get_friend(i)->number, utox_video_frame.w, utox_video_frame.h,
-                                               utox_video_frame.y, utox_video_frame.u, utox_video_frame.v, &error);
+                        
+                        
+                        if ((utox_video_frame.w > 1920) || (utox_video_frame.h > 1080))
+                        {
+                            // resize into bounding box 1920x1080 if video is larger than that box (e.g. 4K video frame)
+                            UTOX_FRAME_PKG *frame = malloc(sizeof(UTOX_FRAME_PKG));
+                            
+                            float scale_w = (float)(utox_video_frame.w) / 1920.0f;
+                            float scale_h = (float)(utox_video_frame.h) / 1080.0f;
+                            
+                            float scale = scale_w;
+                            if (scale_h > scale_w)
+                            {
+                                scale = scale_h;
+                            }
+
+                            uint32_t new_width = (uint32_t)((float)(utox_video_frame.w) / scale);
+                            uint32_t new_height = (uint32_t)((float)(utox_video_frame.h) / scale);
+
+                            if (new_width > 1920)
+                            {
+                                new_width = 1920;
+                            }
+
+                            if (new_height > 1080)
+                            {
+                                new_height = 1080;
+                            }
+
+                            frame->w              = new_width;
+                            frame->h              = new_height;
+                            frame->img            = malloc( ((new_width * new_height) * 3 / 2) + 1000 ); // YUV buffer
+                            void* u_start         = frame->img + (new_width * new_height);
+                            void* v_start         = frame->img + (new_width * new_height) + ((new_width / 2) * (new_height / 2));
+
+                            scale_down_yuv420_image(utox_video_frame.y, utox_video_frame.u, utox_video_frame.v,
+                                                    utox_video_frame.w, utox_video_frame.h,
+                                                    frame->img, u_start, v_start,
+                                                    new_width, new_height);
+
+                            toxav_video_send_frame(av, get_friend(i)->number, frame->w, frame->h,
+                                                   frame->img, u_start, v_start, &error);
+
+                            free(frame->img);
+                            free(frame);
+                        }
+                        else
+                        {
+                            toxav_video_send_frame(av, get_friend(i)->number, utox_video_frame.w, utox_video_frame.h,
+                                                   utox_video_frame.y, utox_video_frame.u, utox_video_frame.v, &error);
+                        }
 
 #ifdef HAVE_TOXAV_OPTION_SET
                         TOXAV_ERR_OPTION_SET error2;
@@ -639,3 +688,49 @@ void scale_rgbx_image(uint8_t *old_rgbx, uint16_t old_width, uint16_t old_height
         }
     }
 }
+
+void scale_down_yuv420_image(uint8_t *old_y, uint8_t *old_u, uint8_t *old_v,
+                             uint32_t old_width, uint32_t old_height,
+                             uint8_t *new_y, uint8_t *new_u, uint8_t *new_v,
+                             uint32_t new_width, uint32_t new_height)
+{
+    // scale down Y layer
+    for (int y = 0; y != new_height; y++) {
+        const int y0 = y * old_height / new_height;
+        for (int x = 0; x != new_width; x++) {
+            const int x0 = x * old_width / new_width;
+
+            const int a         = x + y * new_width;
+            const int b         = x0 + y0 * old_width;
+            new_y[a]            = old_y[b];
+        }
+    }
+
+    // scale down U layer
+    for (int y = 0; y != (new_height / 2); y++) {
+        const int y0 = y * (old_height / 2) / (new_height / 2);
+        for (int x = 0; x != (new_width / 2); x++) {
+            const int x0 = x * (old_width / 2) / (new_width / 2);
+
+            const int a         = x + y * (new_width / 2);
+            const int b         = x0 + y0 * (old_width / 2);
+            new_u[a]            = old_u[b];
+        }
+    }
+
+    // scale down V layer
+    for (int y = 0; y != (new_height / 2); y++) {
+        const int y0 = y * (old_height / 2) / (new_height / 2);
+        for (int x = 0; x != (new_width / 2); x++) {
+            const int x0 = x * (old_width / 2) / (new_width / 2);
+
+            const int a         = x + y * (new_width / 2);
+            const int b         = x0 + y0 * (old_width / 2);
+            new_v[a]            = old_v[b];
+        }
+    }
+
+}
+
+
+

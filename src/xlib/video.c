@@ -221,6 +221,17 @@ bool native_video_init(void *handle) {
 
         video_width = alwaysRoundDown(video_width + 10, 64);
         video_height = alwaysRoundDown(video_height + 10, 64);
+        
+        if (video_width > default_screen->width)
+        {
+            video_width = default_screen->width;
+        }
+
+        if (video_height > default_screen->height)
+        {
+            video_height = default_screen->height;
+        }
+        
 
         if (video_width & 1) {
             if (video_x & 1) {
