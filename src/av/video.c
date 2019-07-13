@@ -719,19 +719,6 @@ void scale_down_yuv420_image(uint8_t *old_y, uint8_t *old_u, uint8_t *old_v,
         }
     }
 
-#if 0
-    // scale down V layer
-    for (int y = 0; y != (new_height / 2); y++) {
-        const int y0 = y * (old_height / 2) / (new_height / 2);
-        for (int x = 0; x != (new_width / 2); x++) {
-            const int x0 = x * (old_width / 2) / (new_width / 2);
-
-            const int a         = x + y * (new_width / 2);
-            const int b         = x0 + y0 * (old_width / 2);
-        }
-    }
-#endif
-
 }
 
 
