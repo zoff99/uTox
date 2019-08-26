@@ -19,6 +19,10 @@
 #include <vpx/vpx_codec.h>
 #include <vpx/vpx_image.h>
 
+#define UTOX_MAX_DESKTOP_CAPTURE_WIDTH 1920 // 2560 // 3840 // 1920
+#define UTOX_MAX_DESKTOP_CAPTURE_HEIGHT 1080 // 1440 // 2112 // 1080
+
+
 bool utox_video_thread_init = false;
 
 static void *   video_device[16]     = { NULL }; /* TODO; magic number */
@@ -326,15 +330,14 @@ void utox_video_thread(void *args) {
                         LOG_TRACE("uToxVideo", "sending video frame to friend %lu" , i);
                         active_video_count++;
                         TOXAV_ERR_SEND_FRAME error = 0;
-                        
-                        
-                        if ((utox_video_frame.w > 1920) || (utox_video_frame.h > 1080))
+
+                        if ((utox_video_frame.w > UTOX_MAX_DESKTOP_CAPTURE_WIDTH) || (utox_video_frame.h > UTOX_MAX_DESKTOP_CAPTURE_HEIGHT))
                         {
                             // resize into bounding box 1920x1080 if video is larger than that box (e.g. 4K video frame)
                             UTOX_FRAME_PKG *frame = malloc(sizeof(UTOX_FRAME_PKG));
                             
-                            float scale_w = (float)(utox_video_frame.w) / 1920.0f;
-                            float scale_h = (float)(utox_video_frame.h) / 1080.0f;
+                            float scale_w = (float)(utox_video_frame.w) / (float)(UTOX_MAX_DESKTOP_CAPTURE_WIDTH);
+                            float scale_h = (float)(utox_video_frame.h) / (float)(UTOX_MAX_DESKTOP_CAPTURE_HEIGHT);
                             
                             float scale = scale_w;
                             if (scale_h > scale_w)
@@ -345,14 +348,14 @@ void utox_video_thread(void *args) {
                             uint32_t new_width = (uint32_t)((float)(utox_video_frame.w) / scale);
                             uint32_t new_height = (uint32_t)((float)(utox_video_frame.h) / scale);
 
-                            if (new_width > 1920)
+                            if (new_width > UTOX_MAX_DESKTOP_CAPTURE_WIDTH)
                             {
-                                new_width = 1920;
+                                new_width = UTOX_MAX_DESKTOP_CAPTURE_WIDTH;
                             }
 
-                            if (new_height > 1080)
+                            if (new_height > UTOX_MAX_DESKTOP_CAPTURE_HEIGHT)
                             {
-                                new_height = 1080;
+                                new_height = UTOX_MAX_DESKTOP_CAPTURE_HEIGHT;
                             }
 
                             frame->w              = new_width;
