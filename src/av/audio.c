@@ -165,7 +165,7 @@ bool utox_audio_in_device_set(ALCdevice *new_device) {
 
     if (new_device) {
         audio_in_device = new_device;
-        LOG_TRACE("uTox Audio", "Audio in device changed." );
+        LOG_ERR("uTox Audio", "Audio in device changed." );
         return true;
     }
 
@@ -265,13 +265,13 @@ static bool audio_out_device_close(void) {
 bool utox_audio_out_device_set(ALCdevice *new_device) {
     if (new_device) {
         audio_out_device = new_device;
-        LOG_TRACE("uTox Audio", "Audio out device changed." );
+        LOG_ERR("uTox Audio", "Audio out device changed." );
         return true;
     }
 
     audio_out_device = NULL;
     audio_out_handle = NULL;
-    LOG_TRACE("uTox Audio", "Audio in device set to null." );
+    LOG_ERR("uTox Audio", "Audio in device set to null." );
     return false;
 }
 
@@ -331,9 +331,9 @@ static void audio_in_init(void) {
     audio_in_device_list = alcGetString(NULL, ALC_CAPTURE_DEVICE_SPECIFIER);
     if (audio_in_device_list) {
         audio_in_device = (void *)audio_in_device_list;
-        LOG_TRACE("uTox Audio", "input device list:" );
+        LOG_ERR("uTox Audio", "input device list:" );
         while (*audio_in_device_list) {
-            LOG_TRACE("uTox Audio", "\t%s" , audio_in_device_list);
+            LOG_ERR("uTox Audio", "\t%s" , audio_in_device_list);
             postmessage_utox(AUDIO_IN_DEVICE, UI_STRING_ID_INVALID, 0, (void *)audio_in_device_list);
             audio_in_device_list += strlen(audio_in_device_list) + 1;
         }
@@ -352,9 +352,9 @@ static void audio_out_init(void) {
 
     if (audio_out_device_list) {
         audio_out_device = (void *)audio_out_device_list;
-        LOG_TRACE("uTox Audio", "output device list:" );
+        LOG_ERR("uTox Audio", "output device list:" );
         while (*audio_out_device_list) {
-            LOG_TRACE("uTox Audio", "\t%s" , audio_out_device_list);
+            LOG_ERR("uTox Audio", "\t%s" , audio_out_device_list);
             postmessage_utox(AUDIO_OUT_DEVICE, 0, 0, (void *)audio_out_device_list);
             audio_out_device_list += strlen(audio_out_device_list) + 1;
         }
@@ -397,10 +397,10 @@ static bool audio_source_init(ALuint *source) {
     ALint error;
     alGetError();
     alGenSources((ALuint)1, source);
-    if ((error = alGetError()) != AL_NO_ERROR) {
-        LOG_TRACE("uTox Audio", "Error generating source with err %x" , error);
-        return false;
-    }
+    //if ((error = alGetError()) != AL_NO_ERROR) {
+    //    LOG_TRACE("uTox Audio", "Error generating source with err %x" , error);
+    //    return false;
+    //}
     return true;
 }
 
@@ -809,6 +809,7 @@ void utox_audio_thread(void *args) {
                 }
             }
 
+#if 0
             #ifdef AUDIO_FILTERING
             #ifdef ALC_LOOPBACK_CAPTURE_SAMPLES
             if (f_a && settings.audiofilter_enabled) {
@@ -825,10 +826,11 @@ void utox_audio_thread(void *args) {
             }
             #endif
             #endif
+#endif
 
             if (frame) {
                 bool voice = true;
-                #ifdef AUDIO_FILTERING
+                #ifdef AUDIO_FILTERING__XXX
                 if (f_a) {
                     const int ret = filter_audio(f_a, (int16_t *)buf, perframe);
 
@@ -868,6 +870,17 @@ void utox_audio_thread(void *args) {
                             active_call_count++;
                             TOXAV_ERR_SEND_FRAME error = 0;
                             // LOG_TRACE("uTox Audio", "Sending audio frame!" );
+
+#if 0                            
+                            LOG_ERR("uTox Audio", "toxav_audio_send_frame:samples=%d", (int) perframe);
+                            if (perframe > 20)
+                            {
+                                for (int i = 0; i < 20; i++)
+                                {
+                                    printf("%02X", buf[i]);
+                                }
+                            }
+#endif
                             toxav_audio_send_frame(av, get_friend(i)->number, (const int16_t *)buf, perframe,
                                                    UTOX_DEFAULT_AUDIO_CHANNELS, UTOX_DEFAULT_SAMPLE_RATE_A, &error);
                             if (error) {
