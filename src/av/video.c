@@ -372,6 +372,14 @@ void utox_video_thread(void *args) {
                             toxav_video_send_frame(av, get_friend(i)->number, frame->w, frame->h,
                                                    frame->img, u_start, v_start, &error);
 
+                            if (error) {
+                                if (error == TOXAV_ERR_SEND_FRAME_SYNC) {
+                                    yieldcpu(1);
+                                    toxav_video_send_frame(av, get_friend(i)->number, frame->w, frame->h,
+                                                           frame->img, u_start, v_start, &error);
+                                }
+                            }
+
                             free(frame->img);
                             free(frame);
                         }
@@ -379,16 +387,16 @@ void utox_video_thread(void *args) {
                         {
                             toxav_video_send_frame(av, get_friend(i)->number, utox_video_frame.w, utox_video_frame.h,
                                                    utox_video_frame.y, utox_video_frame.u, utox_video_frame.v, &error);
+
+                            if (error) {
+                                if (error == TOXAV_ERR_SEND_FRAME_SYNC) {
+                                    yieldcpu(1);
+                                    toxav_video_send_frame(av, get_friend(i)->number, utox_video_frame.w, utox_video_frame.h,
+                                                        utox_video_frame.y, utox_video_frame.u, utox_video_frame.v, &error);
+                                }
+                            }
+
                         }
-
-#ifdef HAVE_TOXAV_OPTION_SET
-                        TOXAV_ERR_OPTION_SET error2;
-                        toxav_option_set(av, get_friend(i)->number,
-                                         TOXAV_CLIENT_VIDEO_CAPTURE_DELAY_MS,
-                                         (int32_t)timspan_in_ms2,
-                                         &error2);
-#endif
-
 
                         // LOG_TRACE("uToxVideo", "Sent video frame to friend %u" , i);
                         if (error) {
@@ -408,6 +416,15 @@ void utox_video_thread(void *args) {
                                 break;
                             }
                         }
+
+#ifdef HAVE_TOXAV_OPTION_SET
+                        TOXAV_ERR_OPTION_SET error2;
+                        toxav_option_set(av, get_friend(i)->number,
+                                         TOXAV_CLIENT_VIDEO_CAPTURE_DELAY_MS,
+                                         (int32_t)timspan_in_ms2,
+                                         &error2);
+#endif
+
                     }
                 }
                 // ----------- SEND to all friends -----------

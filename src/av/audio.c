@@ -883,12 +883,27 @@ void utox_audio_thread(void *args) {
 #endif
                             toxav_audio_send_frame(av, get_friend(i)->number, (const int16_t *)buf, perframe,
                                                    UTOX_DEFAULT_AUDIO_CHANNELS, UTOX_DEFAULT_SAMPLE_RATE_A, &error);
+
                             if (error) {
-                                LOG_TRACE("uTox Audio", "toxav_send_audio error friend == %lu, error ==  %i" , i, error);
+                                if (error == TOXAV_ERR_SEND_FRAME_SYNC) {
+                                    yieldcpu(1);
+                                    toxav_audio_send_frame(av, get_friend(i)->number, (const int16_t *)buf, perframe,
+                                                           UTOX_DEFAULT_AUDIO_CHANNELS, UTOX_DEFAULT_SAMPLE_RATE_A, &error);
+                                }
+                            }
+
+                            if (error) {
+                                if (error == TOXAV_ERR_SEND_FRAME_SYNC) {
+                                    LOG_ERR("uTox Audio", "Audio Frame sync error: %i" , i, error);
+                                }
+                                else
+                                {
+                                    LOG_ERR("uTox Audio", "toxav_send_audio error friend == %lu, error ==  %i" , i, error);
+                                }
                             } else {
                                 // LOG_TRACE("uTox Audio", "Send a frame to friend %i" ,i);
                                 if (active_call_count >= UTOX_MAX_CALLS) {
-                                    LOG_TRACE("uTox Audio", "We're calling more peers than allowed by UTOX_MAX_CALLS, This is a bug" );
+                                    LOG_ERR("uTox Audio", "We're calling more peers than allowed by UTOX_MAX_CALLS, This is a bug" );
                                     break;
                                 }
                             }
@@ -912,7 +927,7 @@ void utox_audio_thread(void *args) {
         }
 
         if (sleep) {
-            yieldcpu(50);
+            yieldcpu(8);
         }
     }
 

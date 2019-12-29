@@ -56,8 +56,11 @@ void utox_av_ctrl_thread(void *UNUSED(args)) {
                     postmessage_audio(UTOXAUDIO_NEW_AV_INSTANCE, 0, 0, msg->data);
                     postmessage_video(UTOXVIDEO_NEW_AV_INSTANCE, 0, 0, msg->data);
                 } else {
+                    LOG_ERR("uToxAv", "utox_audio_thread thread init" );
                     thread(utox_audio_thread, msg->data);
+                    LOG_ERR("uToxAv", "utox_video_thread thread init" );
                     thread(utox_video_thread, msg->data);
+                    LOG_ERR("uToxAv", "threads created" );
                 }
 
                 av = msg->data;
