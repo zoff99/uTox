@@ -75,7 +75,8 @@ static bool audio_in_device_open(void) {
     }
 
     alGetError();
-    audio_in_handle = alcCaptureOpenDevice(audio_in_device, UTOX_DEFAULT_SAMPLE_RATE_A, AL_FORMAT_MONO16,
+    int _format_ = AL_FORMAT_STEREO16; // AL_FORMAT_MONO16
+    audio_in_handle = alcCaptureOpenDevice(audio_in_device, UTOX_DEFAULT_SAMPLE_RATE_A, _format_,
                                            (UTOX_DEFAULT_FRAME_A * UTOX_DEFAULT_SAMPLE_RATE_A * 4) / 1000);
     if (alGetError() == AL_NO_ERROR) {
         return true;
@@ -889,12 +890,29 @@ void utox_audio_thread(void *args) {
                                     yieldcpu(1);
                                     toxav_audio_send_frame(av, get_friend(i)->number, (const int16_t *)buf, perframe,
                                                            UTOX_DEFAULT_AUDIO_CHANNELS, UTOX_DEFAULT_SAMPLE_RATE_A, &error);
+
+                                    if (error) {
+                                        if (error == TOXAV_ERR_SEND_FRAME_SYNC) {
+                                            yieldcpu(1);
+                                            toxav_audio_send_frame(av, get_friend(i)->number, (const int16_t *)buf, perframe,
+                                                                   UTOX_DEFAULT_AUDIO_CHANNELS, UTOX_DEFAULT_SAMPLE_RATE_A, &error);
+
+                                            if (error) {
+                                                if (error == TOXAV_ERR_SEND_FRAME_SYNC) {
+                                                    yieldcpu(1);
+                                                    toxav_audio_send_frame(av, get_friend(i)->number, (const int16_t *)buf, perframe,
+                                                                           UTOX_DEFAULT_AUDIO_CHANNELS, UTOX_DEFAULT_SAMPLE_RATE_A, &error);
+                                                }
+                                            }
+
+                                        }
+                                    }
                                 }
                             }
 
                             if (error) {
                                 if (error == TOXAV_ERR_SEND_FRAME_SYNC) {
-                                    LOG_ERR("uTox Audio", "Audio Frame sync error: %i" , i, error);
+                                    LOG_ERR("uTox Audio", "Audio Frame sync error: %d %d" , (int)i, (int)error);
                                 }
                                 else
                                 {

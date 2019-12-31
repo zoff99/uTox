@@ -101,6 +101,8 @@ static int get_number_in_string(const char *str, int default_value)
 
 #ifdef HAVE_TOXAV_OPTION_SET
 
+#define MAX_OUTGOING_VIDEO_BITRATE 30000
+
 bool slash_vbr(void *object, char *arg, int arg_length)
 {
 	FRIEND *f = object;
@@ -113,7 +115,7 @@ bool slash_vbr(void *object, char *arg, int arg_length)
 
 	int num_new = get_number_in_string(arg1, (int)UTOX_DEFAULT_BITRATE_V);
 
-	if ((num_new >= 10) && (num_new <= 200000))
+	if ((num_new >= 10) && (num_new <= MAX_OUTGOING_VIDEO_BITRATE))
 	{
 		UTOX_DEFAULT_BITRATE_V = num_new;
         TOXAV_ERR_OPTION_SET error2;

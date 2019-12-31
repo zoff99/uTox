@@ -318,7 +318,7 @@ void utox_video_thread(void *args) {
                 }
 #endif
 
-                unsigned long long timspan_in_ms2 = __utimer_stop(&tt1);
+                unsigned long long timspan_in_ms2;
                 // fprintf(stderr, "CT=%d\n", (int)timspan_in_ms2);
 
                 // ----------- SEND to all friends -----------
@@ -369,14 +369,16 @@ void utox_video_thread(void *args) {
                                                     frame->img, u_start, v_start,
                                                     new_width, new_height);
 
-                            toxav_video_send_frame(av, get_friend(i)->number, frame->w, frame->h,
-                                                   frame->img, u_start, v_start, &error);
+                            timspan_in_ms2 = __utimer_stop(&tt1);
+                            toxav_video_send_frame_age(av, get_friend(i)->number, frame->w, frame->h,
+                                                   frame->img, u_start, v_start, &error, timspan_in_ms2);
 
                             if (error) {
                                 if (error == TOXAV_ERR_SEND_FRAME_SYNC) {
                                     yieldcpu(1);
-                                    toxav_video_send_frame(av, get_friend(i)->number, frame->w, frame->h,
-                                                           frame->img, u_start, v_start, &error);
+                                    timspan_in_ms2 = __utimer_stop(&tt1);
+                                    toxav_video_send_frame_age(av, get_friend(i)->number, frame->w, frame->h,
+                                                           frame->img, u_start, v_start, &error, timspan_in_ms2);
                                 }
                             }
 
@@ -385,14 +387,16 @@ void utox_video_thread(void *args) {
                         }
                         else
                         {
-                            toxav_video_send_frame(av, get_friend(i)->number, utox_video_frame.w, utox_video_frame.h,
-                                                   utox_video_frame.y, utox_video_frame.u, utox_video_frame.v, &error);
+                            timspan_in_ms2 = __utimer_stop(&tt1);
+                            toxav_video_send_frame_age(av, get_friend(i)->number, utox_video_frame.w, utox_video_frame.h,
+                                                   utox_video_frame.y, utox_video_frame.u, utox_video_frame.v, &error, timspan_in_ms2);
 
                             if (error) {
                                 if (error == TOXAV_ERR_SEND_FRAME_SYNC) {
                                     yieldcpu(1);
-                                    toxav_video_send_frame(av, get_friend(i)->number, utox_video_frame.w, utox_video_frame.h,
-                                                        utox_video_frame.y, utox_video_frame.u, utox_video_frame.v, &error);
+                                    timspan_in_ms2 = __utimer_stop(&tt1);
+                                    toxav_video_send_frame_age(av, get_friend(i)->number, utox_video_frame.w, utox_video_frame.h,
+                                                        utox_video_frame.y, utox_video_frame.u, utox_video_frame.v, &error, timspan_in_ms2);
                                 }
                             }
 
