@@ -14,7 +14,9 @@
 #include "../native/video.h"
 
 #include <pthread.h>
+#include <semaphore.h>
 #include <stdlib.h>
+#include <string.h>
 #include <tox/toxav.h>
 #include <vpx/vpx_codec.h>
 #include <vpx/vpx_image.h>
@@ -47,6 +49,57 @@ unsigned long long timspan_in_ms[TIMESPAN_IN_MS_ELEMENTS];
 uint16_t timspan_in_ms_cur_index = 0;
 uint32_t sleep_between_frames;
 
+#include <X11/X.h>
+#include <X11/Xlib.h>
+extern XImage *screen_image;
+
+sem_t count_video_play_threads;
+int count_video_play_threads_int;
+#define MAX_VIDEO_PLAY_THREADS 1
+sem_t video_play_lock_;
+
+struct video_play_thread_args {
+    int w;
+    int h;
+    unsigned long long timspan_in_ms2;
+    ToxAV *av;
+    struct timeval tt1;
+    size_t i;
+    uint8_t *y;
+    uint8_t *u;
+    uint8_t *v;
+};
+
+
+
+void inc_video_t_counter()
+{
+    sem_wait(&count_video_play_threads);
+    count_video_play_threads_int++;
+    sem_post(&count_video_play_threads);
+}
+
+void dec_video_t_counter()
+{
+    sem_wait(&count_video_play_threads);
+    count_video_play_threads_int--;
+
+    if (count_video_play_threads_int < 0)
+    {
+        count_video_play_threads_int = 0;
+    }
+
+    sem_post(&count_video_play_threads);
+}
+
+int get_video_t_counter()
+{
+    sem_wait(&count_video_play_threads);
+    int ret = count_video_play_threads_int;
+    sem_post(&count_video_play_threads);
+    return ret;
+}
+
 static inline void __utimer_start(struct timeval* tm1)
 {
     gettimeofday(tm1, NULL);
@@ -63,18 +116,31 @@ static inline unsigned long long __utimer_stop(struct timeval* tm1)
 // --- FPS ---
 
 static bool video_device_init(void *handle) {
+
     // initialize video (will populate video_width and video_height)
     if (handle == (void *)1) {
         if (!native_video_init((void *)1)) {
-            LOG_TRACE("uToxVideo", "native_video_init() failed for desktop" );
+            LOG_ERR("uToxVideo", "native_video_init() failed for desktop" );
             return false;
         }
     } else {
         if (!handle || !native_video_init(*(void **)handle)) {
-            LOG_TRACE("uToxVideo", "native_video_init() failed webcam" );
+            LOG_ERR("uToxVideo", "native_video_init() failed webcam" );
             return false;
         }
     }
+
+    if (sem_init(&video_play_lock_, 0, 1))
+    {
+        LOG_ERR("uToxVideo", "Error in sem_init for video_play_lock_");
+    }
+
+    count_video_play_threads_int = 0;
+    if (sem_init(&count_video_play_threads, 0, 1))
+    {
+        LOG_ERR("uToxVideo", "Error in sem_init for count_video_play_threads");
+    }
+
     vpx_img_alloc(&input, VPX_IMG_FMT_I420, video_width, video_height, 1);
     utox_video_frame.y = input.planes[0];
     utox_video_frame.u = input.planes[1];
@@ -82,7 +148,7 @@ static bool video_device_init(void *handle) {
     utox_video_frame.w = input.d_w;
     utox_video_frame.h = input.d_h;
 
-    LOG_NOTE("uToxVideo", "video init done!" );
+    LOG_ERR("uToxVideo", "video init done!" );
     video_device_status = true;
 
     return true;
@@ -94,6 +160,8 @@ static void close_video_device(void *handle) {
         vpx_img_free(&input);
     }
     video_device_status = false;
+    sem_destroy(&video_play_lock_);
+    sem_destroy(&count_video_play_threads);
 }
 
 static bool video_device_start(void) {
@@ -120,6 +188,8 @@ static bool video_device_stop(void) {
 #include "../layout/settings.h" // TODO move?
 void utox_video_append_device(void *device, bool localized, void *name, bool default_) {
     video_device[video_device_count++] = device;
+
+    LOG_ERR("v4l", "utox_video_append_device:cur=%d count=%d", (int)video_device_current, (int)video_device_count);
 
     if (localized) {
         // Device name is localized with name containing UTOX_I18N_STR.
@@ -256,6 +326,8 @@ static void init_video_devices(void) {
     // select a video device (autodectect)
     video_device_current = native_video_detect();
 
+    LOG_ERR("v4l", "init_video_devices:cur=%d", (int)video_device_current);
+
     if (video_device_current) {
         // open the video device to get some info e.g. frame size
         // close it afterwards to not block the device while it is not used
@@ -264,6 +336,122 @@ static void init_video_devices(void) {
         }
     }
 }
+
+static void *video_play(void *video_frame_data)
+{
+    //LOG_ERR("uToxVideo:thread", "video play thread:start");
+
+    struct video_play_thread_args* d = (struct video_play_thread_args*)video_frame_data;
+    unsigned long long timspan_in_ms2 = d->timspan_in_ms2;
+    ToxAV *av = d->av;
+    struct timeval tt1 = d->tt1;
+    size_t i = d->i;
+    utox_av_video_frame utox_video_frame;
+    utox_video_frame.w = d->w;
+    utox_video_frame.h = d->h;
+
+    if (!screen_image)
+    {
+        dec_video_t_counter();
+        sem_post(&video_play_lock_);
+        pthread_exit(0);
+    }
+
+    if (!screen_image->data)
+    {
+        dec_video_t_counter();
+        sem_post(&video_play_lock_);
+        pthread_exit(0);
+    }
+
+    if ((utox_video_frame.w < 10) || (utox_video_frame.w > 20000))
+    {
+        dec_video_t_counter();
+        sem_post(&video_play_lock_);
+        pthread_exit(0);
+    }
+
+    if ((utox_video_frame.h < 10) || (utox_video_frame.h > 20000))
+    {
+        dec_video_t_counter();
+        sem_post(&video_play_lock_);
+        pthread_exit(0);
+    }
+
+    TOXAV_ERR_SEND_FRAME error;
+    size_t y_size = (utox_video_frame.w * utox_video_frame.h);
+    size_t u_size = ((utox_video_frame.w * utox_video_frame.h) / 4 );
+    size_t v_size = ((utox_video_frame.w * utox_video_frame.h) / 4 );
+    utox_video_frame.y = calloc(1, y_size);
+    utox_video_frame.u = calloc(1, u_size);
+    utox_video_frame.v = calloc(1, v_size);
+    memcpy(utox_video_frame.y, d->y, y_size);
+    memcpy(utox_video_frame.u, d->u, u_size);
+    memcpy(utox_video_frame.v, d->v, v_size);
+
+    sem_post(&video_play_lock_);
+
+    // resize into bounding box 1920x1080 if video is larger than that box (e.g. 4K video frame)
+    UTOX_FRAME_PKG *frame = calloc(1, sizeof(UTOX_FRAME_PKG));
+
+    float scale_w = (float)(utox_video_frame.w) / (float)(UTOX_MAX_DESKTOP_CAPTURE_WIDTH);
+    float scale_h = (float)(utox_video_frame.h) / (float)(UTOX_MAX_DESKTOP_CAPTURE_HEIGHT);
+
+    float scale = scale_w;
+    if (scale_h > scale_w)
+    {
+        scale = scale_h;
+    }
+
+    uint32_t new_width = (uint32_t)((float)(utox_video_frame.w) / scale);
+    uint32_t new_height = (uint32_t)((float)(utox_video_frame.h) / scale);
+
+    if (new_width > UTOX_MAX_DESKTOP_CAPTURE_WIDTH)
+    {
+        new_width = UTOX_MAX_DESKTOP_CAPTURE_WIDTH;
+    }
+
+    if (new_height > UTOX_MAX_DESKTOP_CAPTURE_HEIGHT)
+    {
+        new_height = UTOX_MAX_DESKTOP_CAPTURE_HEIGHT;
+    }
+
+    frame->w              = new_width;
+    frame->h              = new_height;
+    frame->img            = calloc(1, ((new_width * new_height) * 3 / 2) + 1000 ); // YUV buffer
+    void* u_start         = frame->img + (new_width * new_height);
+    void* v_start         = frame->img + (new_width * new_height) + ((new_width / 2) * (new_height / 2));
+
+    scale_down_yuv420_image(utox_video_frame.y, utox_video_frame.u, utox_video_frame.v,
+                            utox_video_frame.w, utox_video_frame.h,
+                            frame->img, u_start, v_start,
+                            new_width, new_height);
+
+    timspan_in_ms2 = __utimer_stop(&tt1);
+    toxav_video_send_frame_age(av, get_friend(i)->number, frame->w, frame->h,
+                           frame->img, u_start, v_start, &error, timspan_in_ms2);
+
+    if (error) {
+        if (error == TOXAV_ERR_SEND_FRAME_SYNC) {
+            yieldcpu(1);
+            timspan_in_ms2 = __utimer_stop(&tt1);
+            toxav_video_send_frame_age(av, get_friend(i)->number, frame->w, frame->h,
+                                   frame->img, u_start, v_start, &error, timspan_in_ms2);
+        }
+    }
+
+    free(frame->img);
+    free(frame);
+    free(utox_video_frame.y);
+    free(utox_video_frame.u);
+    free(utox_video_frame.v);
+
+    //LOG_ERR("uToxVideo:thread", "ending video play thread: w=%d h=%d", new_width, new_height);
+
+    dec_video_t_counter();
+    pthread_exit(0);
+}
+
 
 void utox_video_thread(void *args) {
     ToxAV *av = args;
@@ -302,21 +490,6 @@ void utox_video_thread(void *args) {
             const int r = native_video_getframe(utox_video_frame.y, utox_video_frame.u, utox_video_frame.v,
                                                 utox_video_frame.w, utox_video_frame.h);
             if (r == 1) {
-#if 0
-                if (settings.video_preview) {
-                    /* Make a copy of the video frame for uTox to display */
-                    UTOX_FRAME_PKG *frame = malloc(sizeof(UTOX_FRAME_PKG));
-                    frame->w              = utox_video_frame.w;
-                    frame->h              = utox_video_frame.h;
-                    frame->img            = malloc(utox_video_frame.w * utox_video_frame.h * 4);
-
-                    yuv420tobgr(utox_video_frame.w, utox_video_frame.h, utox_video_frame.y, utox_video_frame.u,
-                                utox_video_frame.v, utox_video_frame.w, (utox_video_frame.w / 2),
-                                (utox_video_frame.w / 2), frame->img);
-
-                    postmessage_utox(AV_VIDEO_FRAME, UINT16_MAX, 1, (void *)frame);
-                }
-#endif
 
                 unsigned long long timspan_in_ms2;
                 // fprintf(stderr, "CT=%d\n", (int)timspan_in_ms2);
@@ -327,63 +500,42 @@ void utox_video_thread(void *args) {
                 size_t active_video_count = 0;
                 for (size_t i = 0; i < self.friend_list_count; i++) {
                     if (SEND_VIDEO_FRAME(i)) {
-                        LOG_TRACE("uToxVideo", "sending video frame to friend %lu" , i);
+                        //LOG_ERR("uToxVideo", "sending video frame to friend %lu,w=%d,h=%d" , i, utox_video_frame.w, utox_video_frame.h);
                         active_video_count++;
                         TOXAV_ERR_SEND_FRAME error = 0;
 
                         if ((utox_video_frame.w > UTOX_MAX_DESKTOP_CAPTURE_WIDTH) || (utox_video_frame.h > UTOX_MAX_DESKTOP_CAPTURE_HEIGHT))
                         {
-                            // resize into bounding box 1920x1080 if video is larger than that box (e.g. 4K video frame)
-                            UTOX_FRAME_PKG *frame = malloc(sizeof(UTOX_FRAME_PKG));
-                            
-                            float scale_w = (float)(utox_video_frame.w) / (float)(UTOX_MAX_DESKTOP_CAPTURE_WIDTH);
-                            float scale_h = (float)(utox_video_frame.h) / (float)(UTOX_MAX_DESKTOP_CAPTURE_HEIGHT);
-                            
-                            float scale = scale_w;
-                            if (scale_h > scale_w)
+                            if (get_video_t_counter() < MAX_VIDEO_PLAY_THREADS)
                             {
-                                scale = scale_h;
-                            }
+                                inc_video_t_counter();
+                                sem_wait(&video_play_lock_);
 
-                            uint32_t new_width = (uint32_t)((float)(utox_video_frame.w) / scale);
-                            uint32_t new_height = (uint32_t)((float)(utox_video_frame.h) / scale);
+                                struct video_play_thread_args args2;
+                                args2.timspan_in_ms2 = timspan_in_ms2;
+                                args2.av = av;
+                                args2.tt1 = tt1;
+                                args2.i = i;
+                                args2.w = utox_video_frame.w;
+                                args2.h = utox_video_frame.h;
+                                args2.y = utox_video_frame.y;
+                                args2.u = utox_video_frame.u;
+                                args2.v = utox_video_frame.v;
 
-                            if (new_width > UTOX_MAX_DESKTOP_CAPTURE_WIDTH)
-                            {
-                                new_width = UTOX_MAX_DESKTOP_CAPTURE_WIDTH;
-                            }
-
-                            if (new_height > UTOX_MAX_DESKTOP_CAPTURE_HEIGHT)
-                            {
-                                new_height = UTOX_MAX_DESKTOP_CAPTURE_HEIGHT;
-                            }
-
-                            frame->w              = new_width;
-                            frame->h              = new_height;
-                            frame->img            = malloc( ((new_width * new_height) * 3 / 2) + 1000 ); // YUV buffer
-                            void* u_start         = frame->img + (new_width * new_height);
-                            void* v_start         = frame->img + (new_width * new_height) + ((new_width / 2) * (new_height / 2));
-
-                            scale_down_yuv420_image(utox_video_frame.y, utox_video_frame.u, utox_video_frame.v,
-                                                    utox_video_frame.w, utox_video_frame.h,
-                                                    frame->img, u_start, v_start,
-                                                    new_width, new_height);
-
-                            timspan_in_ms2 = __utimer_stop(&tt1);
-                            toxav_video_send_frame_age(av, get_friend(i)->number, frame->w, frame->h,
-                                                   frame->img, u_start, v_start, &error, timspan_in_ms2);
-
-                            if (error) {
-                                if (error == TOXAV_ERR_SEND_FRAME_SYNC) {
-                                    yieldcpu(1);
-                                    timspan_in_ms2 = __utimer_stop(&tt1);
-                                    toxav_video_send_frame_age(av, get_friend(i)->number, frame->w, frame->h,
-                                                           frame->img, u_start, v_start, &error, timspan_in_ms2);
+                                pthread_t video_play_thread;
+                                int res_ = pthread_create(&video_play_thread, NULL, video_play, (void *)&args2);
+                                if (res_ != 0)
+                                {
+                                    dec_video_t_counter();
+                                    LOG_ERR("uToxVideo:thread", "error creating video play thread ERRNO=%d", res_);
+                                    sem_post(&video_play_lock_);
+                                }
+                                else
+                                {
+                                    sem_wait(&video_play_lock_);
+                                    sem_post(&video_play_lock_);
                                 }
                             }
-
-                            free(frame->img);
-                            free(frame);
                         }
                         else
                         {
