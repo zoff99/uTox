@@ -55,7 +55,7 @@ extern XImage *screen_image;
 
 sem_t count_video_play_threads;
 int count_video_play_threads_int;
-#define MAX_VIDEO_PLAY_THREADS 1
+#define MAX_VIDEO_PLAY_THREADS 2
 sem_t video_play_lock_;
 
 struct video_play_thread_args {
@@ -385,9 +385,14 @@ static void *video_play(void *video_frame_data)
     utox_video_frame.y = calloc(1, y_size);
     utox_video_frame.u = calloc(1, u_size);
     utox_video_frame.v = calloc(1, v_size);
+#if 0
     memcpy(utox_video_frame.y, d->y, y_size);
     memcpy(utox_video_frame.u, d->u, u_size);
     memcpy(utox_video_frame.v, d->v, v_size);
+#endif
+
+    bgrxtoyuv420(utox_video_frame.y, utox_video_frame.u, utox_video_frame.v,
+                (uint8_t *)screen_image->data, screen_image->width, screen_image->height);
 
     sem_post(&video_play_lock_);
 
