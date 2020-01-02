@@ -220,7 +220,7 @@ bool native_video_init(void *handle) {
         video_height = MAX(grab.dn_y, grab.up_y) - MIN(grab.dn_y, grab.up_y);
 
         video_width = alwaysRoundDown(video_width + 10, 64);
-        video_height = alwaysRoundDown(video_height + 10, 64);
+        video_height = alwaysRoundDown(video_height + 10, 2);
         
         if (video_width > default_screen->width)
         {
