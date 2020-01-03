@@ -186,7 +186,7 @@ uint16_t native_video_detect(void) {
 
         if (!first) {
             first = pp;
-            utox_video_append_device((void *)p, 0, p + sizeof(void *), 1);
+            utox_video_append_device((void *)p, 0, p + sizeof(void *), 0);
         } else {
             utox_video_append_device((void *)p, 0, p + sizeof(void *), 0);
         }
