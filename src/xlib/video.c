@@ -162,7 +162,7 @@ uint16_t native_video_detect(void) {
     uint16_t device_count = 1; /* start at 1 for the desktop input */
 
     // Indicate that we support desktop capturing.
-    utox_video_append_device((void *)1, 1, (void *)STR_VIDEO_IN_DESKTOP, 0);
+    utox_video_append_device((void *)1, 1, (void *)STR_VIDEO_IN_DESKTOP, 1);
 
     for (int i = 0; i != 64; i++) { /* TODO: magic numbers are bad mm'kay? */
         snprintf(dev_name + 10, sizeof(dev_name) - 10, "%i", i);
@@ -213,14 +213,16 @@ bool native_video_init(void *handle) {
     if (isdesktop(handle)) {
         utox_v4l_fd = -1;
 
-        GRAB_POS grab = grab_pos();
-        video_x      = MIN(grab.dn_x, grab.up_x);
-        video_y      = MIN(grab.dn_y, grab.up_y);
-        video_width  = MAX(grab.dn_x, grab.up_x) - MIN(grab.dn_x, grab.up_x);
-        video_height = MAX(grab.dn_y, grab.up_y) - MIN(grab.dn_y, grab.up_y);
+        // GRAB_POS grab = grab_pos();
+        video_x      = 0; // MIN(grab.dn_x, grab.up_x);
+        video_y      = 0; // MIN(grab.dn_y, grab.up_y);
+        video_width  = default_screen->width; // MAX(grab.dn_x, grab.up_x) - MIN(grab.dn_x, grab.up_x);
+        video_height = default_screen->height; // MAX(grab.dn_y, grab.up_y) - MIN(grab.dn_y, grab.up_y);
 
-        video_width = alwaysRoundDown(video_width + 10, 64);
-        video_height = alwaysRoundDown(video_height + 10, 64);
+        // ------ disable rounding screen window ------------------
+        // video_width = alwaysRoundDown(video_width + 10, 64);
+        // video_height = alwaysRoundDown(video_height + 10, 64);
+        // ------ disable rounding screen window ------------------
         
         if (video_width > default_screen->width)
         {
