@@ -21,8 +21,8 @@
 #include <vpx/vpx_codec.h>
 #include <vpx/vpx_image.h>
 
-#define UTOX_MAX_DESKTOP_CAPTURE_WIDTH  1280 // 1280 // 1920
-#define UTOX_MAX_DESKTOP_CAPTURE_HEIGHT  720 //  720 // 1080
+#define UTOX_MAX_DESKTOP_CAPTURE_WIDTH  1920 // 1280 // 1920
+#define UTOX_MAX_DESKTOP_CAPTURE_HEIGHT 1080 //  720 // 1080
 
 
 bool utox_video_thread_init = false;

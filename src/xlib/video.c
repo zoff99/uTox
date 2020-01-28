@@ -300,10 +300,85 @@ bool native_video_endread(void) {
     return v4l_endread();
 }
 
+inline void set_color_in_bgra_frame_xy(int fb_xres, int fb_yres, int fb_line_bytes, uint8_t *fb_buf, int px_x, int px_y,
+                                uint8_t r, uint8_t g, uint8_t b)
+{
+    uint8_t *plane = fb_buf;
+    plane = plane + (px_x * 4) + (px_y * fb_line_bytes);
+    *plane = b; // b
+    plane++;
+    *plane = g; // g
+    plane++;
+    *plane = r; // r
+    plane++;
+    *plane = 0; // a
+}
+
+void left_top_bar_into_bgra_frame(int fb_xres, int fb_yres, int fb_line_bytes, uint8_t *fb_buf, int bar_start_x_pix,
+                                  int bar_start_y_pix, int bar_w_pix, int bar_h_pix, uint8_t r, uint8_t g, uint8_t b)
+{
+    int k;
+    int j;
+
+    for (k = 0; k < bar_h_pix; k++)
+    {
+        for (j = 0; j < bar_w_pix; j++)
+        {
+            set_color_in_bgra_frame_xy(fb_xres, fb_yres, fb_line_bytes, fb_buf,
+                                       (bar_start_x_pix + j), (bar_start_y_pix + k), r, g, b);
+        }
+    }
+}
+
+static void query_mouse_position(Display *d, Window root, int *x, int *y)
+{
+    int once;
+    int i;
+    unsigned m;
+    Window dummy1;
+    Window dummy2;
+
+    XQueryPointer(d, root, &dummy1, &dummy2, x, y, &i, &i, &m);
+    // fprintf(stderr, "X: %d Y: %d\n", *x, *y);
+}
+
 int native_video_getframe(uint8_t *y, uint8_t *u, uint8_t *v, uint16_t width, uint16_t height) {
 
     if (utox_v4l_fd == -1) {
+
+        // -----------------------------------------------
+        // -- DRAW a mouse cursor on the captured image --
+        // -----------------------------------------------
+        int mx = -1;
+        int my = -1;
+        query_mouse_position(deskdisplay, RootWindow(deskdisplay, deskscreen), &mx, &my);
         XShmGetImage(deskdisplay, RootWindow(deskdisplay, deskscreen), screen_image, video_x, video_y, AllPlanes);
+
+        int box_w = 80;
+        int box_h = 80;
+        int box_line_thikness = 10;
+
+        if (width == video_width && height == video_height)
+        {        
+            if ((mx > (box_line_thikness + 1))
+                &&
+                (mx < (screen_image->bytes_per_line - (box_w + 1 + 100)))
+                && (my > (box_line_thikness + 1))
+                && (my < (screen_image->height - (box_h + 1)))
+                )
+            {
+
+                left_top_bar_into_bgra_frame(screen_image->width, screen_image->height, screen_image->bytes_per_line,
+                                             screen_image->data, mx, my, box_w, box_line_thikness, 255, 0, 0);
+
+                left_top_bar_into_bgra_frame(screen_image->width, screen_image->height, screen_image->bytes_per_line,
+                                             screen_image->data, mx, my, box_line_thikness, box_h, 255, 0, 0);
+            }
+        }
+        // -----------------------------------------------
+        // -- DRAW a mouse cursor on the captured image --
+        // -----------------------------------------------
+
 
         if (width != video_width || height != video_height) {
             LOG_ERR("v4l", "width/height mismatch %u %u != %u %u", width, height, screen_image->width,
