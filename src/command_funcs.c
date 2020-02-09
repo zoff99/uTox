@@ -141,6 +141,35 @@ bool slash_vbr(void *object, char *arg, int arg_length)
 	return true;
 }
 
+extern int global_show_mouse_cursor;
+
+bool slash_mou(void *object, char *arg, int arg_length)
+{
+	FRIEND *f = object;
+
+	char arg1[300];
+	CLEAR(arg1);
+    snprintf(arg1, arg_length, "%s", arg);
+
+	LOG_ERR("slash_mou", "*arg=%s* len=%d" , arg1, arg_length);
+
+	int num_new = get_number_in_string(arg1, (int)1);
+
+	if (num_new == 1)
+	{
+		LOG_ERR("slash_mou", "show_mouse_cursor:1");
+        global_show_mouse_cursor = 1;
+	}
+    else
+    {
+		LOG_ERR("slash_mou", "show_mouse_cursor:0");
+        global_show_mouse_cursor = 0;
+    }
+
+	return true;
+}
+
+
 bool slash_vpxenc(void *object, char *arg, int arg_length)
 {
 	FRIEND *f = object;

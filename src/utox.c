@@ -29,6 +29,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+int global_show_mouse_cursor = 0;
+
 /** Translates status code to text then sends back to the user */
 static void file_notify(FRIEND *f, MSG_HEADER *msg) {
     STRING *str;

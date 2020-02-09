@@ -342,42 +342,51 @@ static void query_mouse_position(Display *d, Window root, int *x, int *y)
     // fprintf(stderr, "X: %d Y: %d\n", *x, *y);
 }
 
+extern int global_show_mouse_cursor;
+
 int native_video_getframe(uint8_t *y, uint8_t *u, uint8_t *v, uint16_t width, uint16_t height) {
 
     if (utox_v4l_fd == -1) {
 
-        // -----------------------------------------------
-        // -- DRAW a mouse cursor on the captured image --
-        // -----------------------------------------------
-        int mx = -1;
-        int my = -1;
-        query_mouse_position(deskdisplay, RootWindow(deskdisplay, deskscreen), &mx, &my);
-        XShmGetImage(deskdisplay, RootWindow(deskdisplay, deskscreen), screen_image, video_x, video_y, AllPlanes);
+        if (global_show_mouse_cursor == 1)
+        {
+            // -----------------------------------------------
+            // -- DRAW a mouse cursor on the captured image --
+            // -----------------------------------------------
+            int mx = -1;
+            int my = -1;
+            query_mouse_position(deskdisplay, RootWindow(deskdisplay, deskscreen), &mx, &my);
+            XShmGetImage(deskdisplay, RootWindow(deskdisplay, deskscreen), screen_image, video_x, video_y, AllPlanes);
 
-        int box_w = 80;
-        int box_h = 80;
-        int box_line_thikness = 10;
+            int box_w = 80;
+            int box_h = 80;
+            int box_line_thikness = 10;
 
-        if (width == video_width && height == video_height)
-        {        
-            if ((mx > (box_line_thikness + 1))
-                &&
-                (mx < (screen_image->bytes_per_line - (box_w + 1 + 100)))
-                && (my > (box_line_thikness + 1))
-                && (my < (screen_image->height - (box_h + 1)))
-                )
+            if (width == video_width && height == video_height)
             {
+                if ((mx > (box_line_thikness + 1 + 100))
+                    &&
+                    (mx < (screen_image->bytes_per_line - (box_w + 1 + 200)))
+                    && (my > (box_line_thikness + 1))
+                    && (my < (screen_image->height - (box_h + 1)))
+                    )
+                {
 
-                left_top_bar_into_bgra_frame(screen_image->width, screen_image->height, screen_image->bytes_per_line,
-                                             screen_image->data, mx, my, box_w, box_line_thikness, 255, 0, 0);
+                    left_top_bar_into_bgra_frame(screen_image->width, screen_image->height, screen_image->bytes_per_line,
+                                                 screen_image->data, mx, my, box_w, box_line_thikness, 255, 0, 0);
 
-                left_top_bar_into_bgra_frame(screen_image->width, screen_image->height, screen_image->bytes_per_line,
-                                             screen_image->data, mx, my, box_line_thikness, box_h, 255, 0, 0);
+                    left_top_bar_into_bgra_frame(screen_image->width, screen_image->height, screen_image->bytes_per_line,
+                                                 screen_image->data, mx, my, box_line_thikness, box_h, 255, 0, 0);
+                }
             }
+            // -----------------------------------------------
+            // -- DRAW a mouse cursor on the captured image --
+            // -----------------------------------------------
         }
-        // -----------------------------------------------
-        // -- DRAW a mouse cursor on the captured image --
-        // -----------------------------------------------
+        else
+        {
+            XShmGetImage(deskdisplay, RootWindow(deskdisplay, deskscreen), screen_image, video_x, video_y, AllPlanes);
+        }
 
 
         if (width != video_width || height != video_height) {

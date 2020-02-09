@@ -37,6 +37,7 @@ bool slash_topic(void *object, char *arg, int arg_length);
 
 
 bool slash_vbr(void *object, char *arg, int arg_length);
+bool slash_mou(void *object, char *arg, int arg_length);
 bool slash_vpxenc(void *object, char *arg, int arg_length);
 bool slash_vpxxqt(void *object, char *arg, int arg_length);
 
