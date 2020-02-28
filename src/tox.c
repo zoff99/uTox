@@ -185,29 +185,32 @@ static void write_save(Tox *tox) {
     size_t clear_length     = tox_get_savedata_size(tox);
     size_t encrypted_length = clear_length + TOX_PASS_ENCRYPTION_EXTRA_LENGTH;
 
-    uint8_t *clear_data_p = calloc(1, clear_length);
-    uint8_t *encrypted_data_p = calloc(1, encrypted_length);
+    uint8_t *clear_data = calloc(1, clear_length);
+    uint8_t *encrypted_data = calloc(1, encrypted_length);
+    if (!clear_data || !encrypted_data) {
+        LOG_FATAL_ERR(EXIT_FAILURE, "Toxcore", "Could not allocate memory for savedata.\n");
+    }
 
-    tox_get_savedata(tox, clear_data_p);
+    tox_get_savedata(tox, clear_data);
 
     if (edit_profile_password.length == 0) {
         // user doesn't use encryption
-        save_needed = utox_data_save_tox(clear_data_p, clear_length);
+        save_needed = utox_data_save_tox(clear_data, clear_length);
         LOG_TRACE("Toxcore", "Unencrypted save data written" );
     } else {
-        UTOX_ENC_ERR enc_err = utox_encrypt_data(clear_data_p, clear_length, encrypted_data_p);
+        UTOX_ENC_ERR enc_err = utox_encrypt_data(clear_data, clear_length, encrypted_data);
         if (enc_err) {
             /* encryption failed, write clear text data */
-            save_needed = utox_data_save_tox(clear_data_p, clear_length);
+            save_needed = utox_data_save_tox(clear_data, clear_length);
             LOG_TRACE("Toxcore", "\n\n\t\tWARNING UTOX WAS UNABLE TO ENCRYPT DATA!\n\t\tDATA WRITTEN IN CLEAR TEXT!\n" );
         } else {
-            save_needed = utox_data_save_tox(encrypted_data_p, encrypted_length);
+            save_needed = utox_data_save_tox(encrypted_data, encrypted_length);
             LOG_TRACE("Toxcore", "Encrypted save data written" );
         }
     }
-    
-    free(clear_data_p);
-    free(encrypted_data_p);
+
+    free(encrypted_data);
+    free(clear_data);
 }
 
 void tox_settingschanged(void) {
@@ -269,56 +272,56 @@ static int load_toxcore_save(struct Tox_Options *options) {
     uint8_t *raw_data = utox_data_load_tox(&raw_length);
 
     /* Check if we're loading a saved profile */
-    if (raw_data && raw_length) {
-        if (tox_is_data_encrypted(raw_data)) {
-            size_t   cleartext_length = raw_length - TOX_PASS_ENCRYPTION_EXTRA_LENGTH;
-            uint8_t *clear_data       = calloc(1, cleartext_length);
-            settings.save_encryption   = 1;
-            LOG_INFO("Toxcore", "Using encrypted data, trying password: ");
-
-            UTOX_ENC_ERR decrypt_err = utox_decrypt_data(raw_data, raw_length, clear_data);
-            if (decrypt_err) {
-                if (decrypt_err == UTOX_ENC_ERR_LENGTH) {
-                    LOG_WARN("Toxcore", "Password too short!\r");
-                } else if (decrypt_err == UTOX_ENC_ERR_BAD_PASS) {
-                    LOG_ERR("Toxcore", "Couldn't decrypt, wrong password?\r");
-                } else {
-                    LOG_ERR("Toxcore", "Unknown error, please file a bug report!" );
-                }
-                return -1;
-            }
-
-            if (clear_data && cleartext_length) {
-                options->savedata_type   = TOX_SAVEDATA_TYPE_TOX_SAVE;
-                options->savedata_data   = clear_data;
-                options->savedata_length = cleartext_length;
-
-                return 0;
-            }
-        } else {
-            LOG_INFO("Toxcore", "Using unencrypted save file");
-            options->savedata_type   = TOX_SAVEDATA_TYPE_TOX_SAVE;
-            options->savedata_data   = raw_data;
-            options->savedata_length = raw_length;
-            return 0;
-        }
+    if (!raw_data || !raw_length) {
+        // No save file at all, create new profile!
+        return -2;
     }
-    /* No save file at all, create new profile! */
-    return -2;
+
+    if (!tox_is_data_encrypted(raw_data)) {
+        LOG_INFO("Toxcore", "Using unencrypted save file");
+        options->savedata_type   = TOX_SAVEDATA_TYPE_TOX_SAVE;
+        options->savedata_data   = raw_data;
+        options->savedata_length = raw_length;
+        return 0;
+    }
+
+    size_t   cleartext_length = raw_length - TOX_PASS_ENCRYPTION_EXTRA_LENGTH;
+    uint8_t *clear_data       = calloc(1, cleartext_length);
+    settings.save_encryption   = 1;
+    LOG_INFO("Toxcore", "Using encrypted data, trying password: ");
+
+    UTOX_ENC_ERR decrypt_err = utox_decrypt_data(raw_data, raw_length, clear_data);
+    if (decrypt_err) {
+        if (decrypt_err == UTOX_ENC_ERR_LENGTH) {
+            LOG_WARN("Toxcore", "Password too short!\r");
+        } else if (decrypt_err == UTOX_ENC_ERR_BAD_PASS) {
+            LOG_ERR("Toxcore", "Couldn't decrypt, wrong password?\r");
+        } else {
+            LOG_ERR("Toxcore", "Unknown error, please file a bug report!" );
+        }
+        return -1;
+    }
+
+    if (!clear_data || !cleartext_length) {
+        return -1;
+    }
+
+    options->savedata_type   = TOX_SAVEDATA_TYPE_TOX_SAVE;
+    options->savedata_data   = clear_data;
+    options->savedata_length = cleartext_length;
+
+    return 0;
 }
 
 static void log_callback(Tox *UNUSED(tox), TOX_LOG_LEVEL level, const char *file, uint32_t line,
                          const char *func, const char *message, void *UNUSED(user_data)) {
-    if (level > TOX_LOG_LEVEL_INFO)
-    {
-        time_t t3 = time(NULL);
-        struct tm tm3 = *localtime(&t3);
-        
-
-        debug("%04d-%02d-%02d %02d:%02d:%02d:%d:%s:%d:%s:%s\n",
-            tm3.tm_year + 1900, tm3.tm_mon + 1, tm3.tm_mday,
-            tm3.tm_hour, tm3.tm_min, tm3.tm_sec,
-            level, file, line, func, message);
+    if (message && file && line) {
+        LOG_NET_TRACE("Toxcore", "TOXCORE LOGGING ERROR (%u): %s" , level, message);
+        LOG_NET_TRACE("Toxcore", "     in: %s:%u" , file, line);
+    } else if (func) {
+        LOG_NET_TRACE("Toxcore", "TOXCORE LOGGING ERROR: %s" , func);
+    } else {
+        LOG_ERR("Toxcore logging", "TOXCORE LOGGING is broken!!:\tOpen an bug upstream");
     }
 }
 
@@ -598,8 +601,8 @@ void toxcore_thread(void *UNUSED(args)) {
  * There are two main threads, the tox worker thread, that interacts with Toxcore, and receives the callbacks. The other
  * is the 'uTox' thread that interacts with the user, (rather sends information to the GUI.) The tox thread and the uTox
  * thread may interact with each other, as you see fit. However the Toxcore thread has child threads that are a bit
- * temperamental. The ToxAV thread is a child of the Toxcore thread, and therefor will ideally only be called by the tox
- * thread. The ToxAV thread also has two children of it's own, an audio and a video thread. Both a & v threads should
+ * temperamental. The ToxAV thread is a child of the Toxcore thread, and therefore will ideally only be called by the tox
+ * thread. The ToxAV thread also has two children of its own, an audio and a video thread. Both a & v threads should
  * only be called by the ToxAV thread to avoid deadlocks.
  */
 static void tox_thread_message(Tox *tox, ToxAV *av, uint64_t time, uint8_t msg, uint32_t param1, uint32_t param2,

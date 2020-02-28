@@ -9,7 +9,7 @@ msgstr("GERMAN")
 
 
 /******************************************************************************
- *** UNSORTED STRINGS                                                       ***
+ *** MISC & UNSORTED                                                        ***
  ******************************************************************************/
 msgid(REQ_SENT)
 msgstr("Freundschaftsanfrage verschickt. Dein Freund wird online erscheinen, sobald er deine Anfrage akzeptiert hat.")
@@ -148,6 +148,9 @@ msgstr("Chatverlauf als Text exportieren")
 msgid(GROUPCHAT_JOIN_AUDIO)
 msgstr("Audiochat beitreten")
 
+msgid(GROUP_CREATE_WITH_AUDIO)
+msgstr("Audio aktivieren")
+
 msgid(GROUP_CREATE_TEXT)
 msgstr("Text-Gruppenchat erstellen")
 
@@ -171,7 +174,7 @@ msgid(GROUPCHAT_SETTINGS)
 msgstr("Gruppenchat-Einstellungen")
 
 msgid(GROUP_NOTIFICATIONS)
-msgstr("Benachrichtigungen")
+msgstr("Gruppenbenachrichtigungen")
 
 msgid(GROUP_NOTIFICATIONS_ON)
 msgstr("An")
@@ -338,6 +341,9 @@ msgstr("Passwortfeld verstecken")
 msgid(HIDE_UI_PASSWORD_TOOLTIP)
 msgstr("Hier klicken, um Passwortfeld zu verstecken.")
 
+msgid(PASSWORD_TOO_SHORT)
+msgstr("Passwort muss mindestens 4 Zeichen lang sein")
+
 msgid(LOCK)
 msgstr("Sperren")
 
@@ -351,10 +357,10 @@ msgid(NETWORK)
 msgstr("Netzwerk")
 
 msgid(PROXY_FORCE)
-msgstr("Verwendung des Proxy's erzwingen")
+msgstr("Verwendung des Proxys erzwingen")
 
 msgid(WARNING)
-msgstr("Das Verändern von Netzwerk-/Proxy-Einstellungen unterbricht die Verbindung zum Tox-Netzwerk.")
+msgstr("Das Verändern von Netzwerk-/Proxy-Einstellungen unterbricht kurzzeitig die Verbindung zum Tox-Netzwerk.")
 
 msgid(SAVE_CHAT_HISTORY)
 msgstr("Chatverläufe speichern")
@@ -373,6 +379,18 @@ msgstr("In den Infobereich schließen")
 
 msgid(START_IN_TRAY)
 msgstr("Im Infobereich starten")
+
+msgid(SHOW_QR)
+msgstr("QR Code anzeigen")
+
+msgid(HIDE_QR)
+msgstr("QR Code verstecken")
+
+msgid(SAVE_QR)
+msgstr("QR Code speichern")
+
+msgid(COPY_TOX_ID)
+msgstr("Kopieren")
 
 msgid(COPY)
 msgstr("Kopieren")
@@ -393,7 +411,7 @@ msgid(DELETE)
 msgstr("Löschen")
 
 msgid(SELECTALL)
-msgstr("Alle auswählen")
+msgstr("Alles markieren")
 
 msgid(REMOVE)
 msgstr("Entfernen")
@@ -420,7 +438,7 @@ msgid(SENDMESSAGE)
 msgstr("Senden")
 
 msgid(SENDSCREENSHOT)
-msgstr("Bildschirmaufnahme senden")
+msgstr("Bildschirmfoto senden")
 
 msgid(CLICKTOSAVE)
 msgstr("Klicken um zu speichern")
@@ -467,6 +485,9 @@ msgstr("Zeigen")
 msgid(HIDE)
 msgstr("Verstecken")
 
+msgid(EXIT)
+msgstr("Beenden")
+
 msgid(VIDEO_IN_NONE)
 msgstr("keines")
 
@@ -481,6 +502,9 @@ msgstr("Bitte füge mich deiner Kontaktliste hinzu.")
 
 msgid(CONTACT_SEARCH_ADD_HINT)
 msgstr("Freunde suchen/hinzufügen")
+
+msgid(PROXY_EDIT_HINT_IP)
+msgstr("IP-Adresse")
 
 msgid(WINDOW_TITLE_VIDEO_PREVIEW)
 msgstr("Videovorschau")

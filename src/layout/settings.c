@@ -39,10 +39,15 @@ static void draw_settings_header(int x, int y, int w, int UNUSED(height)) {
 #ifdef GIT_VERSION
     setfont(FONT_TEXT);
     char ver_string[64];
-    int  count = snprintf(ver_string, 64, "Toxcore v%u.%u.%u",
-                            tox_version_major(), tox_version_minor(), tox_version_patch());
-    drawtextwidth_right(x + w - textwidth(ver_string, count) , textwidth(ver_string, count), SCALE(10),
-                        ver_string, count);
+    int  ver_string_len;
+
+    snprintf(ver_string, sizeof(ver_string), "Toxcore v%u.%u.%u",
+             tox_version_major(), tox_version_minor(), tox_version_patch());
+    ver_string_len = strnlen(ver_string, sizeof(ver_string) - 1);
+
+    drawtextwidth_right(x + w - textwidth(ver_string, ver_string_len),
+                        textwidth(ver_string, ver_string_len), SCALE(10),
+                        ver_string, ver_string_len);
 
     setfont(FONT_SELF_NAME); // x adjustment depends on the font type being set first
     x += SCALE(25) + UTOX_STR_WIDTH(UTOX_SETTINGS);
@@ -148,7 +153,6 @@ static void draw_settings_text_profile(int x, int y, int UNUSED(w), int UNUSED(h
     drawstr(x + SCALE(10), y + SCALE(10), NAME);
     drawstr(x + SCALE(10), y + SCALE(65), STATUSMESSAGE);
     drawstr(x + SCALE(10), y + SCALE(120), TOXID);
-    drawstr(x + SCALE(10), y + SCALE(175), LANGUAGE);
 
     if (self.qr_image && !button_qr.disabled) {
         // Enlarge original QR for better recognition
@@ -158,7 +162,7 @@ static void draw_settings_text_profile(int x, int y, int UNUSED(w), int UNUSED(h
         button_qr.panel.width = button_qr.panel.height = UN_SCALE(self.qr_image_size * image_scale);
 
         image_set_scale(self.qr_image, image_scale);
-        draw_image(self.qr_image, x + SCALE(10), y + SCALE(230), image_size, image_size, 0, 0);
+        draw_image(self.qr_image, x + SCALE(10), y + SCALE(175), image_size, image_size, 0, 0);
         image_set_scale(self.qr_image, 1.0);
     }
 }
@@ -172,9 +176,11 @@ static void draw_settings_text_devices(int x, int y, int UNUSED(w), int UNUSED(h
     drawstr(x + SCALE(10), y + SCALE(60), DEVICES_NUMBER);
 
     char   str[10];
-    size_t strlen = snprintf(str, 10, "%zu", self.device_list_count);
 
-    drawtext(x + SCALE(10), y + SCALE(75), str, strlen);
+    snprintf(str, sizeof(str), "%zu", self.device_list_count);
+    size_t str_len = strnlen(str, sizeof(str) - 1);
+
+    drawtext(x + SCALE(10), y + SCALE(75), str, str_len);
 }
 
 static void draw_settings_text_password(int x, int y, int UNUSED(w), int UNUSED(h)) {
@@ -203,15 +209,16 @@ static void draw_nospam_settings(int x, int y, int UNUSED(w), int UNUSED(h)){
 static void draw_settings_text_ui(int x, int y, int UNUSED(w), int UNUSED(height)) {
     setcolor(COLOR_MAIN_TEXT);
     setfont(FONT_SELF_NAME);
-    drawstr(x + SCALE(150), y + SCALE(10),  DPI);
-    drawstr(x + SCALE(10),  y + SCALE(10),  THEME);
-    drawstr(x + SCALE(20) + BM_SWITCH_WIDTH,  y + SCALE(65),  SAVE_CHAT_HISTORY);
-    drawstr(x + SCALE(20) + BM_SWITCH_WIDTH,  y + SCALE(95),  CLOSE_TO_TRAY);
-    drawstr(x + SCALE(20) + BM_SWITCH_WIDTH,  y + SCALE(125), START_IN_TRAY);
-    drawstr(x + SCALE(20) + BM_SWITCH_WIDTH,  y + SCALE(155), AUTO_STARTUP);
-    drawstr(x + SCALE(20) + BM_SWITCH_WIDTH,  y + SCALE(185), SETTINGS_UI_MINI_ROSTER);
+    drawstr(x + SCALE(10), y + SCALE(10), LANGUAGE);
+    drawstr(x + SCALE(150), y + SCALE(65),  DPI);
+    drawstr(x + SCALE(10),  y + SCALE(65),  THEME);
+    drawstr(x + SCALE(20) + BM_SWITCH_WIDTH,  y + SCALE(120),  SAVE_CHAT_HISTORY);
+    drawstr(x + SCALE(20) + BM_SWITCH_WIDTH,  y + SCALE(150),  CLOSE_TO_TRAY);
+    drawstr(x + SCALE(20) + BM_SWITCH_WIDTH,  y + SCALE(180), START_IN_TRAY);
+    drawstr(x + SCALE(20) + BM_SWITCH_WIDTH,  y + SCALE(210), AUTO_STARTUP);
+    drawstr(x + SCALE(20) + BM_SWITCH_WIDTH,  y + SCALE(240), SETTINGS_UI_MINI_ROSTER);
     #if PLATFORM_ANDROID
-        drawstr(x + SCALE(20) + BM_SWITCH_WIDTH, y + SCALE(215), SETTINGS_UI_AUTO_HIDE_SIDEBAR);
+        drawstr(x + SCALE(20) + BM_SWITCH_WIDTH, y + SCALE(270), SETTINGS_UI_AUTO_HIDE_SIDEBAR);
     #endif
 }
 
@@ -383,7 +390,6 @@ panel_settings_master = {
             (PANEL*)&edit_toxid,
             (PANEL*)&button_copyid,
             (PANEL*)&button_show_qr,
-            (PANEL*)&dropdown_language,
             (PANEL*)&button_qr,
             NULL
         }
@@ -402,6 +408,7 @@ panel_settings_master = {
         .disabled = 1,
         .content_scroll = &scrollbar_settings,
         .child = (PANEL*[]) {
+            (PANEL*)&dropdown_language,
             (PANEL*)&dropdown_dpi,
             (PANEL*)&dropdown_theme,
             (PANEL*)&switch_save_chat_history,
@@ -510,6 +517,13 @@ static void update_show_password_button_text(void) {
 }
 
 BUTTON button_settings = {
+    .panel = {
+        .type   = PANEL_BUTTON,
+        .x      = SIDEBAR_BUTTON_LEFT,
+        .y      = ROSTER_BOTTOM,
+        .width  = SIDEBAR_BUTTON_WIDTH,
+        .height = SIDEBAR_BUTTON_HEIGHT,
+    },
     .bm_icon          = BM_SETTINGS,
     .icon_w       = _BM_ADD_WIDTH,
     .icon_h       = _BM_ADD_WIDTH,
@@ -520,6 +534,29 @@ BUTTON button_settings = {
     .tooltip_text = {.i18nal = STR_USERSETTINGS },
 };
 
+static void close_dropdowns(PANEL *p) {
+    if (!p->child) {
+        return;
+    }
+
+    PANEL *ch;
+    for (int i = 0; (ch = p->child[i]); ++i)
+    {
+        PANEL_TYPE type = ch->type;
+        if (type == PANEL_DROPDOWN) {
+            dropdown_close((DROPDOWN*)ch);
+        } else if (type == PANEL_NONE) {
+            close_dropdowns(ch);
+        }
+    }
+}
+
+void reset_settings_controls(void) {
+    update_show_nospam_button_text();
+    update_show_password_button_text();
+    close_dropdowns(&panel_settings_master);
+}
+
 static void disable_all_setting_sub(void) {
     flist_selectsettings();
     panel_settings_profile.disabled         = true;
@@ -528,8 +565,7 @@ static void disable_all_setting_sub(void) {
     panel_settings_av.disabled              = true;
     panel_settings_notifications.disabled   = true;
     panel_settings_adv.disabled             = true;
-    update_show_nospam_button_text();
-    update_show_password_button_text();
+    reset_settings_controls();
 }
 
 static void button_settings_sub_profile_on_mup(void) {
@@ -635,7 +671,7 @@ static void button_lock_uTox_on_mup(void) {
         tox_settingschanged();
     } else {
         show_messagebox(NULL, 0, S(PASSWORD_TOO_SHORT), SLEN(PASSWORD_TOO_SHORT));
-        memset(edit_profile_password.data, 0, edit_profile_password.maxlength);
+        memset(edit_profile_password.data, '\0', edit_profile_password.data_size);
         edit_profile_password.length = 0;
     }
     button_show_password_settings.disabled = false;
@@ -753,6 +789,7 @@ static void button_videopreview_on_mup(void) {
         postmessage_utoxav(UTOXAV_START_VIDEO, UINT16_MAX, 1, NULL);
     } else {
         LOG_ERR("Button", "Video_width = 0, can't preview\n");
+        return;
     }
     settings.video_preview = !settings.video_preview;
 }
@@ -771,6 +808,13 @@ static void button_show_qr_update(BUTTON *b) {
 }
 
 BUTTON button_copyid = {
+    .panel = {
+        .type   = PANEL_BUTTON,
+        .x      =  66,
+        .y      = 117,
+        .width  = _BM_SBUTTON_WIDTH,
+        .height = _BM_SBUTTON_HEIGHT,
+    },
     .bm_fill  = BM_SBUTTON,
     .update   = button_setcolors_success,
     .on_mup   = button_copyid_on_mup,
@@ -797,7 +841,7 @@ BUTTON button_qr = {
     .panel = {
         .type   = PANEL_BUTTON,
         .x      = 10,
-        .y      = 230,
+        .y      = 175,
         .disabled = true,
     },
     .nodraw   = true,
@@ -826,6 +870,13 @@ BUTTON button_videopreview = {
 };
 
 BUTTON button_lock_uTox = {
+    .panel = {
+        .type   = PANEL_BUTTON,
+        .x      =  10,
+        .y      = 295,
+        .width  = _BM_SBUTTON_WIDTH,
+        .height = _BM_SBUTTON_HEIGHT,
+    },
     .bm_fill      = BM_SBUTTON,
     .update       = button_setcolors_success,
     .on_mup       = button_lock_uTox_on_mup,
@@ -834,6 +885,13 @@ BUTTON button_lock_uTox = {
 };
 
 BUTTON button_show_password_settings = {
+    .panel = {
+        .type   = PANEL_BUTTON,
+        .x      =  10,
+        .y      = 207,
+        .width  = _BM_SBUTTON_WIDTH,
+        .height = _BM_SBUTTON_HEIGHT,
+    },
     .bm_fill      = BM_SBUTTON,
     .update       = button_setcolors_success,
     .on_mup       = button_show_password_settings_on_mup,
@@ -842,6 +900,13 @@ BUTTON button_show_password_settings = {
 };
 
 BUTTON button_export_chatlog = {
+    .panel = {
+        .type   = PANEL_BUTTON,
+        .x      =  10,
+        .y      = 208,
+        .width  = _BM_SBUTTON_WIDTH,
+        .height = _BM_SBUTTON_HEIGHT,
+    },
     .bm_fill      = BM_SBUTTON,
     .update       = button_setcolors_success,
     .on_mup       = button_export_chatlog_on_mup,
@@ -851,6 +916,13 @@ BUTTON button_export_chatlog = {
 };
 
 BUTTON button_change_nospam = {
+    .panel = {
+        .type   = PANEL_BUTTON,
+        .x      =  10,
+        .y      = 295,
+        .width  = _BM_SBUTTON_WIDTH,
+        .height = _BM_SBUTTON_HEIGHT,
+    },
     .bm_fill      = BM_SBUTTON,
     .update       = button_setcolors_success,
     .on_mup       = button_change_nospam_on_mup,
@@ -874,34 +946,6 @@ BUTTON button_show_nospam = {
     .button_text  = {.i18nal = STR_SHOW_NOSPAM},
     .on_mup       = button_show_nospam_on_mup,
 };
-
-static void switch_set_colors(UISWITCH *s) {
-    if (s->switch_on) {
-        s->bg_color    = COLOR_BTN_SUCCESS_BKGRND;
-        s->sw_color    = COLOR_BTN_SUCCESS_TEXT;
-        s->press_color = COLOR_BTN_SUCCESS_BKGRND_HOVER;
-        s->hover_color = COLOR_BTN_SUCCESS_BKGRND_HOVER;
-    } else {
-        s->bg_color    = COLOR_BTN_DISABLED_BKGRND;
-        s->sw_color    = COLOR_BTN_DISABLED_FORGRND;
-        s->hover_color = COLOR_BTN_DISABLED_BKGRND_HOVER;
-        s->press_color = COLOR_BTN_DISABLED_BKGRND_HOVER;
-    }
-}
-
-static void switch_set_size(UISWITCH *s) {
-    s->toggle_w   = BM_SWITCH_TOGGLE_WIDTH;
-    s->toggle_h   = BM_SWITCH_TOGGLE_HEIGHT;
-    s->icon_off_w = BM_FB_WIDTH;
-    s->icon_off_h = BM_FB_HEIGHT;
-    s->icon_on_w  = BM_FB_WIDTH;
-    s->icon_on_h  = BM_FB_HEIGHT;
-}
-
-static void switch_update(UISWITCH *s) {
-    switch_set_colors(s);
-    switch_set_size(s);
-}
 
 static void switchfxn_logging(void) {
     settings.logging_enabled = !settings.logging_enabled;
@@ -961,6 +1005,13 @@ static void switchfxn_auto_update(void) {
 static void switchfxn_block_friend_requests(void) { settings.block_friend_requests = !settings.block_friend_requests; }
 
 UISWITCH switch_save_chat_history = {
+    .panel = {
+        .type   = PANEL_SWITCH,
+        .x      =  10,
+        .y      = 115,
+        .width  = _BM_SWITCH_WIDTH,
+        .height = _BM_SWITCH_HEIGHT,
+    },
     .style_outer    = BM_SWITCH,
     .style_toggle   = BM_SWITCH_TOGGLE,
     .style_icon_off = BM_NO,
@@ -971,6 +1022,13 @@ UISWITCH switch_save_chat_history = {
 };
 
 UISWITCH switch_mini_contacts = {
+    .panel = {
+        .type   = PANEL_SWITCH,
+        .x      =  10,
+        .y      = 235,
+        .width  = _BM_SWITCH_WIDTH,
+        .height = _BM_SWITCH_HEIGHT,
+    },
     .style_outer    = BM_SWITCH,
     .style_toggle   = BM_SWITCH_TOGGLE,
     .style_icon_off = BM_NO,
@@ -1003,6 +1061,13 @@ UISWITCH switch_magic_sidebar = {
 };
 
 UISWITCH switch_ipv6 = {
+    .panel = {
+        .type   = PANEL_SWITCH,
+        .x      = 10,
+        .y      = 27,
+        .width  = _BM_SWITCH_WIDTH,
+        .height = _BM_SWITCH_HEIGHT,
+    },
     .style_outer    = BM_SWITCH,
     .style_toggle   = BM_SWITCH_TOGGLE,
     .style_icon_off = BM_NO,
@@ -1013,6 +1078,13 @@ UISWITCH switch_ipv6 = {
 };
 
 UISWITCH switch_udp = {
+    .panel = {
+        .type   = PANEL_SWITCH,
+        .x      = 10,
+        .y      = 57,
+        .width  = _BM_SWITCH_WIDTH,
+        .height = _BM_SWITCH_HEIGHT,
+    },
     .style_outer    = BM_SWITCH,
     .style_toggle   = BM_SWITCH_TOGGLE,
     .style_icon_off = BM_NO,
@@ -1023,6 +1095,13 @@ UISWITCH switch_udp = {
 };
 
 UISWITCH switch_close_to_tray = {
+    .panel = {
+        .type   = PANEL_SWITCH,
+        .x      =  10,
+        .y      = 145,
+        .width  = _BM_SWITCH_WIDTH,
+        .height = _BM_SWITCH_HEIGHT,
+    },
     .style_outer    = BM_SWITCH,
     .style_toggle   = BM_SWITCH_TOGGLE,
     .style_icon_off = BM_NO,
@@ -1033,6 +1112,13 @@ UISWITCH switch_close_to_tray = {
 };
 
 UISWITCH switch_start_in_tray = {
+    .panel = {
+        .type   = PANEL_SWITCH,
+        .x      =  10,
+        .y      = 175,
+        .width  = _BM_SWITCH_WIDTH,
+        .height = _BM_SWITCH_HEIGHT,
+    },
     .style_outer    = BM_SWITCH,
     .style_toggle   = BM_SWITCH_TOGGLE,
     .style_icon_off = BM_NO,
@@ -1043,6 +1129,13 @@ UISWITCH switch_start_in_tray = {
 };
 
 UISWITCH switch_auto_startup = {
+    .panel = {
+        .type   = PANEL_SWITCH,
+        .x      =  10,
+        .y      = 205,
+        .width  = _BM_SWITCH_WIDTH,
+        .height = _BM_SWITCH_HEIGHT,
+    },
     .style_outer    = BM_SWITCH,
     .style_toggle   = BM_SWITCH_TOGGLE,
     .style_icon_off = BM_NO,
@@ -1053,6 +1146,13 @@ UISWITCH switch_auto_startup = {
 };
 
 UISWITCH switch_typing_notes = {
+    .panel = {
+        .type   = PANEL_SWITCH,
+        .x      = 10,
+        .y      = 70,
+        .width  = _BM_SWITCH_WIDTH,
+        .height = _BM_SWITCH_HEIGHT,
+    },
     .style_outer    = BM_SWITCH,
     .style_toggle   = BM_SWITCH_TOGGLE,
     .style_icon_off = BM_NO,
@@ -1063,6 +1163,13 @@ UISWITCH switch_typing_notes = {
 };
 
 UISWITCH switch_audible_notifications = {
+    .panel = {
+        .type   = PANEL_SWITCH,
+        .x      = 10,
+        .y      = 10,
+        .width  = _BM_SWITCH_WIDTH,
+        .height = _BM_SWITCH_HEIGHT,
+    },
     .style_outer    = BM_SWITCH,
     .style_toggle   = BM_SWITCH_TOGGLE,
     .style_icon_off = BM_NO,
@@ -1073,6 +1180,13 @@ UISWITCH switch_audible_notifications = {
 };
 
 UISWITCH switch_push_to_talk = {
+    .panel = {
+        .type   = PANEL_SWITCH,
+        .x      = 10,
+        .y      = 10,
+        .width  = _BM_SWITCH_WIDTH,
+        .height = _BM_SWITCH_HEIGHT,
+    },
     .style_outer    = BM_SWITCH,
     .style_toggle   = BM_SWITCH_TOGGLE,
     .style_icon_off = BM_NO,
@@ -1093,6 +1207,13 @@ UISWITCH switch_audio_filtering = {
 };
 
 UISWITCH switch_status_notifications = {
+    .panel = {
+        .type   = PANEL_SWITCH,
+        .x      = 10,
+        .y      = 40,
+        .width  = _BM_SWITCH_WIDTH,
+        .height = _BM_SWITCH_HEIGHT,
+    },
     .style_outer    = BM_SWITCH,
     .style_toggle   = BM_SWITCH_TOGGLE,
     .style_icon_off = BM_NO,
@@ -1103,6 +1224,13 @@ UISWITCH switch_status_notifications = {
 };
 
 UISWITCH switch_auto_update = {
+    .panel = {
+        .type   = PANEL_SWITCH,
+        .x      =  10,
+        .y      = 147,
+        .width  = _BM_SWITCH_WIDTH,
+        .height = _BM_SWITCH_HEIGHT,
+    },
     .style_outer    = BM_SWITCH,
     .style_toggle   = BM_SWITCH_TOGGLE,
     .style_icon_off = BM_NO,
@@ -1113,6 +1241,13 @@ UISWITCH switch_auto_update = {
 };
 
 UISWITCH switch_block_friend_requests = {
+    .panel = {
+        .type   = PANEL_SWITCH,
+        .x      =  10,
+        .y      = 177,
+        .width  = _BM_SWITCH_WIDTH,
+        .height = _BM_SWITCH_HEIGHT,
+    },
     .style_outer    = BM_SWITCH,
     .style_toggle   = BM_SWITCH_TOGGLE,
     .style_icon_off = BM_NO,
@@ -1161,6 +1296,13 @@ static void switchfxn_proxy_force(void) {
 }
 
 UISWITCH switch_proxy = {
+    .panel = {
+        .type   = PANEL_SWITCH,
+        .x      = 10,
+        .y      = 87,
+        .width  = _BM_SWITCH_WIDTH,
+        .height = _BM_SWITCH_HEIGHT,
+    },
     .style_outer    = BM_SWITCH,
     .style_toggle   = BM_SWITCH_TOGGLE,
     .style_icon_off = BM_NO,
@@ -1171,6 +1313,13 @@ UISWITCH switch_proxy = {
 };
 
 UISWITCH switch_proxy_force = {
+    .panel = {
+        .type   = PANEL_SWITCH,
+        .x      =  10,
+        .y      = 117,
+        .width  = _BM_SWITCH_WIDTH,
+        .height = _BM_SWITCH_HEIGHT,
+    },
     .style_outer    = BM_SWITCH,
     .style_toggle   = BM_SWITCH_TOGGLE,
     .style_icon_off = BM_NO,
@@ -1193,15 +1342,23 @@ static void dropdown_audio_out_onselect(uint16_t i, const DROPDOWN *dm) {
 }
 
 static void edit_video_fps_onlosefocus(EDIT *UNUSED(edit)) {
-    edit_video_fps.data[edit_video_fps.length] = 0;
-    long tmp = strtol((char *)edit_video_fps.data, NULL, 0);
-    if (tmp <= 0) {
-        settings.video_fps = 25;
-        edit_video_fps.length =
-            snprintf((char *)edit_video_fps.data, edit_video_fps.maxlength + 1, "25");
-    } else {
-        settings.video_fps = tmp;
+    edit_video_fps.data[edit_video_fps.length] = '\0';
+
+    char *temp;
+    uint16_t value = strtol((char *)edit_video_fps.data, &temp, 10);
+
+    if (*temp == '\0' && value >= 1 && value <= UINT8_MAX) {
+        settings.video_fps = value;
+        return;
     }
+
+    LOG_WARN("Settings", "FPS value (%s) is invalid. It must be integer in range of [1,%u]. Setting default value (%u).",
+             edit_video_fps.data, UINT8_MAX, DEFAULT_FPS);
+
+    settings.video_fps = DEFAULT_FPS;
+    snprintf((char *)edit_video_fps.data, edit_video_fps.data_size,
+             "%u", DEFAULT_FPS);
+    edit_video_fps.length = strnlen((char *)edit_video_fps.data, edit_video_fps.data_size - 1);
 }
 
 #include "../screen_grab.h"
@@ -1270,6 +1427,13 @@ DROPDOWN dropdown_video = {
 };
 
 DROPDOWN dropdown_dpi = {
+    .panel = {
+        .type   = PANEL_DROPDOWN,
+        .x      = 150,
+        .y      =  85,
+        .width  = 200,
+        .height =  24,
+    },
     .ondisplay = simple_dropdown_ondisplay,
     .onselect  = dropdown_dpi_onselect,
     .dropcount = COUNTOF(dpidrops),
@@ -1277,6 +1441,13 @@ DROPDOWN dropdown_dpi = {
 };
 
 DROPDOWN dropdown_language = {
+    .panel = {
+        .type   = PANEL_DROPDOWN,
+        .x      = 10,
+        .y      = 30,
+        .width  = -10,
+        .height = 24
+    },
     .ondisplay = dropdown_language_ondisplay,
     .onselect  = dropdown_language_onselect,
     .dropcount = NUM_LANGS,
@@ -1295,6 +1466,13 @@ static UTOX_I18N_STR themedrops[] = {
 };
 
 DROPDOWN dropdown_theme = {
+    .panel = {
+        .type   = PANEL_DROPDOWN,
+        .x      =  10,
+        .y      =  85,
+        .width  = 120,
+        .height =  24,
+    },
     .ondisplay = simple_dropdown_ondisplay,
     .onselect  = dropdown_theme_onselect,
     .dropcount = COUNTOF(themedrops),
@@ -1306,6 +1484,13 @@ static UTOX_I18N_STR notifydrops[] = {
 };
 
 DROPDOWN dropdown_notify_groupchats = {
+    .panel = {
+        .type   = PANEL_DROPDOWN,
+        .x      = 10,
+        .y      = 138,
+        .width  = 100,
+        .height = 24
+    },
     .ondisplay = simple_dropdown_ondisplay,
     .onselect  = dropdown_notify_groupchats_onselect,
     .dropcount = COUNTOF(notifydrops),
@@ -1313,6 +1498,13 @@ DROPDOWN dropdown_notify_groupchats = {
 };
 
 DROPDOWN dropdown_global_group_notifications = {
+    .panel = {
+        .type   = PANEL_DROPDOWN,
+        .x      =  10,
+        .y      = 125,
+        .width  = 100,
+        .height =  24,
+    },
     .ondisplay = simple_dropdown_ondisplay,
     .onselect  = dropdown_global_group_notifications_onselect,
     .dropcount = COUNTOF(notifydrops),
@@ -1323,7 +1515,7 @@ static char edit_name_data[128],
             edit_status_msg_data[128],
             edit_proxy_ip_data[256],
             edit_proxy_port_data[8],
-            edit_video_fps_data[8],
+            edit_video_fps_data[3 + 1], /* range is [1-255] */
             edit_profile_password_data[65535],
             edit_nospam_data[(sizeof(uint32_t) * 2) + 1] = { 0 };
 #ifdef ENABLE_MULTIDEVICE
@@ -1342,11 +1534,28 @@ static void edit_name_onenter(EDIT *edit) {
     postmessage_toxcore(TOX_SELF_SET_NAME, length, 0, self.name);
 }
 
+static void edit_name_ontab(EDIT *UNUSED(edit)) {
+    edit_setfocus(&edit_status_msg);
+}
+
+static void edit_name_onshifttab(EDIT *UNUSED(edit)) {
+    edit_setfocus(&edit_toxid);
+}
+
 EDIT edit_name = {
+    .panel = {
+        .type   = PANEL_EDIT,
+        .x      =  10,
+        .y      =  30,
+        .width  = -10,
+        .height =  24,
+    },
     .data        = edit_name_data,
-    .maxlength   = sizeof edit_name_data - 1,
+    .data_size   = sizeof edit_name_data,
     .onenter     = edit_name_onenter,
     .onlosefocus = edit_name_onenter,
+    .ontab       = edit_name_ontab,
+    .onshifttab  = edit_name_onshifttab,
 };
 
 static void edit_status_msg_onenter(EDIT *edit) {
@@ -1366,11 +1575,28 @@ static void edit_status_msg_onenter(EDIT *edit) {
     postmessage_toxcore(TOX_SELF_SET_STATUS, length, 0, self.statusmsg); //!
 }
 
+static void edit_status_msg_ontab(EDIT *UNUSED(edit)) {
+    edit_setfocus(&edit_toxid);
+}
+
+static void edit_status_msg_onshifttab(EDIT *UNUSED(edit)) {
+    edit_setfocus(&edit_name);
+}
+
 EDIT edit_status_msg = {
+    .panel = {
+        .type   = PANEL_EDIT,
+        .x      =  10,
+        .y      =  85,
+        .width  = -10,
+        .height =  24,
+    },
     .data        = edit_status_msg_data,
-    .maxlength   = sizeof edit_status_msg_data - 1,
+    .data_size   = sizeof edit_status_msg_data,
     .onenter     = edit_status_msg_onenter,
     .onlosefocus = edit_status_msg_onenter,
+    .ontab       = edit_status_msg_ontab,
+    .onshifttab  = edit_status_msg_onshifttab,
 };
 
 
@@ -1393,24 +1619,49 @@ static void edit_proxy_ip_port_onlosefocus(EDIT *UNUSED(edit)) {
     }
 }
 
+static void edit_proxy_ip_ontab(EDIT *UNUSED(edit)) {
+    edit_setfocus(&edit_proxy_port);
+}
+
 EDIT edit_proxy_ip = {
+    .panel = {
+        .type   = PANEL_EDIT,
+        .x      = 230,
+        .y      =  87,
+        .width  = 120,
+        .height =  24,
+    },
     .data        = edit_proxy_ip_data,
-    .maxlength   = sizeof edit_proxy_ip_data - 1,
-    .onlosefocus = edit_proxy_ip_port_onlosefocus,
+    .data_size   = sizeof edit_proxy_ip_data,
     .empty_str = {.i18nal = STR_PROXY_EDIT_HINT_IP },
-    /* TODO .ontab = change to proxy port field */
+    .onlosefocus = edit_proxy_ip_port_onlosefocus,
+    .ontab       = edit_proxy_ip_ontab,
+    .onshifttab  = edit_proxy_ip_ontab,
 };
 
+static void edit_proxy_port_ontab(EDIT *UNUSED(edit)) {
+    edit_setfocus(&edit_proxy_ip);
+}
+
 EDIT edit_proxy_port = {
+    .panel = {
+        .type   = PANEL_EDIT,
+        .x      = 360,
+        .y      =  87,
+        .width  =  60,
+        .height =  24,
+    },
     .data        = edit_proxy_port_data,
-    .maxlength   = sizeof edit_proxy_port_data - 1,
-    .onlosefocus = edit_proxy_ip_port_onlosefocus,
+    .data_size   = sizeof edit_proxy_port_data,
     .empty_str = {.i18nal = STR_PROXY_EDIT_HINT_PORT },
+    .onlosefocus = edit_proxy_ip_port_onlosefocus,
+    .ontab       = edit_proxy_port_ontab,
+    .onshifttab  = edit_proxy_port_ontab,
 };
 
 EDIT edit_video_fps = {
-    .data = edit_video_fps_data,
-    .maxlength = sizeof edit_video_fps - 1,
+    .data        = edit_video_fps_data,
+    .data_size   = sizeof edit_video_fps_data,
     .onlosefocus = edit_video_fps_onlosefocus,
     /* .empty_str = {.i18nal = STR_PROXY_EDIT_HINT_PORT }, */
 };
@@ -1422,19 +1673,43 @@ static void edit_profile_password_update(EDIT *UNUSED(edit)) {
 }
 
 EDIT edit_profile_password = {
-    .maxlength = sizeof(edit_profile_password) - 1,
+    .panel = {
+        .type   = PANEL_EDIT,
+        .x      =  10,
+        .y      =  85,
+        .width  = -10,
+        .height =  24,
+    },
+    .data_size = sizeof edit_profile_password_data,
     .data      = edit_profile_password_data,
     // .onchange    = edit_profile_password_update,
     .onlosefocus = edit_profile_password_update,
     .password    = 1,
 };
 
+static void edit_toxid_ontab(EDIT *UNUSED(edit)) {
+    edit_setfocus(&edit_name);
+}
+
+static void edit_toxid_onshifttab(EDIT *UNUSED(edit)) {
+    edit_setfocus(&edit_status_msg);
+}
+
 EDIT edit_toxid = {
+    .panel = {
+        .type   = PANEL_EDIT,
+        .x      =  10,
+        .y      = 140,
+        .width  = -10,
+        .height =  24,
+    },
     .length = TOX_ADDRESS_SIZE * 2,
     .data = self.id_str,
     .readonly = 1,
     .noborder = 0,
     .select_completely = 1,
+    .ontab      = edit_toxid_ontab,
+    .onshifttab = edit_toxid_onshifttab,
 };
 
 static void edit_change_nospam_onenter(EDIT *edit) {
@@ -1452,7 +1727,14 @@ static void edit_change_nospam_onenter(EDIT *edit) {
 }
 
 EDIT edit_nospam = {
-    .maxlength    = sizeof(edit_nospam_data),
+    .panel = {
+        .type   = PANEL_EDIT,
+        .x      =  10,
+        .y      = 265,
+        .width  = -10,
+        .height =  24,
+    },
+    .data_size    = sizeof edit_nospam_data,
     .data         = edit_nospam_data,
     .noborder     = false,
     .onenter      = edit_change_nospam_onenter,
@@ -1469,6 +1751,6 @@ static void edit_add_new_device_to_self_onenter(EDIT *UNUSED(edit)) {
 
 EDIT edit_add_new_device_to_self = {
     .data      = edit_add_new_device_to_self_data,
-    .maxlength = sizeof edit_add_new_device_to_self_data - 1,
+    .data_size = sizeof edit_add_new_device_to_self_data,
     .onenter   = edit_add_new_device_to_self_onenter,
 };

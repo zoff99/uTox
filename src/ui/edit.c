@@ -111,25 +111,26 @@ void edit_draw(EDIT *edit, int x, int y, int width, int height) {
     }
 
     bool is_active = (edit == active_edit);
-    if (edit->password) {
+    char *star = NULL;
+    if (edit->password && edit->length) {
+        star = malloc(edit->length);
+        if (!star) {
+            LOG_FATAL_ERR(EXIT_MALLOC, "UI Edit", "Unable to malloc for password field");
+        }
         /* Generate the stars for this password */
-        char star[edit->length];
         memset(star, '*', edit->length);
-        utox_draw_text_multiline_within_box(x + SCALE(4), yy + SCALE(top_offset * 2),
-                                                x + width - SCALE(4) - (edit->multiline ? SCALE(SCROLL_WIDTH) : 0),
-                                                y, y + height, font_small_lineheight, star,
-                                                edit->length, is_active ? edit_sel.start : UINT16_MAX,
-                                                is_active ? edit_sel.length : UINT16_MAX,
-                                                is_active ? edit_sel.mark_start : 0,
-                                                is_active ? edit_sel.mark_length : 0, edit->multiline);
-    } else {
-        utox_draw_text_multiline_within_box(x + SCALE(4), yy + SCALE(top_offset * 2),
-                                    x + width - SCALE(4) - (edit->multiline ? SCALE(SCROLL_WIDTH) : 0),
-                                    y, y + height, font_small_lineheight, edit->data,
-                                    edit->length, is_active ? edit_sel.start : UINT16_MAX,
-                                    is_active ? edit_sel.length : UINT16_MAX, is_active ? edit_sel.mark_start : 0,
-                                    is_active ? edit_sel.mark_length : 0, edit->multiline);
     }
+    utox_draw_text_multiline_within_box(
+            x + SCALE(4), yy + SCALE(top_offset * 2),
+            x + width - SCALE(4) - (edit->multiline ? SCALE(SCROLL_WIDTH) : 0),
+            y, y + height, font_small_lineheight,
+            star ? star : edit->data, edit->length,
+            is_active ? edit_sel.start : UINT16_MAX,
+            is_active ? edit_sel.length : UINT16_MAX,
+            is_active ? edit_sel.mark_start : 0,
+            is_active ? edit_sel.mark_length : 0,
+            edit->multiline);
+    free(star);
 
     if (edit->multiline) {
         popclip();
@@ -232,15 +233,17 @@ bool edit_dclick(EDIT *edit, bool triclick) {
         edit->mouseover_char = edit->length;
     }
 
-    char c = triclick ? '\n' : ' ';
-
     uint16_t i = edit->mouseover_char;
-    while (i != 0 && edit->data[i - 1] != c) {
+    while (i != 0 && edit->data[i - 1] != '\n'
+           /*  If it's a dclick, also set ' ' as boundary, else do nothing. */
+           && (!triclick ? (edit->data[i - 1] != ' ') : 1)) {
         i -= utf8_unlen(edit->data + i);
     }
     edit_sel.start = edit_sel.p1 = i;
     i                            = edit->mouseover_char;
-    while (i != edit->length && edit->data[i] != c) {
+    while (i != edit->length && edit->data[i] != '\n'
+           /*  If it's a dclick, also set ' ' as boundary, else do nothing. */
+           && (!triclick ? (edit->data[i] != ' ') : 1)) {
         i += utf8_len(edit->data + i);
     }
     edit_sel.p2     = i;
@@ -355,6 +358,10 @@ void edit_do(EDIT *edit, uint16_t start, uint16_t length, bool remove) {
     if (!history) {
         LOG_FATAL_ERR(EXIT_MALLOC, "UI Edit", "Unable to realloc for edit history, this should never happen!");
     }
+    /* Note: if we access edit->history after reallocing it, we're using
+       potentially freed memory.
+    */
+    edit->history = history;
 
     new = calloc(1, sizeof(EDIT_CHANGE) + length);
     if (!new) {
@@ -374,7 +381,6 @@ void edit_do(EDIT *edit, uint16_t start, uint16_t length, bool remove) {
     }
 
     history[edit->history_cur] = new;
-    edit->history              = history;
 
     edit->history_cur++;
     edit->history_length = edit->history_cur;
@@ -436,7 +442,7 @@ enum {
 
 void edit_char(uint32_t ch, bool control, uint8_t flags) {
     if (!active_edit) {
-        LOG_ERR("UI Edit", "Stopped you from crashing becase no edit was active or something.");
+        LOG_ERR("UI Edit", "Stopped you from crashing because no edit was active or something.");
         return;
     }
 
@@ -608,47 +614,51 @@ void edit_char(uint32_t ch, bool control, uint8_t flags) {
             }
 
             case KEY_HOME: {
-                if (flags & EMOD_SHIFT) {
-                    edit_sel.p2     = 0;
-                    edit_sel.start  = 0;
-                    edit_sel.length = edit_sel.p1;
-                    break;
-                }
-                edit_sel.p1 = edit_sel.p2 = edit_sel.start = edit_sel.length = 0;
-                break;
-            }
+                uint16_t p = edit_sel.p2;
 
-            case KEY_END: {
-                if (edit->length == 0) {
+                if (p == 0 && !edit_sel.length) {
                     break;
                 }
 
                 if (flags & EMOD_CTRL) {
-                    edit_sel.p1 = edit_sel.p2 = edit_sel.start = edit->length;
-                    edit_sel.length                            = 0;
-                    break;
-                }
-
-                uint32_t p = edit_sel.p2;
-                while (p != edit->length && edit->data[p] != '\n') {
-                    p++;
-                }
-                --p;
-
-                do {
-                    if (p == edit->length) {
-                        break;
+                    p = 0;
+                } else {
+                    while (p != 0 && edit->data[p - 1] != '\n') {
+                        --p;
                     }
-                    p += utf8_len(&edit->data[p]);
-                } while ((flags & EMOD_CTRL) && edit->data[p] != '\n');
+                }
 
                 if (flags & EMOD_SHIFT) {
                     edit_sel.p2 = p;
                     updatesel();
                 } else {
-                    if (edit_sel.length) {
-                        p = edit_sel.start + edit_sel.length;
+                    edit_sel.p1     = p;
+                    edit_sel.p2     = p;
+                    edit_sel.start  = p;
+                    edit_sel.length = 0;
+                }
+                break;
+            }
+
+            case KEY_END: {
+                uint16_t p = edit_sel.p2;
+
+                if (p == edit->length && !edit_sel.length) {
+                    break;
+                }
+
+                if (flags & EMOD_CTRL) {
+                    p = edit->length;
+                } else {
+                    while (edit->data[p] != '\n' && p != edit->length) {
+                        p++;
                     }
+                }
+
+                if (flags & EMOD_SHIFT) {
+                    edit_sel.p2 = p;
+                    updatesel();
+                } else {
                     edit_sel.p1     = p;
                     edit_sel.p2     = p;
                     edit_sel.start  = p;
@@ -667,31 +677,19 @@ void edit_char(uint32_t ch, bool control, uint8_t flags) {
                 break;
             }
 
-            case 'z':
-            case 'Z': {
-                if (!(flags & EMOD_SHIFT)) {
-                    uint16_t p = edit_undo(edit);
-                    if (p != UINT16_MAX) {
-                        edit_sel.p1     = p;
-                        edit_sel.p2     = p;
-                        edit_sel.start  = p;
-                        edit_sel.length = 0;
-                        modified        = true;
-                    }
-                    break;
-                } else {
-                    uint16_t p = edit_redo(edit);
-                    if (p != UINT16_MAX) {
-                        edit_sel.p1     = p;
-                        edit_sel.p2     = p;
-                        edit_sel.start  = p;
-                        edit_sel.length = 0;
-                        modified        = false;
-                    }
-                    break;
+            case 'z': {
+                uint16_t p = edit_undo(edit);
+                if (p != UINT16_MAX) {
+                    edit_sel.p1     = p;
+                    edit_sel.p2     = p;
+                    edit_sel.start  = p;
+                    edit_sel.length = 0;
+                    modified        = true;
                 }
+                break;
             }
 
+            case 'Z':
             case 'y':
             case 'Y': {
                 uint16_t p = edit_redo(edit);
@@ -748,31 +746,33 @@ void edit_char(uint32_t ch, bool control, uint8_t flags) {
         edit_redraw();
     } else if (!edit->readonly) {
         uint8_t len = unicode_to_utf8_len(ch);
-        if (edit->length - edit_sel.length + len <= edit->maxlength) {
-            char *p = edit->data + edit_sel.start;
+        char *p = edit->data + edit_sel.start;
 
-            if (edit_sel.length) {
-                edit_do(edit, edit_sel.start, edit_sel.length, 1);
-            }
-
-            memmove(p + len, p + edit_sel.length, edit->length - (edit_sel.start + edit_sel.length));
-            edit->length -= edit_sel.length;
-            unicode_to_utf8(ch, edit->data + edit_sel.start);
-            edit->length += len;
-
-            edit_do(edit, edit_sel.start, len, 0);
-
-            edit_sel.start += len;
-            edit_sel.p1     = edit_sel.start;
-            edit_sel.p2     = edit_sel.p1;
-            edit_sel.length = 0;
-
-            if (edit->onchange) {
-                edit->onchange(edit);
-            }
-
-            edit_redraw();
+        if ((size_t)edit->length - edit_sel.length + len >= edit->data_size) {
+            return;
         }
+
+        if (edit_sel.length) {
+            edit_do(edit, edit_sel.start, edit_sel.length, 1);
+        }
+
+        memmove(p + len, p + edit_sel.length, edit->length - (edit_sel.start + edit_sel.length));
+        edit->length -= edit_sel.length;
+        unicode_to_utf8(ch, edit->data + edit_sel.start);
+        edit->length += len;
+
+        edit_do(edit, edit_sel.start, len, 0);
+
+        edit_sel.start += len;
+        edit_sel.p1     = edit_sel.start;
+        edit_sel.p2     = edit_sel.p1;
+        edit_sel.length = 0;
+
+        if (edit->onchange) {
+            edit->onchange(edit);
+        }
+
+        edit_redraw();
     }
 }
 
@@ -798,7 +798,7 @@ void edit_paste(char *data, int length, bool select) {
 
     length = utf8_validate((uint8_t *)data, length);
 
-    const int maxlen = active_edit->maxlength - active_edit->length + edit_sel.length;
+    const int maxlen = (active_edit->data_size - 1) - active_edit->length + edit_sel.length;
     int newlen = 0, i = 0;
     while (i < length) {
         const uint8_t len = utf8_len(data + i);
@@ -884,8 +884,11 @@ EDIT *edit_get_active(void) {
 }
 
 void edit_setstr(EDIT *edit, char *str, uint16_t length) {
-    if (length >= edit->maxlength) {
-        length = edit->maxlength;
+	uint16_t maxlength;
+
+	maxlength = edit->data_size - 1;
+    if (length >= maxlength) {
+        length = maxlength;
     }
 
     edit->length = length;

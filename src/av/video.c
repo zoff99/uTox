@@ -14,8 +14,8 @@
 #include "../native/video.h"
 
 #include <pthread.h>
-#include <semaphore.h>
 #include <stdlib.h>
+#include <semaphore.h>
 #include <string.h>
 #include <tox/toxav.h>
 #include <vpx/vpx_codec.h>

@@ -5,6 +5,12 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#ifdef __APPLE__
+#include <OpenAL/alc.h>
+#else
+#include <AL/alc.h>
+#endif
+
 typedef struct ALCdevice_struct ALCdevice;
 
 extern bool utox_audio_thread_init;

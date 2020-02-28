@@ -102,7 +102,7 @@ SETTINGS settings = {
     .use_mini_flist         = false,
     .magic_flist_enabled    = false,
 
-    .video_fps              = 25,
+    .video_fps              = DEFAULT_FPS,
 
     // Notifications / Alerts
     .ringtone_enabled       = true,
@@ -213,7 +213,16 @@ static void parse_av_section(UTOX_SAVE *config, const char* key, const char* val
     } else if (MATCH(NAMEOF(config->audio_device_out), key)) {
         config->audio_device_out = atoi(value);
     } else if (MATCH(NAMEOF(config->video_fps), key)) {
-        config->video_fps = atoi(value);
+        char *temp;
+        uint16_t value_fps = strtol((char *)value, &temp, 0);
+
+        if (*temp == '\0' && value_fps >= 1 && value_fps <= UINT8_MAX) {
+            settings.video_fps = value_fps;
+            return;
+        }
+
+        LOG_WARN("Settings", "Fps value (%s) is invalid. It must be integer in range of [1,%u].",
+             value, UINT8_MAX);
     }
 }
 
@@ -282,7 +291,6 @@ static int config_parser(const char* section, const char* key, const char* value
 
 static UTOX_SAVE *utox_load_config(void) {
     UTOX_SAVE *save = calloc(1, sizeof(UTOX_SAVE) + proxy_address_size + 1);
-
     if (!save) {
         LOG_ERR("Settings", "Unable to calloc for UTOX_SAVE.");
         return NULL;
@@ -370,7 +378,6 @@ static bool utox_save_config(UTOX_SAVE *config) {
 
 static UTOX_SAVE *init_default_settings(void) {
     UTOX_SAVE *save = calloc(1, sizeof(UTOX_SAVE));
-
     if (!save) {
         LOG_FATAL_ERR(EXIT_MALLOC, "Settings", "Unable to malloc for default settings.");
     }
@@ -466,11 +473,10 @@ UTOX_SAVE *config_load(void) {
     strcpy((char *)edit_proxy_ip.data, (char *)save->proxy_ip);
 
     if (save->proxy_port) {
-        edit_proxy_port.length =
-            snprintf((char *)edit_proxy_port.data, edit_proxy_port.maxlength + 1, "%u", save->proxy_port);
-        if (edit_proxy_port.length >= edit_proxy_port.maxlength + 1) {
-            edit_proxy_port.length = edit_proxy_port.maxlength;
-        }
+        snprintf((char *)edit_proxy_port.data, edit_proxy_port.data_size,
+                 "%u", save->proxy_port);
+        edit_proxy_port.length = strnlen((char *)edit_proxy_port.data,
+                                         edit_proxy_port.data_size - 1);
     }
 
     /* UX settings */
@@ -488,6 +494,8 @@ UTOX_SAVE *config_load(void) {
     settings.send_typing_status   = !save->no_typing_notifications;
     settings.status_notifications = save->status_notifications;
 
+    settings.window_x             = save->window_x;
+    settings.window_y             = save->window_y;
     settings.window_width         = save->window_width;
     settings.window_height        = save->window_height;
 
@@ -500,14 +508,12 @@ UTOX_SAVE *config_load(void) {
     switch_auto_update.switch_on  = save->auto_update;
     settings.update_to_develop    = save->update_to_develop;
     settings.send_version         = save->send_version;
+    settings.video_fps = save->video_fps != 0 ? save->video_fps : DEFAULT_FPS;
 
-    settings.video_fps = save->video_fps ? save->video_fps : 25;
-
-    edit_video_fps.length =
-        snprintf((char *)edit_video_fps.data, edit_video_fps.maxlength + 1, "%u", save->video_fps);
-    if (edit_video_fps.length > edit_video_fps.maxlength) {
-        edit_video_fps.length = edit_video_fps.maxlength;
-    }
+    snprintf((char *)edit_video_fps.data, edit_video_fps.data_size,
+             "%u", settings.video_fps);
+    edit_video_fps.length = strnlen((char *)edit_video_fps.data,
+                                    edit_video_fps.data_size - 1);
 
     // TODO: Don't clobber (and start saving) commandline flags.
 
@@ -528,6 +534,10 @@ UTOX_SAVE *config_load(void) {
 // TODO refactor to match order in main.h
 void config_save(UTOX_SAVE *save_in) {
     UTOX_SAVE *save = calloc(1, sizeof(UTOX_SAVE) + proxy_address_size);
+    if (!save) {
+        LOG_ERR("Settings", "Could not allocate memory to save settings");
+        return;
+    }
 
     /* Copy the data from the in data to protect the calloc */
     save->window_x                      = save_in->window_x;
@@ -550,8 +560,7 @@ void config_save(UTOX_SAVE *save_in) {
     save->use_mini_flist                = settings.use_mini_flist;
     save->magic_flist_enabled           = settings.magic_flist_enabled;
     save->use_long_time_msg             = settings.use_long_time_msg;
-
-    save->video_fps                     = (settings.video_fps == 0) ? 25 : settings.video_fps;
+    save->video_fps                     = settings.video_fps;
 
     save->disableudp                    = !settings.enable_udp;
     save->enableipv6                    = settings.enable_ipv6;

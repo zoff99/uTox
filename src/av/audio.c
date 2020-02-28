@@ -641,7 +641,7 @@ void utox_audio_thread(void *args) {
                 }
                 case UTOXAUDIO_START_FRIEND: {
                     FRIEND *f = get_friend(m->param1);
-                    if (!f->audio_dest) {
+                    if (f && !f->audio_dest) {
                         audio_source_init(&f->audio_dest);
                     }
                     audio_out_device_open();
@@ -650,7 +650,7 @@ void utox_audio_thread(void *args) {
                 }
                 case UTOXAUDIO_STOP_FRIEND: {
                     FRIEND *f = get_friend(m->param1);
-                    if (f->audio_dest) {
+                    if (f && f->audio_dest) {
                         audio_source_raze(&f->audio_dest);
                         f->audio_dest = 0;
                     }
