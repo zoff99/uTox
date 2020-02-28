@@ -507,7 +507,9 @@ static void page_open(ITEM *i) {
         case ITEM_GROUP: {
             GROUPCHAT *g = get_group(i->id_number);
             if (!g) {
-                LOG_FATAL_ERR(EXIT_FAILURE, "F-List", "Selected group no longer exists. Group number: %u", i->id_number);
+                // LOG_FATAL_ERR(EXIT_FAILURE, "F-List", "Selected group no longer exists. Group number: %u", i->id_number);
+                LOG_ERR("F-List", "Selected group no longer exists. Group number: %u", i->id_number);
+                return;
             }
 
             memcpy(edit_chat_msg_group.data, g->typed, g->typed_length);
