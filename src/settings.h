@@ -10,7 +10,7 @@ typedef struct utox_save UTOX_SAVE;
 #include <stdint.h>
 #include <stdbool.h>
 
-#define DEFAULT_FPS 25
+#define DEFAULT_FPS 29
 
 extern uint16_t loaded_audio_in_device, loaded_audio_out_device;
 
