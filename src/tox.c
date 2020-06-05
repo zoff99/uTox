@@ -315,6 +315,20 @@ static int load_toxcore_save(struct Tox_Options *options) {
 
 static void log_callback(Tox *UNUSED(tox), TOX_LOG_LEVEL level, const char *file, uint32_t line,
                          const char *func, const char *message, void *UNUSED(user_data)) {
+
+    if (level >= TOX_LOG_LEVEL_DEBUG)
+    {
+        time_t t3 = time(NULL);
+        struct tm tm3 = *localtime(&t3);
+        
+
+        debug("%04d-%02d-%02d %02d:%02d:%02d:%d:%s:%d:%s:%s\n",
+            tm3.tm_year + 1900, tm3.tm_mon + 1, tm3.tm_mday,
+            tm3.tm_hour, tm3.tm_min, tm3.tm_sec,
+            level, file, line, func, message);
+    }
+
+#if 0
     if (message && file && line) {
         LOG_NET_TRACE("Toxcore", "TOXCORE LOGGING ERROR (%u): %s" , level, message);
         LOG_NET_TRACE("Toxcore", "     in: %s:%u" , file, line);
@@ -323,6 +337,7 @@ static void log_callback(Tox *UNUSED(tox), TOX_LOG_LEVEL level, const char *file
     } else {
         LOG_ERR("Toxcore logging", "TOXCORE LOGGING is broken!!:\tOpen an bug upstream");
     }
+#endif
 }
 
 // initialize toxcore based on current settings

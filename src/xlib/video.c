@@ -306,7 +306,7 @@ bool native_video_endread(void) {
     return v4l_endread();
 }
 
-inline void set_color_in_bgra_frame_xy(int fb_xres, int fb_yres, int fb_line_bytes, uint8_t *fb_buf, int px_x, int px_y,
+void set_color_in_bgra_frame_xy(int fb_xres, int fb_yres, int fb_line_bytes, uint8_t *fb_buf, int px_x, int px_y,
                                 uint8_t r, uint8_t g, uint8_t b)
 {
     uint8_t *plane = fb_buf;
