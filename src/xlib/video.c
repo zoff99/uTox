@@ -348,6 +348,7 @@ static void query_mouse_position(Display *d, Window root, int *x, int *y)
     // fprintf(stderr, "X: %d Y: %d\n", *x, *y);
 }
 
+
 extern int global_show_mouse_cursor;
 
 int native_video_getframe(uint8_t *y, uint8_t *u, uint8_t *v, uint16_t width, uint16_t height) {

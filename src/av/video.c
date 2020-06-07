@@ -61,7 +61,7 @@ sem_t video_play_lock_;
 struct video_play_thread_args {
     int w;
     int h;
-    unsigned long long timspan_in_ms2;
+    uint64_t timspan_in_ms2;
     ToxAV *av;
     struct timeval tt1;
     size_t i;
@@ -114,6 +114,17 @@ static inline unsigned long long __utimer_stop(struct timeval* tm1)
 	return t;
 }
 // --- FPS ---
+
+// gives a counter value that increaes every millisecond
+static uint64_t current_time_monotonic_default()
+{
+    uint64_t time = 0;
+    struct timespec clock_mono;
+    clock_gettime(CLOCK_MONOTONIC, &clock_mono);
+    time = 1000ULL * clock_mono.tv_sec + (clock_mono.tv_nsec / 1000000ULL);
+    return time;
+}
+
 
 static bool video_device_init(void *handle) {
 
@@ -342,7 +353,7 @@ static void *video_play(void *video_frame_data)
     //LOG_ERR("uToxVideo:thread", "video play thread:start");
 
     struct video_play_thread_args* d = (struct video_play_thread_args*)video_frame_data;
-    unsigned long long timspan_in_ms2 = d->timspan_in_ms2;
+    uint64_t timspan_in_ms2 = d->timspan_in_ms2;
     ToxAV *av = d->av;
     struct timeval tt1 = d->tt1;
     size_t i = d->i;
@@ -441,16 +452,14 @@ static void *video_play(void *video_frame_data)
                             frame->img, u_start, v_start,
                             new_width, new_height);
 
-    timspan_in_ms2 = __utimer_stop(&tt1);
     toxav_video_send_frame_age(av, get_friend(i)->number, frame->w, frame->h,
-                           frame->img, u_start, v_start, &error, timspan_in_ms2);
+                           frame->img, u_start, v_start, &error, (int32_t)(current_time_monotonic_default() - timspan_in_ms2));
 
     if (error) {
         if (error == TOXAV_ERR_SEND_FRAME_SYNC) {
             yieldcpu(1);
-            timspan_in_ms2 = __utimer_stop(&tt1);
             toxav_video_send_frame_age(av, get_friend(i)->number, frame->w, frame->h,
-                                   frame->img, u_start, v_start, &error, timspan_in_ms2);
+                                   frame->img, u_start, v_start, &error, (int32_t)(current_time_monotonic_default() - timspan_in_ms2));
         }
     }
 
@@ -466,7 +475,6 @@ static void *video_play(void *video_frame_data)
     pthread_exit(0);
 }
 
-
 void utox_video_thread(void *args) {
     ToxAV *av = args;
 
@@ -477,6 +485,7 @@ void utox_video_thread(void *args) {
     utox_video_thread_init = 1;
     int32_t sleep_delay_corrected = 24; // set to 24ms default sleep delay
     int32_t timspan_current = sleep_delay_corrected;
+    uint64_t timspan_in_ms2 = 0;
 
     while (1) {
         if (video_thread_msg) {
@@ -500,12 +509,14 @@ void utox_video_thread(void *args) {
             static struct timeval tt1;
             __utimer_start(&tt1);
 
+            // fprintf(stderr, "REC:DELTA=%d\n", (int)(current_time_monotonic_default() - timspan_in_ms2));
+            timspan_in_ms2 = current_time_monotonic_default();
+
             // capturing is enabled, capture frames
             const int r = native_video_getframe(utox_video_frame.y, utox_video_frame.u, utox_video_frame.v,
                                                 utox_video_frame.w, utox_video_frame.h);
             if (r == 1) {
 
-                unsigned long long timspan_in_ms2;
                 // fprintf(stderr, "CT=%d\n", (int)timspan_in_ms2);
 
                 // ----------- SEND to all friends -----------
@@ -577,7 +588,7 @@ void utox_video_thread(void *args) {
                         TOXAV_ERR_OPTION_SET error2;
                         toxav_option_set(av, get_friend(i)->number,
                                          TOXAV_CLIENT_VIDEO_CAPTURE_DELAY_MS,
-                                         (int32_t)timspan_in_ms2,
+                                         (int32_t)(current_time_monotonic_default() - timspan_in_ms2),
                                          &error2);
 #endif
 
@@ -678,6 +689,21 @@ void utox_video_thread(void *args) {
                     sleep_delay_corrected = 2000;
                 }
             }
+
+
+            // -------- new --------
+            int32_t delay_time_frame_sending = (int32_t)(current_time_monotonic_default() - timspan_in_ms2);
+            sleep_between_frames = (1000 / settings.video_fps);
+            
+            if (delay_time_frame_sending >= (int32_t)sleep_between_frames)
+            {
+                sleep_delay_corrected = 1;
+            }
+            else
+            {
+                sleep_delay_corrected = (int32_t)sleep_between_frames - delay_time_frame_sending;
+            }
+            // -------- new --------
 
             yieldcpu(sleep_delay_corrected);
             // --- FPS ----
