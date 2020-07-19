@@ -21,6 +21,7 @@ struct Command commands[MAX_NUM_CMDS] = {
 #ifdef HAVE_TOXAV_OPTION_SET
     { "vbr",      3, slash_vbr       },
     { "mou",      3, slash_mou       },
+    { "wh",       2, slash_wh        },
     { "vpxenc"  , 6, slash_vpxenc    },
     { "vpxxqt",   6, slash_vpxxqt    },
 #endif

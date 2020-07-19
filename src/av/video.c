@@ -21,10 +21,6 @@
 #include <vpx/vpx_codec.h>
 #include <vpx/vpx_image.h>
 
-#define UTOX_MAX_DESKTOP_CAPTURE_WIDTH  1920 // 1280 // 1920
-#define UTOX_MAX_DESKTOP_CAPTURE_HEIGHT 1080 //  720 // 1080
-
-
 bool utox_video_thread_init = false;
 
 static void *   video_device[16]     = { NULL }; /* TODO; magic number */
@@ -52,6 +48,9 @@ uint32_t sleep_between_frames;
 #include <X11/X.h>
 #include <X11/Xlib.h>
 extern XImage *screen_image;
+
+extern int global_utox_max_desktop_capture_width;
+extern int global_utox_max_desktop_capture_height;
 
 sem_t count_video_play_threads;
 int count_video_play_threads_int;
@@ -407,19 +406,19 @@ static void *video_play(void *video_frame_data)
 
     sem_post(&video_play_lock_);
 
-    // resize into bounding box 1920x1080 if video is larger than that box (e.g. 4K video frame)
+    // resize into bounding box "w" x "h" if video is larger than that box (e.g. 4K video frame)
     UTOX_FRAME_PKG *frame = calloc(1, sizeof(UTOX_FRAME_PKG));
 
     float scale = 1.0f;
 
-    if ((utox_video_frame.w <= UTOX_MAX_DESKTOP_CAPTURE_WIDTH) && (utox_video_frame.h <= UTOX_MAX_DESKTOP_CAPTURE_HEIGHT))
+    if ((utox_video_frame.w <= global_utox_max_desktop_capture_width) && (utox_video_frame.h <= global_utox_max_desktop_capture_height))
     {
         // scale = 1.0f; // do not scale up!
     }
     else
     {
-        float scale_w = (float)(utox_video_frame.w) / (float)(UTOX_MAX_DESKTOP_CAPTURE_WIDTH);
-        float scale_h = (float)(utox_video_frame.h) / (float)(UTOX_MAX_DESKTOP_CAPTURE_HEIGHT);
+        float scale_w = (float)(utox_video_frame.w) / (float)(global_utox_max_desktop_capture_width);
+        float scale_h = (float)(utox_video_frame.h) / (float)(global_utox_max_desktop_capture_height);
 
         scale = scale_w;
         if (scale_h > scale_w)
@@ -431,14 +430,14 @@ static void *video_play(void *video_frame_data)
     uint32_t new_width = (uint32_t)((float)(utox_video_frame.w) / scale);
     uint32_t new_height = (uint32_t)((float)(utox_video_frame.h) / scale);
 
-    if (new_width > UTOX_MAX_DESKTOP_CAPTURE_WIDTH)
+    if (new_width > global_utox_max_desktop_capture_width)
     {
-        new_width = UTOX_MAX_DESKTOP_CAPTURE_WIDTH;
+        new_width = global_utox_max_desktop_capture_width;
     }
 
-    if (new_height > UTOX_MAX_DESKTOP_CAPTURE_HEIGHT)
+    if (new_height > global_utox_max_desktop_capture_height)
     {
-        new_height = UTOX_MAX_DESKTOP_CAPTURE_HEIGHT;
+        new_height = global_utox_max_desktop_capture_height;
     }
 
     frame->w              = new_width;

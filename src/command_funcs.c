@@ -170,6 +170,43 @@ bool slash_mou(void *object, char *arg, int arg_length)
 }
 
 
+extern int global_utox_max_desktop_capture_width;
+extern int global_utox_max_desktop_capture_height;
+
+bool slash_wh(void *object, char *arg, int arg_length)
+{
+	FRIEND *f = object;
+
+	char arg1[300];
+	CLEAR(arg1);
+    snprintf(arg1, arg_length, "%s", arg);
+
+	LOG_ERR("slash_wh", "*arg=%s* len=%d" , arg1, arg_length);
+
+	int num_new = get_number_in_string(arg1, (int)1);
+
+	if (num_new == 2)
+	{
+		LOG_ERR("slash_wh", "max_screen_res:1920x1080");
+        global_utox_max_desktop_capture_width = 1920;
+        global_utox_max_desktop_capture_height = 1080;
+	}
+	else if (num_new == 1)
+	{
+		LOG_ERR("slash_wh", "max_screen_res:1280x720");
+        global_utox_max_desktop_capture_width = 1280;
+        global_utox_max_desktop_capture_height = 720;
+	}
+    else
+    {
+		LOG_ERR("slash_wh", "max_screen_res:640x480");
+        global_utox_max_desktop_capture_width = 640;
+        global_utox_max_desktop_capture_height = 480;
+    }
+
+	return true;
+}
+
 bool slash_vpxenc(void *object, char *arg, int arg_length)
 {
 	FRIEND *f = object;

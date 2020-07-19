@@ -30,6 +30,8 @@
 #include <string.h>
 
 int global_show_mouse_cursor = 0;
+int global_utox_max_desktop_capture_width = 1920;
+int global_utox_max_desktop_capture_height = 1080;
 
 /** Translates status code to text then sends back to the user */
 static void file_notify(FRIEND *f, MSG_HEADER *msg) {
