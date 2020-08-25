@@ -136,6 +136,7 @@ void parse_args(int argc, char *argv[],
     };
 
     settings.debug_file = stdout;
+    setvbuf(settings.debug_file, NULL, _IOLBF, 0);
 
     int opt, long_index = 0;
     while ((opt = getopt_long(argc, argv, "t:ps:u:nvh", long_options, &long_index)) != -1) {
@@ -244,6 +245,7 @@ void parse_args(int argc, char *argv[],
                     settings.debug_file = stdout;
                     LOG_NORM("Could not open %s. Logging to stdout.\n", optarg);
                 }
+                setvbuf(settings.debug_file, NULL, _IOLBF, 0);
                 break;
             }
 
