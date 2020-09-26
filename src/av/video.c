@@ -696,7 +696,7 @@ void utox_video_thread(void *args) {
             
             if (delay_time_frame_sending >= (int32_t)sleep_between_frames)
             {
-                sleep_delay_corrected = 1;
+                sleep_delay_corrected = 0;
             }
             else
             {
@@ -704,7 +704,10 @@ void utox_video_thread(void *args) {
             }
             // -------- new --------
 
-            yieldcpu(sleep_delay_corrected);
+            if (sleep_delay_corrected != 0)
+            {
+                yieldcpu(sleep_delay_corrected);
+            }
             // --- FPS ----
             // --- FPS ----
             // --- FPS ----
