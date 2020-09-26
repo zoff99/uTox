@@ -24,8 +24,16 @@ bool utox_av_ctrl_init = false;
 static bool toxav_thread_msg = 0;
 
 void postmessage_utoxav(uint8_t msg, uint32_t param1, uint32_t param2, void *data) {
+    int max_counter = 20;
+    int counter = 0;
     while (toxav_thread_msg && utox_av_ctrl_init) { /* I'm not convinced this is the best way */
         yieldcpu(1);
+        counter++;
+        if (counter > max_counter)
+        {
+            LOG_ERR("postmessage_utoxav", "endless loos, caught!!");
+            break;
+        }
     }
 
     toxav_msg.msg    = msg;
