@@ -39,6 +39,8 @@
 
 static bool save_needed = true;
 
+pthread_mutex_t save_file_write_lock;
+
 enum {
     LOG_FILE_MSG_TYPE_TEXT   = 0,
     LOG_FILE_MSG_TYPE_ACTION = 1,
@@ -181,6 +183,7 @@ static void load_defaults(Tox *tox) {
 }
 
 static void write_save(Tox *tox) {
+    LOG_ERR("write_save", "START");
     /* Get toxsave info from tox*/
     size_t clear_length     = tox_get_savedata_size(tox);
     size_t encrypted_length = clear_length + TOX_PASS_ENCRYPTION_EXTRA_LENGTH;
@@ -188,22 +191,28 @@ static void write_save(Tox *tox) {
     uint8_t *clear_data = calloc(1, clear_length);
     uint8_t *encrypted_data = calloc(1, encrypted_length);
     if (!clear_data || !encrypted_data) {
+        LOG_ERR("write_save", "CRASH");
         LOG_FATAL_ERR(EXIT_FAILURE, "Toxcore", "Could not allocate memory for savedata.\n");
     }
 
+    LOG_ERR("write_save", "tox_get_savedata");
     tox_get_savedata(tox, clear_data);
+    LOG_ERR("write_save", "tox_get_savedata:DONE");
 
     if (edit_profile_password.length == 0) {
         // user doesn't use encryption
+        LOG_ERR("write_save", "utox_data_save_tox:Unencrypted");
         save_needed = utox_data_save_tox(clear_data, clear_length);
         LOG_TRACE("Toxcore", "Unencrypted save data written" );
     } else {
         UTOX_ENC_ERR enc_err = utox_encrypt_data(clear_data, clear_length, encrypted_data);
         if (enc_err) {
             /* encryption failed, write clear text data */
+            LOG_ERR("write_save", "utox_data_save_tox:Unencrypted:2");
             save_needed = utox_data_save_tox(clear_data, clear_length);
             LOG_TRACE("Toxcore", "\n\n\t\tWARNING UTOX WAS UNABLE TO ENCRYPT DATA!\n\t\tDATA WRITTEN IN CLEAR TEXT!\n" );
         } else {
+            LOG_ERR("write_save", "utox_data_save_tox:encrypted");
             save_needed = utox_data_save_tox(encrypted_data, encrypted_length);
             LOG_TRACE("Toxcore", "Encrypted save data written" );
         }
@@ -211,6 +220,7 @@ static void write_save(Tox *tox) {
 
     free(encrypted_data);
     free(clear_data);
+    LOG_ERR("write_save", "END");
 }
 
 void tox_settingschanged(void) {
@@ -347,6 +357,8 @@ static void log_callback(Tox *UNUSED(tox), TOX_LOG_LEVEL level, const char *file
 static int init_toxcore(Tox **tox) {
     tox_thread_init = UTOX_TOX_THREAD_INIT_NONE;
     int save_status = 0;
+
+    pthread_mutex_init(&save_file_write_lock, NULL);
 
     struct Tox_Options topt;
     tox_options_default(&topt);
@@ -557,6 +569,7 @@ void toxcore_thread(void *UNUSED(args)) {
                 // save every 1000.
                 if (save_needed || (time - last_save >= (uint64_t)1000 * 1000 * 1000 * 1000)) {
                     // Save tox data
+                    LOG_ERR("write_save", "001");
                     write_save(tox);
                     last_save = time;
                 }
@@ -590,6 +603,7 @@ void toxcore_thread(void *UNUSED(args)) {
         }
 
         /* If for anyreason, we exit, write the save, and clear the password */
+        LOG_ERR("write_save", "002");
         write_save(tox);
         edit_setstr(&edit_profile_password, (char *)"", 0);
 
@@ -608,6 +622,9 @@ void toxcore_thread(void *UNUSED(args)) {
     tox_thread_init = UTOX_TOX_THREAD_INIT_NONE;
     free_friends();
     raze_groups();
+
+    pthread_mutex_destroy(&save_file_write_lock);
+
     LOG_TRACE("Toxcore", "Tox thread:\tClean exit!");
 }
 

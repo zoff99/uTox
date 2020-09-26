@@ -42,6 +42,8 @@
 #include <signal.h>
 #include <sys/wait.h>
 
+extern pthread_mutex_t save_file_write_lock;
+
 bool hidden = false;
 
 XIC xic = NULL;
@@ -914,9 +916,14 @@ int main(int argc, char *argv[]) {
 #endif
 
     // wait for tox_thread to exit
+    LOG_ERR("shutdown", "wait for tox ...");
     while (tox_thread_init) {
         yieldcpu(1);
     }
+
+    pthread_mutex_lock(&save_file_write_lock);
+    pthread_mutex_unlock(&save_file_write_lock);
+    LOG_ERR("shutdown", "wait for tox:DONE");
 
     return 0;
 }

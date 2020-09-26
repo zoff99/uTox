@@ -14,6 +14,7 @@
 #include <getopt.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 
 
 extern int UTOX_DEFAULT_BITRATE_V;
@@ -24,22 +25,35 @@ extern int UTOX_MIN_BITRATE_VIDEO;
  * src/<platform>/main.x and change from utox_ to native_
  */
 
+extern pthread_mutex_t save_file_write_lock;
+
 bool utox_data_save_tox(uint8_t *data, size_t length) {
+    LOG_ERR("utox_data_save_tox", "START");
+    pthread_mutex_lock(&save_file_write_lock);
+    LOG_ERR("utox_data_save_tox", "START:got lock");
+
     FILE *fp = utox_get_file("tox_save.tox", NULL, UTOX_FILE_OPTS_WRITE);
     if (!fp) {
+        LOG_ERR("utox_data_save_tox", "CRASH:1");
         LOG_ERR("uTox", "Can not open tox_save.tox to write to it.");
+        pthread_mutex_unlock(&save_file_write_lock);
         return true;
     }
 
     if (fwrite(data, length, 1, fp) != 1) {
+        LOG_ERR("utox_data_save_tox", "CRASH:2");
         LOG_ERR("uTox", "Unable to write Tox save to file.");
         fclose(fp);
+        pthread_mutex_unlock(&save_file_write_lock);
         return true;
     }
 
     flush_file(fp);
     fclose(fp);
 
+    LOG_ERR("utox_data_save_tox", "END");
+    pthread_mutex_unlock(&save_file_write_lock);
+    LOG_ERR("utox_data_save_tox", "unlocked");
     return false;
 }
 
