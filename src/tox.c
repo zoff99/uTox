@@ -40,6 +40,7 @@
 static bool save_needed = true;
 
 pthread_mutex_t save_file_write_lock;
+int global_shutdown = 0;
 
 enum {
     LOG_FILE_MSG_TYPE_TEXT   = 0,

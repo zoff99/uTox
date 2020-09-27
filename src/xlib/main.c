@@ -43,6 +43,7 @@
 #include <sys/wait.h>
 
 extern pthread_mutex_t save_file_write_lock;
+extern int global_shutdown;
 
 bool hidden = false;
 
@@ -840,6 +841,8 @@ int main(int argc, char *argv[]) {
     native_window_set_target(&main_window);
     panel_draw(&panel_root, 0, 0, settings.window_width, settings.window_height);
 
+    global_shutdown = 0;
+
     // start toxcore thread
     thread(toxcore_thread, NULL);
 
@@ -922,6 +925,7 @@ int main(int argc, char *argv[]) {
     }
 
     pthread_mutex_lock(&save_file_write_lock);
+    global_shutdown = 1;
     pthread_mutex_unlock(&save_file_write_lock);
     LOG_ERR("shutdown", "wait for tox:DONE");
 
