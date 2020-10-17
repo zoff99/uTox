@@ -59,8 +59,16 @@ static void tox_thread_message(Tox *tox, ToxAV *av, uint64_t time, uint8_t msg, 
                                void *data);
 
 void postmessage_toxcore(uint8_t msg, uint32_t param1, uint32_t param2, void *data) {
+    int max_counter = 20;
+    int counter = 0;
     while (tox_thread_msg) {
         yieldcpu(1);
+        counter++;
+        if (counter > max_counter)
+        {
+            LOG_ERR("postmessage_toxcore", "endless loos, caught!!");
+            break;
+        }
     }
 
     if (!tox_thread_init) {
