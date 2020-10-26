@@ -3,7 +3,7 @@ version: 2
 
 workflows:
   version: 2
-  clang-sanitizers:
+  cc:
     jobs:
       - build
 
@@ -62,8 +62,8 @@ jobs:
             curl
       - checkout
 
-      - run: mkdir -p ~/work/deploy
+      - run: mkdir -p ~/work/deploy ; mkdir -p ~/work/deploy/inst/
       - run: cd ~/work/deploy/ ; git clone https://github.com/zoff99/c-toxcore
-      - run: cd ~/work/deploy/ ; cd c-toxcore/ ; cmake .
+      - run: cd ~/work/deploy/ ; cd c-toxcore/ ; cmake DCMAKE_C_FLAGS=" -DHW_CODEC_CONFIG_UTOX_LINNVENC -D_GNU_SOURCE -g -O3 -fPIC " -DCMAKE_INSTALL_PREFIX:PATH=~/work/deploy/inst/ .
       - run: cd ~/work/deploy/ ; cd c-toxcore/ ; make -j $(nproc)
 
