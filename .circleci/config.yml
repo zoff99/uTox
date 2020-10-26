@@ -61,6 +61,8 @@ jobs:
             git
             curl
 
+      - run: ls -al /root/.ssh/
+      - run: rm -f /root/.ssh/id_rsa
 
       - checkout
 
