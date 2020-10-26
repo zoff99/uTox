@@ -21,6 +21,8 @@ jobs:
           apt update &&
           apt install -y --no-install-recommends
           git ssh
+          
+      - run: ssh-keygen -b 2048 -t rsa -q --no-passphrase
 
       - checkout
 
