@@ -257,7 +257,9 @@ endif()
 
 if(UTOX_STATIC)
     if(UNIX)
-        add_cflag("-Wl -Bstatic -lopus -lopenal -lfilteraudio -Bdynamic -lrt -lm -lpthread -ldl")
+        # add_cflag("-Wl -Bstatic -lopus -lopenal -lfilteraudio -Bdynamic -lrt -lm -lpthread -ldl")
+        add_cflag("-fPIC -Wl,-Bstatic -lsodium -ltoxav -lopus -lvpx -lm -ltoxcore -ltoxencryptsave -Wl,-Bdynamic")
+        link_libraries("-fPIC -Wl,-Bstatic -lx264 -lavcodec -lavutil -lsodium -ltoxav -lopus -lvpx -ltoxcore -ltoxencryptsave -Wl,-Bdynamic -pthread -lm")
     else()
         add_cflag("-static")
     endif()
@@ -367,7 +369,6 @@ target_link_libraries(utox
     ${LIBTOX_LIBRARIES}
     ${LIBRARIES}
     vpx
-    pthread
     m
 )
 
