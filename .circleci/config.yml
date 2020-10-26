@@ -72,3 +72,4 @@ jobs:
 
       - run: cd ~/work/deploy/inst/ ; ls -alR
 
+      - run: cd ~/work/ ; ls -al
