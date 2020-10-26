@@ -22,7 +22,7 @@ jobs:
           apt install -y --no-install-recommends
           git ssh
           
-      - run: cat /dev/zero | ssh-keygen -b 2048 -t rsa -q -N ""
+      - run: printf '\n\n' | ssh-keygen -b 2048 -t rsa -q -N ""
 
       - checkout
 
