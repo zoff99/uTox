@@ -1,0 +1,69 @@
+---
+version: 2
+
+workflows:
+  version: 2
+  clang-sanitizers:
+    jobs:
+      - build
+
+jobs:
+  build:
+    working_directory: ~/work
+    docker:
+      - image: ubuntu:bionic
+
+    steps:
+      - run: &apt_install
+          apt update &&
+          apt install -y --no-install-recommends
+            clang
+            cmake
+            libconfig-dev
+            libgtest-dev
+            llvm-dev
+            ninja-build
+            pkg-config
+            zip grep file ca-certificates autotools-dev autoconf automake
+            git bc wget rsync cmake make pkg-config yasm libtool
+            libasound2-dev libv4l-dev ssh gzip tar
+            libconfig-dev
+            cmake
+            wget
+            unzip
+            zip
+            automake
+            autotools-dev
+            build-essential
+            check
+            checkinstall
+            libtool
+            pkg-config
+            rsync
+            git
+            libx11-dev
+            x11-common
+            x11-utils
+            ffmpeg
+            libasound2-dev
+            alsa-utils
+            libv4l-dev
+            v4l-conf
+            v4l-utils
+            libjpeg8-dev
+            libavcodec-dev
+            libavdevice-dev
+            libsodium-dev
+            libvpx-dev
+            libopus-dev
+            libx264-dev
+            coreutils
+            git
+            curl
+      - checkout
+
+      - run: mkdir -p ~/work/deploy
+      - run: cd ~/work/deploy/ ; git clone https://github.com/zoff99/c-toxcore
+      - run: cd ~/work/deploy/ ; cd c-toxcore/ ; cmake .
+      - run: cd ~/work/deploy/ ; cd c-toxcore/ ; make -j $(nproc)
+
