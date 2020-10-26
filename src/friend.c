@@ -270,6 +270,7 @@ void utox_friend_init(Tox *tox, uint32_t friend_number) {
     /* TODO; consider error handling these two */
     f->online = tox_friend_get_connection_status(tox, friend_number, NULL);
     f->status = tox_friend_get_status(tox, friend_number, NULL);
+    f->connection_status = tox_friend_get_connection_status(tox, friend_number, NULL);
 
     f->avatar = calloc(1, sizeof(AVATAR));
     if (!f->avatar) {
@@ -430,12 +431,17 @@ void friend_notify_msg(FRIEND *f, const char *msg, size_t msg_length) {
     }
 }
 
-bool friend_set_online(FRIEND *f, bool online) {
-    if (f->online == online) {
-        return false;
+bool friend_set_online(FRIEND *f, uint16_t status) {
+
+    bool online = false;
+
+    if ((status == 1) || (status == 2))
+    {
+        online = true;
     }
 
     f->online = online;
+    f->connection_status =  status;
     if (!f->online) {
         friend_set_typing(f, 0);
     }

@@ -73,6 +73,7 @@ typedef struct utox_friend {
     /* Friend Status */
     uint8_t status;
     bool    online;
+    int     connection_status;
     bool    typing;
     bool    video_inline;
 
@@ -148,7 +149,7 @@ void friend_recvimage(FRIEND *f, NATIVE_IMAGE *native_image, uint16_t width, uin
 void friend_notify_msg(FRIEND *f, const char *msg, size_t msg_length);
 
 /* set friend online status. Returns: true if status changed, false otherwise */
-bool friend_set_online(FRIEND *f, bool online);
+bool friend_set_online(FRIEND *f, uint16_t status);
 
 void friend_set_typing(FRIEND *f, int typing);
 

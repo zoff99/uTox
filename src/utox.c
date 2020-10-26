@@ -363,13 +363,12 @@ void utox_message_dispatch(UTOX_MSG utox_msg_id, uint16_t param1, uint16_t param
         /* Friend interaction messages. */
         /* Handshake
          * param1: friend id
-         * param2: new online status(bool) */
+         * param2: connection_status */
         case FRIEND_ONLINE: {
             FRIEND *f = get_friend(param1);
+            friend_set_online(f, param2);
 
-            if (friend_set_online(f, param2)) {
-                redraw();
-            }
+            redraw();
             messages_send_from_queue(&f->msg, param1);
             break;
         }

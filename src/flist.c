@@ -108,7 +108,7 @@ static void flist_draw_name(ITEM *i, int x, int y, int width, char *name, char *
     }
 }
 
-static void flist_draw_status_icon(uint8_t status, int x, int y, bool notify) {
+static void flist_draw_status_icon(int connection_status, uint8_t status, int x, int y, bool notify) {
     y -= BM_STATUS_WIDTH / 2;
     x -= BM_STATUS_WIDTH / 2;
     drawalpha(BM_ONLINE + status, x, y, BM_STATUS_WIDTH, BM_STATUS_WIDTH, status_color[status]);
@@ -119,6 +119,15 @@ static void flist_draw_status_icon(uint8_t status, int x, int y, bool notify) {
         x += BM_STATUS_WIDTH / 2;
         x -= BM_STATUS_NOTIFY_WIDTH / 2;
         drawalpha(BM_STATUS_NOTIFY, x, y, BM_STATUS_NOTIFY_WIDTH, BM_STATUS_NOTIFY_WIDTH, status_color[status]);
+    }
+
+    if (connection_status == 1) // TCP
+    {
+        // y -= BM_STATUS_WIDTH / 2;
+        x -= BM_STATUS_WIDTH / 2;
+        drawvline(x, y, y + BM_STATUS_WIDTH, status_color[1]);
+        drawvline(x + 1, y, y + BM_STATUS_WIDTH, status_color[1]);
+        drawvline(x + 2, y, y + BM_STATUS_WIDTH, status_color[1]);
     }
 }
 
@@ -172,7 +181,7 @@ static void drawitem(ITEM *i, int x, int y, int width) {
             flist_draw_name(i, name_x, name_y, width, UTOX_FRIEND_NAME(f), f->status_message, UTOX_FRIEND_NAME_LENGTH(f), f->status_length,
                             0, 0);
 
-            flist_draw_status_icon(status, width - SCALE(15), y + box_height / 2, f->unread_msg);
+            flist_draw_status_icon(f->connection_status, status, width - SCALE(15), y + box_height / 2, f->unread_msg);
             break;
         }
 
@@ -199,7 +208,7 @@ static void drawitem(ITEM *i, int x, int y, int width) {
 
             flist_draw_name(i, name_x, name_y, width, g->name, g->topic, g->name_length, g->topic_length, color_overide, color);
 
-            flist_draw_status_icon(0, SCALE(width - 15), y + box_height / 2, g->unread_msg);
+            flist_draw_status_icon(0, 0, SCALE(width - 15), y + box_height / 2, g->unread_msg);
             break;
         }
 

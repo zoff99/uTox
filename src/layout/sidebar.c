@@ -86,6 +86,34 @@ static void draw_user_badge(int x, int y, int width, int UNUSED(height)) {
                   y + SCALE(SIDEBAR_PADDING) + BM_STATUSAREA_HEIGHT / 2 - BM_STATUS_WIDTH / 2,
                   BM_STATUS_WIDTH, BM_STATUS_WIDTH, status_color[status]);
 
+        if ((self.connection_status == 1) || (self.connection_status == 2))
+        {
+            int connection_status_color = 1;
+            if (self.connection_status == 2)
+            {
+                connection_status_color = 0;
+            }
+            drawvline(width - BM_STATUS_WIDTH - BM_STATUSAREA_WIDTH / 2 - SCALE(1) -2 ,
+                y + SCALE(SIDEBAR_PADDING) + BM_STATUSAREA_HEIGHT / 2 - BM_STATUS_WIDTH / 2,
+                y + SCALE(SIDEBAR_PADDING) + BM_STATUSAREA_HEIGHT / 2 - BM_STATUS_WIDTH / 2 + 15,
+                status_color[connection_status_color]);
+
+            drawvline(width - BM_STATUS_WIDTH - BM_STATUSAREA_WIDTH / 2 - SCALE(1) -1 ,
+                y + SCALE(SIDEBAR_PADDING) + BM_STATUSAREA_HEIGHT / 2 - BM_STATUS_WIDTH / 2,
+                y + SCALE(SIDEBAR_PADDING) + BM_STATUSAREA_HEIGHT / 2 - BM_STATUS_WIDTH / 2 + 15,
+                status_color[connection_status_color]);
+
+            drawvline(width - BM_STATUS_WIDTH - BM_STATUSAREA_WIDTH / 2 - SCALE(1) ,
+                y + SCALE(SIDEBAR_PADDING) + BM_STATUSAREA_HEIGHT / 2 - BM_STATUS_WIDTH / 2,
+                y + SCALE(SIDEBAR_PADDING) + BM_STATUSAREA_HEIGHT / 2 - BM_STATUS_WIDTH / 2 + 15,
+                status_color[connection_status_color]);
+
+            drawvline(width - BM_STATUS_WIDTH - BM_STATUSAREA_WIDTH / 2 - SCALE(1) + 1 ,
+                y + SCALE(SIDEBAR_PADDING) + BM_STATUSAREA_HEIGHT / 2 - BM_STATUS_WIDTH / 2,
+                y + SCALE(SIDEBAR_PADDING) + BM_STATUSAREA_HEIGHT / 2 - BM_STATUS_WIDTH / 2 + 15,
+                status_color[connection_status_color]);
+        }
+
     } else {
         drawalpha(BM_CONTACT, SCALE(SIDEBAR_PADDING), SIDEBAR_AVATAR_TOP, BM_CONTACT_WIDTH, BM_CONTACT_WIDTH,
                   COLOR_MENU_TEXT);

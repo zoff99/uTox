@@ -10,6 +10,7 @@
 #include "text.h"
 #include "utox.h"
 #include "ui.h"
+#include "self.h"
 
 #include "av/audio.h"
 #include "av/utox_av.h"
@@ -133,7 +134,7 @@ static void callback_connection_status(Tox *tox, uint32_t fid, TOX_CONNECTION st
         avatar_on_friend_online(tox, fid);
         friend_notify_status(f, (uint8_t *)f->status_message, f->status_length, S(STATUS_ONLINE));
     }
-    postmessage_utox(FRIEND_ONLINE, fid, !!status, NULL);
+    postmessage_utox(FRIEND_ONLINE, fid, (uint16_t)status, NULL);
 
     if (status == TOX_CONNECTION_UDP) {
         LOG_INFO("Tox Callbacks", "Friend\t%u\t--\tOnline (UDP)", fid);
@@ -145,6 +146,12 @@ static void callback_connection_status(Tox *tox, uint32_t fid, TOX_CONNECTION st
     }
 }
 
+void callback_self_connection_status(Tox *tox, TOX_CONNECTION connection_status, void *user_data)
+{
+    self.connection_status = connection_status;
+    postmessage_utox(REDRAW, 0, 0, NULL);
+}
+
 void utox_set_callbacks_friends(Tox *tox) {
     tox_callback_friend_request(tox, callback_friend_request);
     tox_callback_friend_message(tox, callback_friend_message);
@@ -154,6 +161,8 @@ void utox_set_callbacks_friends(Tox *tox) {
     tox_callback_friend_typing(tox, callback_typing_change);
     tox_callback_friend_read_receipt(tox, callback_read_receipt);
     tox_callback_friend_connection_status(tox, callback_connection_status);
+    
+    tox_callback_self_connection_status(tox, callback_self_connection_status);
 }
 
 void callback_av_group_audio(void *tox, uint32_t groupnumber, uint32_t peernumber, const int16_t *pcm, unsigned int samples,
