@@ -20,7 +20,7 @@ jobs:
       - run: &apt_install
           apt update &&
           apt install -y --no-install-recommends
-          git
+          git ssh
 
       - checkout
 
