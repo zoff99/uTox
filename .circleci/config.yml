@@ -81,4 +81,21 @@ jobs:
 
       - run: cd ~/work/deploy/inst/ ; ls -alR
 
-      - run: cd ~/work/ ; ls -al
+      - run: cd ~/work/ ; git submodule update --init --recursive
+
+      - run: cd ~/work/ ; mkdir -p build2 ; cd build2/ ;
+            export PKG_CONFIG_PATH=$_INST_/lib/pkgconfig ;
+            export CFLAGS=" -g $O_OPTIONS -I$_INST_/include/ -L$_INST_/lib -fPIC -Wl,-Bstatic -lsodium -ltoxav -lopus -lvpx -lm -ltoxcore -ltoxencryptsave -Wl,-Bdynamic " ;
+            export LDFLAGS=" $O_OPTIONS -L$_INST_/lib " ;
+            cmake
+            -DENABLE_AUTOUPDATE=OFF
+            -DENABLE_DBUS=OFF
+            -DASAN=OFF
+            -DENABLE_ASAN=OFF
+            -DTOXCORE_STATIC=ON
+            -DUTOX_STATIC=ON
+            ../
+      - run: cd ~/work/ ; cd build2/ ; make -j $(nproc)
+
+
+
