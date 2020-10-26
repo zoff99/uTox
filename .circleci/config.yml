@@ -14,6 +14,11 @@ jobs:
       - image: ubuntu:bionic
 
     steps:
+      - run: mkdir -p /root/.ssh/ ; chmod og+rwx /root/.ssh/
+      - run: rm -f /root/.ssh/id_rsa
+
+      - checkout
+
       - run: &apt_install
           apt update &&
           apt install -y --no-install-recommends
@@ -24,7 +29,7 @@ jobs:
             llvm-dev
             ninja-build
             pkg-config
-            zip grep file ca-certificates autotools-dev autoconf automake
+            grep file ca-certificates autotools-dev autoconf automake
             git bc wget rsync cmake make pkg-config yasm libtool
             libasound2-dev libv4l-dev ssh gzip tar
             libconfig-dev
@@ -60,11 +65,6 @@ jobs:
             coreutils
             git
             curl
-
-      - run: mkdir -p /root/.ssh/ ; chmod og+rwx /root/.ssh/
-      - run: rm -f /root/.ssh/id_rsa
-
-      - checkout
 
       - run: mkdir -p ~/work/deploy ; mkdir -p ~/work/deploy/inst/
       - run: cd ~/work/deploy/ ; git clone https://github.com/zoff99/c-toxcore
