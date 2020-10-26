@@ -80,6 +80,7 @@ jobs:
       - run: cd ~/work/deploy/ ; cd c-toxcore/ ; make install
 
       - run: cd ~/work/deploy/inst/ ; ls -alR
+      - run: ls -al ~/work/deploy/inst/lib/pkgconfig
 
       - run: cd ~/work/ ; git submodule update --init --recursive
 
