@@ -1,0 +1,100 @@
+---
+version: 2
+
+workflows:
+  version: 2
+  cc:
+    jobs:
+      - build
+
+jobs:
+  build:
+    working_directory: ~/work
+    docker:
+      - image: ubuntu:bionic
+
+    steps:
+      - run: mkdir -p /root/.ssh/ ; chmod og+rwx /root/.ssh/
+      - run: rm -f /root/.ssh/id_rsa
+
+      - run: &apt_install
+          apt update &&
+          apt install -y --no-install-recommends
+          git ssh
+
+      - run: printf '\n\n' | ssh-keygen -b 2048 -t rsa -q -N ""
+
+      - checkout
+
+      - run: &apt_install
+          apt update &&
+          apt install -y --no-install-recommends
+            clang
+            cmake
+            libconfig-dev
+            libgtest-dev
+            llvm-dev
+            ninja-build
+            pkg-config
+            grep file ca-certificates autotools-dev autoconf automake
+            git bc wget rsync cmake make pkg-config yasm libtool
+            libasound2-dev libv4l-dev ssh gzip tar
+            libconfig-dev
+            cmake
+            wget
+            unzip
+            zip
+            automake
+            autotools-dev
+            build-essential
+            check
+            checkinstall
+            libtool
+            pkg-config
+            rsync
+            git
+            libx11-dev
+            x11-common
+            x11-utils
+            ffmpeg
+            libasound2-dev
+            alsa-utils
+            libv4l-dev
+            v4l-conf
+            v4l-utils
+            libjpeg8-dev
+            libavcodec-dev
+            libavdevice-dev
+            libsodium-dev
+            libvpx-dev
+            libopus-dev
+            libx264-dev
+            coreutils
+            git
+            curl
+
+      - run: mkdir -p ~/work/deploy ; mkdir -p ~/work/deploy/inst/
+      - run: cd ~/work/deploy/ ; git clone https://github.com/zoff99/c-toxcore
+      - run: cd ~/work/deploy/ ; cd c-toxcore/ ; cmake DCMAKE_C_FLAGS=" -DHW_CODEC_CONFIG_UTOX_LINNVENC -D_GNU_SOURCE -g -O3 -fPIC " -DCMAKE_INSTALL_PREFIX:PATH=~/work/deploy/inst/ .
+      - run: cd ~/work/deploy/ ; cd c-toxcore/ ; make -j $(nproc)
+      - run: cd ~/work/deploy/ ; cd c-toxcore/ ; make install
+
+      - run: cd ~/work/deploy/inst/ ; ls -alR
+      - run: ls -al ~/work/deploy/inst/lib/pkgconfig
+
+      - run: cd ~/work/ ; git submodule update --init --recursive
+
+      - run: cd ~/work/ ; mkdir -p build2 ; cd build2/ ;
+            export PKG_CONFIG_PATH=~/work/deploy/inst/lib/pkgconfig ;
+            cmake
+            -DENABLE_AUTOUPDATE=OFF
+            -DENABLE_DBUS=OFF
+            -DASAN=OFF
+            -DENABLE_ASAN=OFF
+            -DTOXCORE_STATIC=ON
+            -DUTOX_STATIC=ON
+            ../
+      - run: cd ~/work/ ; cd build2/ ; make -j $(nproc)
+
+
+
