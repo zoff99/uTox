@@ -62,6 +62,7 @@ jobs:
             libxext-dev
             ffmpeg
             libasound2-dev
+            libopenal-dev
             alsa-utils
             libv4l-dev
             v4l-conf
