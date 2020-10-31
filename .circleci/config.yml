@@ -56,8 +56,13 @@ jobs:
             libx11-dev
             x11-common
             x11-utils
+            libxrender-dev
+            libfreetype6-dev
+            libfontconfig1-dev
+            libxext-dev
             ffmpeg
             libasound2-dev
+            libopenal-dev
             alsa-utils
             libv4l-dev
             v4l-conf
@@ -79,7 +84,7 @@ jobs:
       - run: cd ~/work/deploy/ ; cd c-toxcore/ ;
             export CFLAGS=" -DHW_CODEC_CONFIG_UTOX_LINNVENC -D_GNU_SOURCE -g -O3 -I$_INST_/include/ -fPIC " ;
             export LDFLAGS=" -O3 -L$_INST_/lib -fPIC " ;
-            ./configure --prefix=~/work/deploy/inst/ --disable-soname-versions --disable-testing --enable-logging --disable-shared
+            ./configure --prefix=$(cd ~/work/deploy/inst/;pwd) --disable-soname-versions --disable-testing --enable-logging --disable-shared
       - run: cd ~/work/deploy/ ; cd c-toxcore/ ; make -j $(nproc)
       - run: cd ~/work/deploy/ ; cd c-toxcore/ ; make install
 
@@ -89,7 +94,7 @@ jobs:
       - run: cd ~/work/ ; git submodule update --init --recursive
 
       - run: cd ~/work/ ; mkdir -p build2 ; cd build2/ ;
-            export PKG_CONFIG_PATH=~/work/deploy/inst/lib/pkgconfig ;
+            export PKG_CONFIG_PATH=$(cd ~/work/deploy/inst/lib/pkgconfig;pwd) ;
             cmake
             -DENABLE_AUTOUPDATE=OFF
             -DENABLE_DBUS=OFF
