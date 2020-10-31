@@ -56,6 +56,10 @@ jobs:
             libx11-dev
             x11-common
             x11-utils
+            libxrender-dev
+            libfreetype6-dev
+            libfontconfig1-dev
+            libxext-dev
             ffmpeg
             libasound2-dev
             alsa-utils
