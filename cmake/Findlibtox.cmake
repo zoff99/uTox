@@ -7,7 +7,7 @@
 
 find_package(PkgConfig)
 
-pkg_check_modules(PKG_LIBTOX QUIET libtoxcore)
+pkg_check_modules(PKG_LIBTOX REQUIRED libtoxcore)
 set(LIBTOX_DEFINITIONS ${PKG_LIBTOX_CFLAGS_OTHER})
 
 find_path(LIBTOX_INCLUDE_DIR tox/tox.h HINTS
@@ -16,6 +16,11 @@ find_path(LIBTOX_INCLUDE_DIR tox/tox.h HINTS
 )
 
 find_library(LIBTOX_LIBRARY NAMES toxcore HINTS
+    ${PKG_LIBTOX_LIBDIR}
+    ${PKG_LIBTOX_LIBRARY_DIRS}
+)
+
+find_library(LIBTOX_LIBRARY NAMES toxencryptsave HINTS
     ${PKG_LIBTOX_LIBDIR}
     ${PKG_LIBTOX_LIBRARY_DIRS}
 )
