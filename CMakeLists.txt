@@ -257,9 +257,7 @@ endif()
 
 if(UTOX_STATIC)
     if(UNIX)
-        # add_cflag("-Wl -Bstatic -lopus -lopenal -lfilteraudio -Bdynamic -lrt -lm -lpthread -ldl")
-        add_cflag("-fPIC -Wl,-Bstatic -lsodium -ltoxav -lopus -lvpx -lm -ltoxcore -ltoxencryptsave -Wl,-Bdynamic")
-        link_libraries("-fPIC -Wl,-Bstatic -lx264 -lavcodec -lavutil -lsodium -ltoxav -lopus -lvpx -ltoxcore -ltoxencryptsave -Wl,-Bdynamic -pthread -lm")
+        add_cflag("-fPIC -Wl,-Bstatic -lsodium -lopus -lvpx -lm -Wl,-Bdynamic")
     else()
         add_cflag("-static")
     endif()
@@ -273,8 +271,29 @@ if(ENABLE_FILTERAUDIO)
     add_cflag("-DAUDIO_FILTERING=1")
 endif()
 
-find_package(libtox REQUIRED)
+
+
+find_package(PkgConfig REQUIRED)
+
+# -------------------- TOX --------------------
+
+pkg_check_modules(LIBTOX REQUIRED libtoxcore)
 include_directories(${LIBTOX_INCLUDE_DIRS})
+
+pkg_check_modules(LIBTOXAV REQUIRED libtoxav)
+include_directories(${LIBTOXAV_INCLUDE_DIRS})
+
+pkg_check_modules(LIBAVCODEC REQUIRED libavcodec)
+include_directories(${LIBAVCODEC_INCLUDE_DIRS})
+
+pkg_check_modules(LIBAVUTIL REQUIRED libavutil)
+include_directories(${LIBAVUTIL_INCLUDE_DIRS})
+
+pkg_check_modules(X264 REQUIRED x264)
+include_directories(${X264_INCLUDE_DIRS})
+
+# -------------------- TOX --------------------
+
 
 find_package(libsodium REQUIRED)
 include_directories(${LIBSODIUM_INCLUDE_DIRS})
@@ -311,6 +330,7 @@ elseif(UNIX)
         # Required for v4l (at least in the Linux static builds on Jenkins)
         set(LIBRARIES ${LIBRARIES} "rt")
     endif()
+
 endif()
 
 # include utoxLAYOUT
@@ -366,9 +386,17 @@ target_link_libraries(utox
     utoxAV
     utoxNATIVE
     utoxUI
-    ${LIBTOX_LIBRARIES}
+    :libtoxcore.a
+    :libtoxav.a
+    :libtoxencryptsave.a
+    -L${LIBTOX_LIBRARY_DIRS}
+    -L${LIBTOXAV_LIBRARY_DIRS}
+    ${LIBAVCODEC_LIBRARIES}
+    ${LIBAVUTIL_LIBRARIES}
+    ${X264_LIBRARIES}
     ${LIBRARIES}
     vpx
+    pthread
     m
 )
 
