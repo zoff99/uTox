@@ -75,7 +75,11 @@ jobs:
 
       - run: mkdir -p ~/work/deploy ; mkdir -p ~/work/deploy/inst/
       - run: cd ~/work/deploy/ ; git clone https://github.com/zoff99/c-toxcore
-      - run: cd ~/work/deploy/ ; cd c-toxcore/ ; cmake DCMAKE_C_FLAGS=" -DHW_CODEC_CONFIG_UTOX_LINNVENC -D_GNU_SOURCE -g -O3 -fPIC " -DCMAKE_INSTALL_PREFIX:PATH=~/work/deploy/inst/ .
+      - run: cd ~/work/deploy/ ; cd c-toxcore/ ; ./autogen.sh
+      - run: cd ~/work/deploy/ ; cd c-toxcore/ ;
+            export CFLAGS=" -DHW_CODEC_CONFIG_UTOX_LINNVENC -D_GNU_SOURCE -g -O3 -I$_INST_/include/ -fPIC " ;
+            export LDFLAGS=" -O3 -L$_INST_/lib -fPIC " ;
+            ./configure --prefix=~/work/deploy/inst/ --disable-soname-versions --disable-testing --enable-logging --disable-shared
       - run: cd ~/work/deploy/ ; cd c-toxcore/ ; make -j $(nproc)
       - run: cd ~/work/deploy/ ; cd c-toxcore/ ; make install
 
