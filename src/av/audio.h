@@ -11,7 +11,9 @@
 #include <AL/alc.h>
 #endif
 
-typedef struct ALCdevice_struct ALCdevice;
+//#ifndef ALCdevice
+//typedef struct ALCdevice_struct ALCdevice;
+//#endif
 
 extern bool utox_audio_thread_init;
 
