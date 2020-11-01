@@ -10,12 +10,11 @@ cd $_HOME_
 
 
 build_for='
-archlinux:20200605
 alpine:3.12.0
 ubuntu:18.04
 debian:10
 '
-
+# archlinux:20200605
 # debian:9
 # ubuntu:16.04
 
@@ -36,19 +35,11 @@ for system_to_build_for in $build_for ; do
 
     ls -al $_HOME_/"$system_to_build_for"/
 
-    rsync -a ../ --exclude=.localrun $_HOME_/"$system_to_build_for"/script/uTox
-    chmod a+rwx -R $_HOME_/"$system_to_build_for"/script/uTox
+    rsync -a ../ --exclude=.localrun $_HOME_/"$system_to_build_for"/workspace/uTox
+    chmod a+rwx -R $_HOME_/"$system_to_build_for"/workspace/uTox
 
     echo '#! /bin/bash
 
-set -x
-
-
-pwd
-id
-df -h
-
-ls -al /
 
 pkgs_Ubuntu_18_04="
     :u:
@@ -265,15 +256,15 @@ done
 
 #------------------------
 
-mkdir -p /script/
-cd /script/
+mkdir -p /workspace/
+cd /workspace/
 mkdir -p inst
 git clone https://github.com/zoff99/c-toxcore
 cd c-toxcore
 
 
 # cmake DCMAKE_C_FLAGS=" -DHW_CODEC_CONFIG_ACCELDEFAULT -D_GNU_SOURCE -g -O3 -fPIC " \
-#  -DCMAKE_INSTALL_PREFIX:PATH=/script/inst/ . || exit 1
+#  -DCMAKE_INSTALL_PREFIX:PATH=/workspace/inst/ . || exit 1
 
 pwd
 ls -al
@@ -282,7 +273,7 @@ ls -al
 export CFLAGS=" -DHW_CODEC_CONFIG_ACCELDEFAULT -D_GNU_SOURCE -g -O3 -I$_INST_/include/ -fPIC "
 export LDFLAGS=" -O3 -L$_INST_/lib -fPIC "
 ./configure \
-  --prefix=/script/inst/ \
+  --prefix=/workspace/inst/ \
   --disable-soname-versions --disable-testing --enable-logging --disable-shared
 
 # make VERBOSE=1 -j $(nproc) || exit 1
@@ -293,14 +284,14 @@ make install || exit 1
 #------------------------
 
 
-cd /script/uTox/
+cd /workspace/uTox/
 git submodule update --init --recursive
 
 rm -Rf build2
 mkdir -p build2
 cd build2/ 
 
-export PKG_CONFIG_PATH=/script/inst/lib/pkgconfig
+export PKG_CONFIG_PATH=/workspace/inst/lib/pkgconfig
 
 # --debug-output
 
