@@ -32,6 +32,7 @@ jobs:
 
       - run: ls -al ~/work
       - run: docker --version
+      - run: cd ~/work/.localrun ; bash ./docker_it.sh
 
 
 
