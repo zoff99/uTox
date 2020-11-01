@@ -93,24 +93,29 @@ static void draw_user_badge(int x, int y, int width, int UNUSED(height)) {
             {
                 connection_status_color = 0;
             }
-            drawvline(width - BM_STATUS_WIDTH - BM_STATUSAREA_WIDTH / 2 - SCALE(1) -2 ,
+            drawvline(width - BM_STATUS_WIDTH - BM_STATUSAREA_WIDTH / 2 - SCALE(3) -3 ,
                 y + SCALE(SIDEBAR_PADDING) + BM_STATUSAREA_HEIGHT / 2 - BM_STATUS_WIDTH / 2,
-                y + SCALE(SIDEBAR_PADDING) + BM_STATUSAREA_HEIGHT / 2 - BM_STATUS_WIDTH / 2 + 15,
+                y + SCALE(SIDEBAR_PADDING) + BM_STATUSAREA_HEIGHT / 2 - BM_STATUS_WIDTH / 2 + BM_STATUSAREA_HEIGHT / 5,
                 status_color[connection_status_color]);
 
-            drawvline(width - BM_STATUS_WIDTH - BM_STATUSAREA_WIDTH / 2 - SCALE(1) -1 ,
+            drawvline(width - BM_STATUS_WIDTH - BM_STATUSAREA_WIDTH / 2 - SCALE(3) -2 ,
                 y + SCALE(SIDEBAR_PADDING) + BM_STATUSAREA_HEIGHT / 2 - BM_STATUS_WIDTH / 2,
-                y + SCALE(SIDEBAR_PADDING) + BM_STATUSAREA_HEIGHT / 2 - BM_STATUS_WIDTH / 2 + 15,
+                y + SCALE(SIDEBAR_PADDING) + BM_STATUSAREA_HEIGHT / 2 - BM_STATUS_WIDTH / 2 + BM_STATUSAREA_HEIGHT / 5,
                 status_color[connection_status_color]);
 
-            drawvline(width - BM_STATUS_WIDTH - BM_STATUSAREA_WIDTH / 2 - SCALE(1) ,
+            drawvline(width - BM_STATUS_WIDTH - BM_STATUSAREA_WIDTH / 2 - SCALE(3) -1 ,
                 y + SCALE(SIDEBAR_PADDING) + BM_STATUSAREA_HEIGHT / 2 - BM_STATUS_WIDTH / 2,
-                y + SCALE(SIDEBAR_PADDING) + BM_STATUSAREA_HEIGHT / 2 - BM_STATUS_WIDTH / 2 + 15,
+                y + SCALE(SIDEBAR_PADDING) + BM_STATUSAREA_HEIGHT / 2 - BM_STATUS_WIDTH / 2 + BM_STATUSAREA_HEIGHT / 5,
                 status_color[connection_status_color]);
 
-            drawvline(width - BM_STATUS_WIDTH - BM_STATUSAREA_WIDTH / 2 - SCALE(1) + 1 ,
+            drawvline(width - BM_STATUS_WIDTH - BM_STATUSAREA_WIDTH / 2 - SCALE(3) ,
                 y + SCALE(SIDEBAR_PADDING) + BM_STATUSAREA_HEIGHT / 2 - BM_STATUS_WIDTH / 2,
-                y + SCALE(SIDEBAR_PADDING) + BM_STATUSAREA_HEIGHT / 2 - BM_STATUS_WIDTH / 2 + 15,
+                y + SCALE(SIDEBAR_PADDING) + BM_STATUSAREA_HEIGHT / 2 - BM_STATUS_WIDTH / 2 + BM_STATUSAREA_HEIGHT / 5,
+                status_color[connection_status_color]);
+
+            drawvline(width - BM_STATUS_WIDTH - BM_STATUSAREA_WIDTH / 2 - SCALE(3) + 1 ,
+                y + SCALE(SIDEBAR_PADDING) + BM_STATUSAREA_HEIGHT / 2 - BM_STATUS_WIDTH / 2,
+                y + SCALE(SIDEBAR_PADDING) + BM_STATUSAREA_HEIGHT / 2 - BM_STATUS_WIDTH / 2 + BM_STATUSAREA_HEIGHT / 5,
                 status_color[connection_status_color]);
         }
 
