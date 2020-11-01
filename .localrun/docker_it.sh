@@ -48,8 +48,7 @@ pwd
 id
 df -h
 
-exit 1
-
+ls -al /
 
 pkgs_Ubuntu_18_04="
     :u:
