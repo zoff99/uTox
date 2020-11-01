@@ -27,21 +27,17 @@ for system_to_build_for in $build_for ; do
     cd $_HOME_/
     mkdir -p $_HOME_/"$system_to_build_for"/
 
-    rm -Rf $_HOME_/"$system_to_build_for"/script 2>/dev/null
-    rm -Rf $_HOME_/"$system_to_build_for"/workspace 2>/dev/null
+    # rm -Rf $_HOME_/"$system_to_build_for"/script 2>/dev/null
+    # rm -Rf $_HOME_/"$system_to_build_for"/workspace 2>/dev/null
 
     mkdir -p $_HOME_/"$system_to_build_for"/artefacts
     mkdir -p $_HOME_/"$system_to_build_for"/script
     mkdir -p $_HOME_/"$system_to_build_for"/workspace
 
-    ls -al $_HOME_/"$system_to_build_for"/script
-    ls -al $_HOME_/"$system_to_build_for"/workspace
-    chmod a+rwx $_HOME_/"$system_to_build_for"/workspace
-    chmod a+rwx $_HOME_/"$system_to_build_for"/artefacts
-    ls -al $_HOME_/"$system_to_build_for"/workspace
+    ls -al $_HOME_/"$system_to_build_for"/
 
-    rsync -a ../ --exclude=.localrun $_HOME_/"$system_to_build_for"/workspace/uTox
-    chmod a+rwx -R $_HOME_/"$system_to_build_for"/workspace/uTox
+    rsync -a ../ --exclude=.localrun $_HOME_/"$system_to_build_for"/script/uTox
+    chmod a+rwx -R $_HOME_/"$system_to_build_for"/script/uTox
 
     echo '#! /bin/bash
 
@@ -270,15 +266,15 @@ done
 
 #------------------------
 
-mkdir -p /workspace2/
-cd /workspace2/
+mkdir -p /script/
+cd /script/
 mkdir -p inst
 git clone https://github.com/zoff99/c-toxcore
 cd c-toxcore
 
 
 # cmake DCMAKE_C_FLAGS=" -DHW_CODEC_CONFIG_ACCELDEFAULT -D_GNU_SOURCE -g -O3 -fPIC " \
-#  -DCMAKE_INSTALL_PREFIX:PATH=/workspace2/inst/ . || exit 1
+#  -DCMAKE_INSTALL_PREFIX:PATH=/script/inst/ . || exit 1
 
 pwd
 ls -al
@@ -287,7 +283,7 @@ ls -al
 export CFLAGS=" -DHW_CODEC_CONFIG_ACCELDEFAULT -D_GNU_SOURCE -g -O3 -I$_INST_/include/ -fPIC "
 export LDFLAGS=" -O3 -L$_INST_/lib -fPIC "
 ./configure \
-  --prefix=/workspace2/inst/ \
+  --prefix=/script/inst/ \
   --disable-soname-versions --disable-testing --enable-logging --disable-shared
 
 # make VERBOSE=1 -j $(nproc) || exit 1
@@ -297,18 +293,15 @@ make install || exit 1
 
 #------------------------
 
-cp -av /workspace/uTox /workspace2/
-chmod -R a+rwx /workspace2/uTox/
-chown -R $(id -u) /workspace2/uTox/
 
-cd /workspace2/uTox/
+cd /script/uTox/
 git submodule update --init --recursive
 
 rm -Rf build2
 mkdir -p build2
 cd build2/ 
 
-export PKG_CONFIG_PATH=/workspace2/inst/lib/pkgconfig
+export PKG_CONFIG_PATH=/script/inst/lib/pkgconfig
 
 # --debug-output
 
