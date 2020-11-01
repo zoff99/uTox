@@ -10,100 +10,28 @@ workflows:
 jobs:
   build:
     working_directory: ~/work
-    docker:
-      - image: ubuntu:bionic
+    machine:
+      image: ubuntu-1604:201903-01
 
     steps:
-      - run: mkdir -p /root/.ssh/ ; chmod og+rwx /root/.ssh/
-      - run: rm -f /root/.ssh/id_rsa
-
-      - run: &apt_install
-          apt update &&
-          apt install -y --no-install-recommends
-          git ssh
-
-      - run: printf '\n\n' | ssh-keygen -b 2048 -t rsa -q -N ""
-
       - checkout
 
-      - run: &apt_install
-          apt update &&
-          apt install -y --no-install-recommends
-            clang
-            cmake
-            libconfig-dev
-            libgtest-dev
-            llvm-dev
-            ninja-build
-            pkg-config
-            grep file ca-certificates autotools-dev autoconf automake
-            git bc wget rsync cmake make pkg-config yasm libtool
-            libasound2-dev libv4l-dev ssh gzip tar
-            libconfig-dev
-            cmake
-            wget
-            unzip
-            zip
-            automake
-            autotools-dev
-            build-essential
-            check
-            checkinstall
-            libtool
-            pkg-config
-            rsync
-            git
-            libx11-dev
-            x11-common
-            x11-utils
-            libxrender-dev
-            libfreetype6-dev
-            libfontconfig1-dev
-            libxext-dev
-            ffmpeg
-            libasound2-dev
-            libopenal-dev
-            alsa-utils
-            libv4l-dev
-            v4l-conf
-            v4l-utils
-            libjpeg8-dev
-            libavcodec-dev
-            libavdevice-dev
-            libsodium-dev
-            libvpx-dev
-            libopus-dev
-            libx264-dev
-            coreutils
-            git
-            curl
+      - run: sudo pkill apt-get || echo dummy
+      - run: apt --version
+      - run: ls -al /etc/apt/sources.list.d/
+      - run: sudo rm /etc/apt/sources.list.d/heroku.list
+      - run: sudo rm /etc/apt/sources.list.d/google-chrome.list
+      - run: sudo apt update &&
+          sudo apt install -y --no-install-recommends apt apt-transport-https
+      - run: apt --version
+      - run: sudo apt update &&
+          sudo apt install -y --no-install-recommends
+            grep rsync xz-utils file git curl ssh
+            openssl ca-certificates git sudo bc wget rsync
+            binfmt-support unzip docker
 
-      - run: mkdir -p ~/work/deploy ; mkdir -p ~/work/deploy/inst/
-      - run: cd ~/work/deploy/ ; git clone https://github.com/zoff99/c-toxcore
-      - run: cd ~/work/deploy/ ; cd c-toxcore/ ; ./autogen.sh
-      - run: cd ~/work/deploy/ ; cd c-toxcore/ ;
-            export CFLAGS=" -DHW_CODEC_CONFIG_ACCELDEFAULT -D_GNU_SOURCE -g -O3 -I$_INST_/include/ -fPIC " ;
-            export LDFLAGS=" -O3 -L$_INST_/lib -fPIC " ;
-            ./configure --prefix=$(cd ~/work/deploy/inst/;pwd) --disable-soname-versions --disable-testing --enable-logging --disable-shared
-      - run: cd ~/work/deploy/ ; cd c-toxcore/ ; make -j $(nproc)
-      - run: cd ~/work/deploy/ ; cd c-toxcore/ ; make install
-
-      - run: cd ~/work/deploy/inst/ ; ls -alR
-      - run: ls -al ~/work/deploy/inst/lib/pkgconfig
-
-      - run: cd ~/work/ ; git submodule update --init --recursive
-
-      - run: cd ~/work/ ; mkdir -p build2 ; cd build2/ ;
-            export PKG_CONFIG_PATH=$(cd ~/work/deploy/inst/lib/pkgconfig;pwd) ;
-            cmake
-            -DENABLE_AUTOUPDATE=OFF
-            -DENABLE_DBUS=OFF
-            -DASAN=OFF
-            -DENABLE_ASAN=OFF
-            -DTOXCORE_STATIC=ON
-            -DUTOX_STATIC=ON
-            ../
-      - run: cd ~/work/ ; cd build2/ ; make -j $(nproc)
+      - run: ls -al ~/work
+      - run: docker --version
 
 
 
