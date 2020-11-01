@@ -38,6 +38,8 @@ for system_to_build_for in $build_for ; do
 
     echo '#! /bin/bash
 
+set -x
+
 pkgs_Ubuntu_18_04="
     :u:
     vim
@@ -267,7 +269,7 @@ export CFLAGS=" -DHW_CODEC_CONFIG_ACCELDEFAULT -D_GNU_SOURCE -g -O3 -I$_INST_/in
 export LDFLAGS=" -O3 -L$_INST_/lib -fPIC "
 ./configure \
   --prefix=/workspace/inst/ \
-  --disable-soname-versions --disable-testing --enable-logging --disable-shared || exit 1
+  --disable-soname-versions --disable-testing --enable-logging --disable-shared
 
 # make VERBOSE=1 -j $(nproc) || exit 1
 make -j $(nproc) || exit 1
