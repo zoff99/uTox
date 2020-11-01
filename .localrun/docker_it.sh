@@ -34,7 +34,14 @@ for system_to_build_for in $build_for ; do
     mkdir -p $_HOME_/"$system_to_build_for"/script
     mkdir -p $_HOME_/"$system_to_build_for"/workspace
 
+    ls -al $_HOME_/"$system_to_build_for"/script
+    ls -al $_HOME_/"$system_to_build_for"/workspace
+    chmod a+rwx $_HOME_/"$system_to_build_for"/workspace
+    chmod a+rwx $_HOME_/"$system_to_build_for"/artefacts
+    ls -al $_HOME_/"$system_to_build_for"/workspace
+
     rsync -a ../ --exclude=.localrun $_HOME_/"$system_to_build_for"/workspace/uTox
+    chmod a+rwx -R $_HOME_/"$system_to_build_for"/workspace/uTox
 
     echo '#! /bin/bash
 
