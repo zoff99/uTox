@@ -179,6 +179,10 @@ add_cflag("-Wno-misleading-indentation")
 add_cflag("-fno-strict-aliasing")
 add_cflag("-fPIC")
 
+## temporary fix to compile with GCC-10
+## https://wiki.gentoo.org/wiki/Gcc_10_porting_notes/fno_common
+add_cflag("-fcommon")
+
 ## Optimization Flags
 
 # Fix GNU stack
