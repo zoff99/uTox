@@ -291,7 +291,7 @@ make install || exit 1
 
 cp -av /workspace/uTox /workspace2/
 chmod -R a+rwx /workspace2/uTox/
-chown -R $LOGNAME /workspace2/uTox/
+chown -R $(id -u) /workspace2/uTox/
 
 cd /workspace2/uTox/
 git submodule update --init --recursive
