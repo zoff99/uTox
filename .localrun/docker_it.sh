@@ -47,6 +47,14 @@ for system_to_build_for in $build_for ; do
 
 set -x
 
+
+pwd
+id
+df -h
+
+exit 1
+
+
 pkgs_Ubuntu_18_04="
     :u:
     vim
