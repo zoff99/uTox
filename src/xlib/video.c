@@ -353,7 +353,9 @@ extern int global_show_mouse_cursor;
 
 int native_video_getframe(uint8_t *y, uint8_t *u, uint8_t *v, uint16_t width, uint16_t height) {
 
-    if (utox_v4l_fd == -1) {
+    if (utox_v4l_fd == -1)
+    {
+        // grab screen
 
         if (global_show_mouse_cursor == 1)
         {
@@ -401,7 +403,12 @@ int native_video_getframe(uint8_t *y, uint8_t *u, uint8_t *v, uint16_t width, ui
                   screen_image->height);
             return 0;
         }
-        return 1;
+        return -99;
     }
-    return 0;
+    else
+    {
+        // use real camera device
+
+        return v4l_getframe(y, u, v, width, height);        
+    }
 }

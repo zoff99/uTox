@@ -65,10 +65,11 @@ static struct v4l2_format fmt, dest_fmt = {
 };
 
 bool v4l_init(char *dev_name) {
-    utox_v4l_fd = open(dev_name, O_RDWR /* required */ | O_NONBLOCK, 0);
+    // utox_v4l_fd = open(dev_name, O_RDWR /* required */ | O_NONBLOCK, 0);
+    utox_v4l_fd = open(dev_name, O_RDWR /* required */, 0);
 
     if (-1 == utox_v4l_fd) {
-        LOG_TRACE("v4l", "Cannot open '%s': %d, %s" , dev_name, errno, strerror(errno));
+        LOG_ERR("v4l", "Cannot open '%s': %d, %s" , dev_name, errno, strerror(errno));
         return 0;
     }
 
@@ -79,20 +80,20 @@ bool v4l_init(char *dev_name) {
 
     if (-1 == xioctl(utox_v4l_fd, VIDIOC_QUERYCAP, &cap)) {
         if (EINVAL == errno) {
-            LOG_TRACE("v4l", "%s is no V4L2 device" , dev_name);
+            LOG_ERR("v4l", "%s is no V4L2 device" , dev_name);
         } else {
-            LOG_TRACE("v4l", "VIDIOC_QUERYCAP error %d, %s" , errno, strerror(errno));
+            LOG_ERR("v4l", "VIDIOC_QUERYCAP error %d, %s" , errno, strerror(errno));
         }
         return 0;
     }
 
     if (!(cap.capabilities & V4L2_CAP_VIDEO_CAPTURE)) {
-        LOG_TRACE("v4l", "%s is no video capture device" , dev_name);
+        LOG_ERR("v4l", "%s is no video capture device" , dev_name);
         return 0;
     }
 
     if (!(cap.capabilities & V4L2_CAP_STREAMING)) {
-        LOG_TRACE("v4l", "%s does not support streaming i/o" , dev_name);
+        LOG_ERR("v4l", "%s does not support streaming i/o" , dev_name);
         return 0;
     }
 
@@ -120,6 +121,7 @@ bool v4l_init(char *dev_name) {
     }
 
 #ifndef NO_V4LCONVERT
+    LOG_ERR("v4l", "V4LCONVERT: calling v4lconvert_create()");
     v4lconvert_data = v4lconvert_create(utox_v4l_fd);
 #endif
 
@@ -128,20 +130,20 @@ bool v4l_init(char *dev_name) {
     fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
     if (-1 == xioctl(utox_v4l_fd, VIDIOC_G_FMT, &fmt)) {
-        LOG_TRACE("v4l", "VIDIOC_S_FMT error %d, %s" , errno, strerror(errno));
+        LOG_ERR("v4l", "VIDIOC_S_FMT error %d, %s" , errno, strerror(errno));
         return 0;
     }
 
-    /*if (fmt.fmt.pix.pixelformat != V4L2_PIX_FMT_YUYV) {
+    if (fmt.fmt.pix.pixelformat != V4L2_PIX_FMT_YUYV) {
         LOG_ERR("v4l", "Unsupported video format: %u %u %u %u\n", fmt.fmt.pix.width, fmt.fmt.pix.height,
                 fmt.fmt.pix.pixelformat, fmt.fmt.pix.field);
-    }*/
+    }
 
     video_width             = fmt.fmt.pix.width;
     video_height            = fmt.fmt.pix.height;
     dest_fmt.fmt.pix.width  = fmt.fmt.pix.width;
     dest_fmt.fmt.pix.height = fmt.fmt.pix.height;
-    LOG_TRACE("v4l", "Video size: %u %u" , video_width, video_height);
+    LOG_ERR("v4l", "Video size: %u %u" , video_width, video_height);
 
 
     /* Buggy driver paranoia. */
@@ -165,9 +167,9 @@ bool v4l_init(char *dev_name) {
 
     if (-1 == xioctl(utox_v4l_fd, VIDIOC_REQBUFS, &req)) {
         if (EINVAL == errno) {
-            LOG_TRACE("v4l", "%s does not support x i/o" , dev_name);
+            LOG_ERR("v4l", "%s does not support x i/o" , dev_name);
         } else {
-            LOG_TRACE("v4l", "VIDIOC_REQBUFS error %d, %s" , errno, strerror(errno));
+            LOG_ERR("v4l", "VIDIOC_REQBUFS error %d, %s" , errno, strerror(errno));
         }
         return 0;
     }
@@ -188,7 +190,7 @@ bool v4l_init(char *dev_name) {
         buf.index  = n_buffers;
 
         if (-1 == xioctl(utox_v4l_fd, VIDIOC_QUERYBUF, &buf)) {
-            LOG_TRACE("v4l", "VIDIOC_QUERYBUF error %d, %s" , errno, strerror(errno));
+            LOG_ERR("v4l", "VIDIOC_QUERYBUF error %d, %s" , errno, strerror(errno));
             return 0;
         }
 
@@ -197,7 +199,7 @@ bool v4l_init(char *dev_name) {
                                         MAP_SHARED /* recommended */, utox_v4l_fd, buf.m.offset);
 
         if (MAP_FAILED == buffers[n_buffers].start) {
-            LOG_TRACE("v4l", "mmap error %d, %s" , errno, strerror(errno));
+            LOG_ERR("v4l", "mmap error %d, %s" , errno, strerror(errno));
             return 0;
         }
     }
@@ -275,7 +277,7 @@ bool v4l_endread(void) {
 
 int v4l_getframe(uint8_t *y, uint8_t *UNUSED(u), uint8_t *UNUSED(v), uint16_t width, uint16_t height) {
     if (width != video_width || height != video_height) {
-        LOG_TRACE("V4L", "width/height mismatch %u %u != %u %u" , width, height, video_width, video_height);
+        LOG_ERR("V4L", "width/height mismatch %u %u != %u %u" , width, height, video_width, video_height);
         return 0;
     }
 
@@ -290,14 +292,19 @@ int v4l_getframe(uint8_t *y, uint8_t *UNUSED(u), uint8_t *UNUSED(v), uint16_t wi
     if (-1 == ioctl(utox_v4l_fd, VIDIOC_DQBUF, &buf)) {
         switch (errno) {
             case EINTR:
-            case EAGAIN: return 0;
+            case EAGAIN:
+                LOG_ERR("v4l", "VIDIOC_DQBUF [1] error %d, %s" , errno, strerror(errno));
+                return 0;
+                break;
 
             case EIO:
             /* Could ignore EIO, see spec. */
+                return 0;
+                break;
 
-            /* fall through */
-
-            default: LOG_TRACE("v4l", "VIDIOC_DQBUF error %d, %s" , errno, strerror(errno)); return -1;
+            default:
+                LOG_ERR("v4l", "VIDIOC_DQBUF [2] error %d, %s" , errno, strerror(errno));
+                return -1;
         }
     }
 
@@ -318,7 +325,7 @@ int v4l_getframe(uint8_t *y, uint8_t *UNUSED(u), uint8_t *UNUSED(v), uint16_t wi
     int result = v4lconvert_convert(v4lconvert_data, &fmt, &dest_fmt, data, buf.bytesused, y,
                                     (video_width * video_height * 3) / 2);
     if (result == -1) {
-        LOG_TRACE("v4l", "v4lconvert_convert error %s" , v4lconvert_get_error_message(v4lconvert_data));
+        LOG_ERR("v4l", "v4lconvert_convert error %s" , v4lconvert_get_error_message(v4lconvert_data));
     }
 #else
     if (fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV) {
@@ -328,11 +335,13 @@ int v4l_getframe(uint8_t *y, uint8_t *UNUSED(u), uint8_t *UNUSED(v), uint16_t wi
 #endif
 
     if (-1 == xioctl(utox_v4l_fd, VIDIOC_QBUF, &buf)) {
-        LOG_TRACE("v4l", "VIDIOC_QBUF error %d, %s" , errno, strerror(errno));
+        LOG_ERR("v4l", "VIDIOC_QBUF error %d, %s" , errno, strerror(errno));
     }
 
 #ifndef NO_V4LCONVERT
-    return (result == -1 ? 0 : 1);
+    int res = (result == -1 ? 0 : 1);
+    // LOG_ERR("v4l", "res = %d result = %d" , (int)res, (int) result);
+    return res;
 #else
     return 1;
 #endif

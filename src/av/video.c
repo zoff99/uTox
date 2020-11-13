@@ -67,6 +67,7 @@ struct video_play_thread_args {
     uint8_t *y;
     uint8_t *u;
     uint8_t *v;
+    int type; // -99 = screen capture, 1 = camera
 };
 
 
@@ -349,7 +350,7 @@ static void init_video_devices(void) {
 
 static void *video_play(void *video_frame_data)
 {
-    //LOG_ERR("uToxVideo:thread", "video play thread:start");
+    // LOG_ERR("uToxVideo:thread", "video play thread:start");
 
     struct video_play_thread_args* d = (struct video_play_thread_args*)video_frame_data;
     uint64_t timspan_in_ms2 = d->timspan_in_ms2;
@@ -359,25 +360,32 @@ static void *video_play(void *video_frame_data)
     utox_av_video_frame utox_video_frame;
     utox_video_frame.w = d->w;
     utox_video_frame.h = d->h;
+    int type = d->type;
 
-    if (!screen_image)
+    if (type == -99)
     {
-        dec_video_t_counter();
-        sem_post(&video_play_lock_);
-        pthread_exit(0);
-    }
+        if (!screen_image)
+        {
+            dec_video_t_counter();
+            sem_post(&video_play_lock_);
+            // LOG_ERR("uToxVideo:thread" , "ret:00");
+            pthread_exit(0);
+        }
 
-    if (!screen_image->data)
-    {
-        dec_video_t_counter();
-        sem_post(&video_play_lock_);
-        pthread_exit(0);
+        if (!screen_image->data)
+        {
+            dec_video_t_counter();
+            sem_post(&video_play_lock_);
+            // LOG_ERR("uToxVideo:thread" , "ret:01");
+            pthread_exit(0);
+        }
     }
 
     if ((utox_video_frame.w < 10) || (utox_video_frame.w > 20000))
     {
         dec_video_t_counter();
         sem_post(&video_play_lock_);
+        // LOG_ERR("uToxVideo:thread" , "ret:02");
         pthread_exit(0);
     }
 
@@ -385,6 +393,7 @@ static void *video_play(void *video_frame_data)
     {
         dec_video_t_counter();
         sem_post(&video_play_lock_);
+        // LOG_ERR("uToxVideo:thread" , "ret:03");
         pthread_exit(0);
     }
 
@@ -392,83 +401,114 @@ static void *video_play(void *video_frame_data)
     size_t y_size = (utox_video_frame.w * utox_video_frame.h);
     size_t u_size = ((utox_video_frame.w * utox_video_frame.h) / 4 );
     size_t v_size = ((utox_video_frame.w * utox_video_frame.h) / 4 );
-    utox_video_frame.y = calloc(1, y_size);
-    utox_video_frame.u = calloc(1, u_size);
-    utox_video_frame.v = calloc(1, v_size);
-#if 0
-    memcpy(utox_video_frame.y, d->y, y_size);
-    memcpy(utox_video_frame.u, d->u, u_size);
-    memcpy(utox_video_frame.v, d->v, v_size);
-#endif
+    utox_video_frame.y = malloc(y_size);
+    utox_video_frame.u = malloc(u_size);
+    utox_video_frame.v = malloc(v_size);
 
-    bgrxtoyuv420(utox_video_frame.y, utox_video_frame.u, utox_video_frame.v,
-                (uint8_t *)screen_image->data, screen_image->width, screen_image->height);
-
-    sem_post(&video_play_lock_);
-
-    // resize into bounding box "w" x "h" if video is larger than that box (e.g. 4K video frame)
-    UTOX_FRAME_PKG *frame = calloc(1, sizeof(UTOX_FRAME_PKG));
-
-    float scale = 1.0f;
-
-    if ((utox_video_frame.w <= global_utox_max_desktop_capture_width) && (utox_video_frame.h <= global_utox_max_desktop_capture_height))
+    if (type == 1)
     {
-        // scale = 1.0f; // do not scale up!
+        // LOG_ERR("uToxVideo:thread" , "cpy:-99");
+        memcpy(utox_video_frame.y, d->y, y_size);
+        memcpy(utox_video_frame.u, d->u, u_size);
+        memcpy(utox_video_frame.v, d->v, v_size);
     }
     else
     {
-        float scale_w = (float)(utox_video_frame.w) / (float)(global_utox_max_desktop_capture_width);
-        float scale_h = (float)(utox_video_frame.h) / (float)(global_utox_max_desktop_capture_height);
+        bgrxtoyuv420(utox_video_frame.y, utox_video_frame.u, utox_video_frame.v,
+                    (uint8_t *)screen_image->data, screen_image->width, screen_image->height);
+    }
 
-        scale = scale_w;
-        if (scale_h > scale_w)
+    sem_post(&video_play_lock_);
+
+    if (type == 1)
+    {
+        toxav_video_send_frame_age(av, get_friend(i)->number, utox_video_frame.w, utox_video_frame.h,
+                               utox_video_frame.y, utox_video_frame.u, utox_video_frame.v, &error,
+                               (int32_t)(current_time_monotonic_default() - timspan_in_ms2));
+        // LOG_ERR("uToxVideo:thread", "toxav_video_send_frame_age [-99]: res = %d", error);
+
+        if (error) {
+            if (error == TOXAV_ERR_SEND_FRAME_SYNC) {
+                yieldcpu(1);
+                toxav_video_send_frame_age(av, get_friend(i)->number, utox_video_frame.w, utox_video_frame.h,
+                                       utox_video_frame.y, utox_video_frame.u, utox_video_frame.v, &error,
+                                       (int32_t)(current_time_monotonic_default() - timspan_in_ms2));
+                // LOG_ERR("uToxVideo:thread", "toxav_video_send_frame_age 2 [-99]: res = %d", error);
+            }
+        }
+
+        free(utox_video_frame.y);
+        free(utox_video_frame.u);
+        free(utox_video_frame.v);
+    }
+    else
+    {
+
+        // resize into bounding box "w" x "h" if video is larger than that box (e.g. 4K video frame)
+        UTOX_FRAME_PKG *frame = malloc(sizeof(UTOX_FRAME_PKG));
+
+        float scale = 1.0f;
+
+        if ((utox_video_frame.w <= global_utox_max_desktop_capture_width) && (utox_video_frame.h <= global_utox_max_desktop_capture_height))
         {
-            scale = scale_h;
+            // scale = 1.0f; // do not scale up!
         }
-    }
+        else
+        {
+            float scale_w = (float)(utox_video_frame.w) / (float)(global_utox_max_desktop_capture_width);
+            float scale_h = (float)(utox_video_frame.h) / (float)(global_utox_max_desktop_capture_height);
 
-    uint32_t new_width = (uint32_t)((float)(utox_video_frame.w) / scale);
-    uint32_t new_height = (uint32_t)((float)(utox_video_frame.h) / scale);
-
-    if (new_width > global_utox_max_desktop_capture_width)
-    {
-        new_width = global_utox_max_desktop_capture_width;
-    }
-
-    if (new_height > global_utox_max_desktop_capture_height)
-    {
-        new_height = global_utox_max_desktop_capture_height;
-    }
-
-    frame->w              = new_width;
-    frame->h              = new_height;
-    frame->img            = calloc(1, ((new_width * new_height) * 3 / 2) + 1000 ); // YUV buffer
-    void* u_start         = frame->img + (new_width * new_height);
-    void* v_start         = frame->img + (new_width * new_height) + ((new_width / 2) * (new_height / 2));
-
-    scale_down_yuv420_image(utox_video_frame.y, utox_video_frame.u, utox_video_frame.v,
-                            utox_video_frame.w, utox_video_frame.h,
-                            frame->img, u_start, v_start,
-                            new_width, new_height);
-
-    toxav_video_send_frame_age(av, get_friend(i)->number, frame->w, frame->h,
-                           frame->img, u_start, v_start, &error, (int32_t)(current_time_monotonic_default() - timspan_in_ms2));
-
-    if (error) {
-        if (error == TOXAV_ERR_SEND_FRAME_SYNC) {
-            yieldcpu(1);
-            toxav_video_send_frame_age(av, get_friend(i)->number, frame->w, frame->h,
-                                   frame->img, u_start, v_start, &error, (int32_t)(current_time_monotonic_default() - timspan_in_ms2));
+            scale = scale_w;
+            if (scale_h > scale_w)
+            {
+                scale = scale_h;
+            }
         }
+
+        uint32_t new_width = (uint32_t)((float)(utox_video_frame.w) / scale);
+        uint32_t new_height = (uint32_t)((float)(utox_video_frame.h) / scale);
+
+        if (new_width > global_utox_max_desktop_capture_width)
+        {
+            new_width = global_utox_max_desktop_capture_width;
+        }
+
+        if (new_height > global_utox_max_desktop_capture_height)
+        {
+            new_height = global_utox_max_desktop_capture_height;
+        }
+
+        frame->w              = new_width;
+        frame->h              = new_height;
+        frame->img            = malloc(((new_width * new_height) * 3 / 2) + 1000 ); // YUV buffer
+        void* u_start         = frame->img + (new_width * new_height);
+        void* v_start         = frame->img + (new_width * new_height) + ((new_width / 2) * (new_height / 2));
+
+        scale_down_yuv420_image(utox_video_frame.y, utox_video_frame.u, utox_video_frame.v,
+                                utox_video_frame.w, utox_video_frame.h,
+                                frame->img, u_start, v_start,
+                                new_width, new_height);
+
+        toxav_video_send_frame_age(av, get_friend(i)->number, frame->w, frame->h,
+                               frame->img, u_start, v_start, &error, (int32_t)(current_time_monotonic_default() - timspan_in_ms2));
+
+        if (error) {
+            if (error == TOXAV_ERR_SEND_FRAME_SYNC) {
+                yieldcpu(1);
+                toxav_video_send_frame_age(av, get_friend(i)->number, frame->w, frame->h,
+                                       frame->img, u_start, v_start, &error, (int32_t)(current_time_monotonic_default() - timspan_in_ms2));
+            }
+        }
+
+        free(frame->img);
+        free(frame);
+        free(utox_video_frame.y);
+        free(utox_video_frame.u);
+        free(utox_video_frame.v);
+
+        //LOG_ERR("uToxVideo:thread", "ending video play thread: w=%d h=%d", new_width, new_height);
+
     }
-
-    free(frame->img);
-    free(frame);
-    free(utox_video_frame.y);
-    free(utox_video_frame.u);
-    free(utox_video_frame.v);
-
-    //LOG_ERR("uToxVideo:thread", "ending video play thread: w=%d h=%d", new_width, new_height);
 
     dec_video_t_counter();
     pthread_exit(0);
@@ -512,11 +552,15 @@ void utox_video_thread(void *args) {
             timspan_in_ms2 = current_time_monotonic_default();
 
             // capturing is enabled, capture frames
+            // LOG_ERR("uToxVideo", "native_video_getframe: START");
             const int r = native_video_getframe(utox_video_frame.y, utox_video_frame.u, utox_video_frame.v,
                                                 utox_video_frame.w, utox_video_frame.h);
-            if (r == 1) {
+            // LOG_ERR("uToxVideo", "native_video_getframe: DONE");
+
+            if ((r == 1) || (r == -99)) {
 
                 // fprintf(stderr, "CT=%d\n", (int)timspan_in_ms2);
+                // LOG_ERR("uToxVideo", "native_video_getframe: OK");
 
                 // ----------- SEND to all friends -----------
                 // ----------- SEND to all friends -----------
@@ -524,7 +568,8 @@ void utox_video_thread(void *args) {
                 size_t active_video_count = 0;
                 for (size_t i = 0; i < self.friend_list_count; i++) {
                     if (SEND_VIDEO_FRAME(i)) {
-                        //LOG_ERR("uToxVideo", "sending video frame to friend %lu,w=%d,h=%d" , i, utox_video_frame.w, utox_video_frame.h);
+
+                        // LOG_ERR("uToxVideo", "sending video frame to friend %lu,w=%d,h=%d" , i, utox_video_frame.w, utox_video_frame.h);
                         active_video_count++;
                         TOXAV_ERR_SEND_FRAME error = 0;
 
@@ -538,6 +583,7 @@ void utox_video_thread(void *args) {
                             args2.av = av;
                             args2.tt1 = tt1;
                             args2.i = i;
+                            args2.type = r;
                             args2.w = utox_video_frame.w;
                             args2.h = utox_video_frame.h;
                             args2.y = utox_video_frame.y;
@@ -635,85 +681,100 @@ void utox_video_thread(void *args) {
                 video_device_stop();
                 close_video_device(video_device);
             }
+            else
+            {
+                LOG_ERR("uToxVideo", "Err..: r=%d", (int)r);
+            }
 
             pthread_mutex_unlock(&video_thread_lock);
 
-            
-            // --- FPS ----
-            // --- FPS ----
-            // --- FPS ----
-            
-            // use fps+1 here to compensate for inaccurate delay values
-            sleep_between_frames = (1000 / (settings.video_fps + 1));
-
-            int32_t timspan_average = 0;
-            for (int i=0;i < TIMESPAN_IN_MS_ELEMENTS;i++)
+            if (r == -99)
             {
-                timspan_average = timspan_average + timspan_in_ms[i];
-            }
-            timspan_average = timspan_average / TIMESPAN_IN_MS_ELEMENTS;
 
-            // fprintf(stderr, "settings fps=%d sleep_between_frames=%d timspan_average=%d\n" ,
-            //     (int)settings.video_fps, (int)sleep_between_frames, (int)timspan_current);
-            // fprintf(stderr, "outgoing fps=%d\n" , global_video_out_fps);
+                // --- FPS ----
+                // --- FPS ----
+                // --- FPS ----
+                
+                // use fps+1 here to compensate for inaccurate delay values
+                sleep_between_frames = (1000 / (settings.video_fps + 1));
 
-            if (timspan_current != sleep_between_frames)
-            {
-                int32_t delta_ms = ((int32_t)timspan_current - (int32_t)sleep_between_frames);
-
-                // fprintf(stderr, "x:%d %d %d\n" ,
-                //     (int)delta_ms, (int)sleep_between_frames, (int)timspan_current);
-
-#if 1
-                if (delta_ms < -20)
+                int32_t timspan_average = 0;
+                for (int i=0;i < TIMESPAN_IN_MS_ELEMENTS;i++)
                 {
-                   delta_ms = -20;
+                    timspan_average = timspan_average + timspan_in_ms[i];
                 }
-                else if (delta_ms > 20)
+                timspan_average = timspan_average / TIMESPAN_IN_MS_ELEMENTS;
+
+                // fprintf(stderr, "settings fps=%d sleep_between_frames=%d timspan_average=%d\n" ,
+                //     (int)settings.video_fps, (int)sleep_between_frames, (int)timspan_current);
+                // fprintf(stderr, "outgoing fps=%d\n" , global_video_out_fps);
+
+                if (timspan_current != sleep_between_frames)
                 {
-                   delta_ms = 20;
+                    int32_t delta_ms = ((int32_t)timspan_current - (int32_t)sleep_between_frames);
+
+                    // fprintf(stderr, "x:%d %d %d\n" ,
+                    //     (int)delta_ms, (int)sleep_between_frames, (int)timspan_current);
+
+    #if 1
+                    if (delta_ms < -20)
+                    {
+                       delta_ms = -20;
+                    }
+                    else if (delta_ms > 20)
+                    {
+                       delta_ms = 20;
+                    }
+    #endif
+
+                    // fprintf(stderr, "0:%d %d\n" , (int)sleep_delay_corrected, (int)delta_ms);
+                    sleep_delay_corrected = sleep_delay_corrected - delta_ms;
+                    // fprintf(stderr, "1:%d %d\n" , (int)sleep_delay_corrected, (int)delta_ms);
+
+                    if (sleep_delay_corrected < 0)
+                    {
+                        sleep_delay_corrected = 0;
+                    }
+                    else if (sleep_delay_corrected > 2000)
+                    {
+                        sleep_delay_corrected = 2000;
+                    }
                 }
-#endif
 
-                // fprintf(stderr, "0:%d %d\n" , (int)sleep_delay_corrected, (int)delta_ms);
-                sleep_delay_corrected = sleep_delay_corrected - delta_ms;
-                // fprintf(stderr, "1:%d %d\n" , (int)sleep_delay_corrected, (int)delta_ms);
 
-                if (sleep_delay_corrected < 0)
+                // -------- new --------
+                int32_t delay_time_frame_sending = (int32_t)(current_time_monotonic_default() - timspan_in_ms2);
+                sleep_between_frames = (1000 / settings.video_fps);
+                
+                if (delay_time_frame_sending >= (int32_t)sleep_between_frames)
                 {
                     sleep_delay_corrected = 0;
                 }
-                else if (sleep_delay_corrected > 2000)
+                else
                 {
-                    sleep_delay_corrected = 2000;
+                    sleep_delay_corrected = (int32_t)sleep_between_frames - delay_time_frame_sending;
                 }
-            }
+                // -------- new --------
 
+                if (sleep_delay_corrected != 0)
+                {
+                    yieldcpu(sleep_delay_corrected);
+                }
+                // --- FPS ----
+                // --- FPS ----
+                // --- FPS ----
 
-            // -------- new --------
-            int32_t delay_time_frame_sending = (int32_t)(current_time_monotonic_default() - timspan_in_ms2);
-            sleep_between_frames = (1000 / settings.video_fps);
-            
-            if (delay_time_frame_sending >= (int32_t)sleep_between_frames)
-            {
-                sleep_delay_corrected = 0;
             }
             else
             {
-                sleep_delay_corrected = (int32_t)sleep_between_frames - delay_time_frame_sending;
+                // real camera, so do NOT sleep here, the camera will block anyway
             }
-            // -------- new --------
-
-            if (sleep_delay_corrected != 0)
-            {
-                yieldcpu(sleep_delay_corrected);
-            }
-            // --- FPS ----
-            // --- FPS ----
-            // --- FPS ----
-
 
             continue;     /* We're running video, so don't sleep for an extra 100 ms */
+        }
+        else
+        {
+            // LOG_ERR("uToxVideo", "video_active: false");
         }
 
         sleep_delay_corrected = 24;
