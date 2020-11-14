@@ -58,8 +58,8 @@ bool utox_audio_thread_init = false;
 void draw_audio_bars(int x, int y, int UNUSED(width), int UNUSED(height), int level, int level_med, int level_red, int level_max);
 
 #define AUDIO_VU_MIN_VALUE -20
-#define AUDIO_VU_MED_VALUE 110
-#define AUDIO_VU_RED_VALUE 120
+#define AUDIO_VU_MED_VALUE 70 // 110
+#define AUDIO_VU_RED_VALUE 80 // 120
 static float global_audio_in_vu = AUDIO_VU_MIN_VALUE;
 static float global_audio_out_vu = AUDIO_VU_MIN_VALUE;
 
@@ -911,7 +911,7 @@ void utox_audio_thread(void *args) {
 
                             if (sample_count > 0)
                             {
-                                float vu_value = audio_vu(buf, sample_count);
+                                float vu_value = audio_vu((const int16_t *)buf, sample_count);
 
                                 if (isfinite(vu_value))
                                 {

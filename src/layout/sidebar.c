@@ -39,10 +39,24 @@ static void draw_background_sidebar(int x, int y, int width, int height) {
     drawrect(x, y, width, SCALE(70), COLOR_BKGRND_MENU); // TODO magic numbers are bad
 }
 
+static int draw_audio_bars_every_cur = 0;
+static int draw_audio_bars_every = 2;
+
 /* hack to draw audio bars in the top left corner of the utox window */
 void draw_audio_bars(int x, int y, int UNUSED(width), int UNUSED(height), int level, int level_med, int level_red, int level_max)
 {
-    int level_use = level;
+    draw_audio_bars_every_cur++;
+    if (draw_audio_bars_every_cur > draw_audio_bars_every)
+    {
+        draw_audio_bars_every_cur = 0;
+    }
+    else
+    {
+        // do not draw audio bars on every update
+        return;
+    }
+
+    int level_use = level - 20;
     if (level_use < 0)
     {
         level_use = 0;
@@ -67,27 +81,27 @@ void draw_audio_bars(int x, int y, int UNUSED(width), int UNUSED(height), int le
         drawhline(x, y + 2, x + SCALE(level_use), status_color[2]);
         drawhline(x, y + 3, x + SCALE(level_use), status_color[2]);
 
-        drawhline(x, y, x + SCALE(level_med), status_color[1]);
-        drawhline(x, y + 1, x + SCALE(level_med), status_color[1]);
-        drawhline(x, y + 2, x + SCALE(level_med), status_color[1]);
-        drawhline(x, y + 3, x + SCALE(level_med), status_color[1]);
+        drawhline(x, y, x + SCALE(level_red), status_color[1]);
+        drawhline(x, y + 1, x + SCALE(level_red), status_color[1]);
+        drawhline(x, y + 2, x + SCALE(level_red), status_color[1]);
+        drawhline(x, y + 3, x + SCALE(level_red), status_color[1]);
 
-        drawhline(x, y, x + SCALE(level_red), status_color[0]);
-        drawhline(x, y + 1, x + SCALE(level_red), status_color[0]);
-        drawhline(x, y + 2, x + SCALE(level_red), status_color[0]);
-        drawhline(x, y + 3, x + SCALE(level_red), status_color[0]);
+        drawhline(x, y, x + SCALE(level_med), status_color[0]);
+        drawhline(x, y + 1, x + SCALE(level_med), status_color[0]);
+        drawhline(x, y + 2, x + SCALE(level_med), status_color[0]);
+        drawhline(x, y + 3, x + SCALE(level_med), status_color[0]);
     }
     else if (level_use > level_med)
     {
-        drawhline(x, y, x + SCALE(level_use), status_color[2]);
-        drawhline(x, y + 1, x + SCALE(level_use), status_color[2]);
-        drawhline(x, y + 2, x + SCALE(level_use), status_color[2]);
-        drawhline(x, y + 3, x + SCALE(level_use), status_color[2]);
+        drawhline(x, y, x + SCALE(level_use), status_color[1]);
+        drawhline(x, y + 1, x + SCALE(level_use), status_color[1]);
+        drawhline(x, y + 2, x + SCALE(level_use), status_color[1]);
+        drawhline(x, y + 3, x + SCALE(level_use), status_color[1]);
 
-        drawhline(x, y, x + SCALE(level_med), status_color[1]);
-        drawhline(x, y + 1, x + SCALE(level_med), status_color[1]);
-        drawhline(x, y + 2, x + SCALE(level_med), status_color[1]);
-        drawhline(x, y + 3, x + SCALE(level_med), status_color[1]);
+        drawhline(x, y, x + SCALE(level_med), status_color[0]);
+        drawhline(x, y + 1, x + SCALE(level_med), status_color[0]);
+        drawhline(x, y + 2, x + SCALE(level_med), status_color[0]);
+        drawhline(x, y + 3, x + SCALE(level_med), status_color[0]);
     }
     else
     {
