@@ -153,6 +153,7 @@ static bool video_device_init(void *handle) {
     }
 
     vpx_img_alloc(&input, VPX_IMG_FMT_I420, video_width, video_height, 1);
+    LOG_ERR("uToxVideo", "vpx_img_alloc: %p", (void *)(&input));
     utox_video_frame.y = input.planes[0];
     utox_video_frame.u = input.planes[1];
     utox_video_frame.v = input.planes[2];
@@ -168,6 +169,7 @@ static bool video_device_init(void *handle) {
 static void close_video_device(void *handle) {
     if (handle >= (void *)2) {
         native_video_close(*(void **)handle);
+        LOG_ERR("close_video_device", "vpx_img_free: %p", (void *)(&input));
         vpx_img_free(&input);
     }
     video_device_status = false;
@@ -229,6 +231,7 @@ bool utox_video_change_device(uint16_t device_number) {
         video_device_current = 0;
         if (video_active) {
             video_device_stop();
+            LOG_ERR("uToxVideo", "utox_video_change_device:close_video_device:001");
             close_video_device(video_device[video_device_current]);
             if (settings.video_preview) {
                 settings.video_preview = false;
@@ -243,6 +246,7 @@ bool utox_video_change_device(uint16_t device_number) {
     if (video_active) {
         _was_active = true;
         video_device_stop();
+        LOG_ERR("uToxVideo", "utox_video_change_device:close_video_device:002");
         close_video_device(video_device[video_device_current]);
     } else {
         _was_active = false;
@@ -268,6 +272,7 @@ bool utox_video_change_device(uint16_t device_number) {
         return true;
     } else {
         /* Just grab the new frame size */
+        LOG_ERR("uToxVideo", "utox_video_change_device:close_video_device:003");
         close_video_device(video_device[video_device_current]);
     }
     pthread_mutex_unlock(&video_thread_lock);
@@ -310,6 +315,7 @@ bool utox_video_stop(bool UNUSED(preview)) {
     postmessage_utox(AV_CLOSE_WINDOW, 0, 0, NULL);
 
     video_device_stop();
+    LOG_ERR("uToxVideo", "utox_video_stop:close_video_device:004");
     close_video_device(video_device[video_device_current]);
     LOG_TRACE("uToxVideo", "stopped video" );
     return true;
@@ -343,6 +349,7 @@ static void init_video_devices(void) {
         // open the video device to get some info e.g. frame size
         // close it afterwards to not block the device while it is not used
         if (video_device_init(video_device[video_device_current])) {
+            LOG_ERR("uToxVideo", "init_video_devices:close_video_device:005");
             close_video_device(video_device[video_device_current]);
         }
     }
@@ -678,8 +685,9 @@ void utox_video_thread(void *args) {
             } else if (r == -1) {
                 LOG_ERR("uToxVideo", "Err... something really bad happened trying to get this frame, I'm just going "
                             "to plots now!");
-                video_device_stop();
-                close_video_device(video_device);
+                // video_device_stop();
+                // LOG_ERR("uToxVideo", "utox_video_thread:close_video_device:006");
+                // close_video_device(video_device);
             }
             else
             {
