@@ -55,6 +55,15 @@ static void utox_filter_audio_kill(Filter_Audio *filter_audio_handle) {
 
 bool utox_audio_thread_init = false;
 
+void draw_audio_bars(int x, int y, int UNUSED(width), int UNUSED(height), int level, int level_med, int level_red, int level_max);
+
+#define AUDIO_VU_MIN_VALUE -20
+#define AUDIO_VU_MED_VALUE 110
+#define AUDIO_VU_RED_VALUE 120
+static float global_audio_in_vu = AUDIO_VU_MIN_VALUE;
+static float global_audio_out_vu = AUDIO_VU_MIN_VALUE;
+
+
 static ALCdevice *audio_out_handle, *audio_in_handle;
 static void *     audio_out_device, *audio_in_device;
 static bool       speakers_on, microphone_on;
@@ -579,6 +588,20 @@ void postmessage_audio(uint8_t msg, uint32_t param1, uint32_t param2, void *data
     audio_thread_msg = 1;
 }
 
+static float audio_vu(const int16_t *pcm_data, uint32_t sample_count)
+{
+    float sum = 0.0;
+
+    for (uint32_t i = 0; i < sample_count; i++)
+    {
+        sum += abs(pcm_data[i]) / 32767.0;
+    }
+
+    float vu = 20.0 * logf(sum);
+    return vu;
+}
+
+
 // TODO: This function is 300 lines long. Cut it up.
 void utox_audio_thread(void *args) {
     time_t close_device_time = 0;
@@ -882,6 +905,28 @@ void utox_audio_thread(void *args) {
                                 }
                             }
 #endif
+                            // calculate audio out level -----------------
+                            size_t sample_count = (size_t)(perframe);
+                            global_audio_out_vu = AUDIO_VU_MIN_VALUE;
+
+                            if (sample_count > 0)
+                            {
+                                float vu_value = audio_vu(buf, sample_count);
+
+                                if (isfinite(vu_value))
+                                {
+                                    if (vu_value > AUDIO_VU_MIN_VALUE)
+                                    {
+                                        global_audio_out_vu = vu_value;
+                                    }
+                                }
+                            }
+                            // calculate audio out level -----------------
+
+                            // draw audio out level -----------------
+                            draw_audio_bars(1, 1, 10, 10, (int)global_audio_out_vu, AUDIO_VU_MED_VALUE, AUDIO_VU_RED_VALUE, 200);
+                            // draw audio out level -----------------
+
                             toxav_audio_send_frame(av, get_friend(i)->number, (const int16_t *)buf, perframe,
                                                    UTOX_DEFAULT_AUDIO_CHANNELS, UTOX_DEFAULT_SAMPLE_RATE_A, &error);
 

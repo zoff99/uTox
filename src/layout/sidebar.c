@@ -30,11 +30,75 @@ SCROLLABLE scrollbar_flist = {
     .small = 1,
 };
 
+void force_redraw_soft(void);
+
 static void draw_background_sidebar(int x, int y, int width, int height) {
     /* Friend list (roster) background   */
     drawrect(x, y, width, height, COLOR_BKGRND_LIST);
     /* Current user badge background     */
     drawrect(x, y, width, SCALE(70), COLOR_BKGRND_MENU); // TODO magic numbers are bad
+}
+
+/* hack to draw audio bars in the top left corner of the utox window */
+void draw_audio_bars(int x, int y, int UNUSED(width), int UNUSED(height), int level, int level_med, int level_red, int level_max)
+{
+    int level_use = level;
+    if (level_use < 0)
+    {
+        level_use = 0;
+    }
+    
+    x += SCALE(SIDEBAR_PADDING);
+    y += SCALE(SIDEBAR_PADDING);
+
+    // LOG_ERR("uTox", "draw_audio_bars:x=%d y=%d level=%d", x, y, level);
+
+    uint32_t bg_color = COLOR_BKGRND_MENU;
+
+    drawhline(x, y, x + SCALE(level_max), bg_color);
+    drawhline(x, y + 1, x + SCALE(level_max), bg_color);
+    drawhline(x, y + 2, x + SCALE(level_max), bg_color);
+    drawhline(x, y + 3, x + SCALE(level_max), bg_color);
+
+    if (level_use > level_red)
+    {
+        drawhline(x, y, x + SCALE(level_use), status_color[2]);
+        drawhline(x, y + 1, x + SCALE(level_use), status_color[2]);
+        drawhline(x, y + 2, x + SCALE(level_use), status_color[2]);
+        drawhline(x, y + 3, x + SCALE(level_use), status_color[2]);
+
+        drawhline(x, y, x + SCALE(level_med), status_color[1]);
+        drawhline(x, y + 1, x + SCALE(level_med), status_color[1]);
+        drawhline(x, y + 2, x + SCALE(level_med), status_color[1]);
+        drawhline(x, y + 3, x + SCALE(level_med), status_color[1]);
+
+        drawhline(x, y, x + SCALE(level_red), status_color[0]);
+        drawhline(x, y + 1, x + SCALE(level_red), status_color[0]);
+        drawhline(x, y + 2, x + SCALE(level_red), status_color[0]);
+        drawhline(x, y + 3, x + SCALE(level_red), status_color[0]);
+    }
+    else if (level_use > level_med)
+    {
+        drawhline(x, y, x + SCALE(level_use), status_color[2]);
+        drawhline(x, y + 1, x + SCALE(level_use), status_color[2]);
+        drawhline(x, y + 2, x + SCALE(level_use), status_color[2]);
+        drawhline(x, y + 3, x + SCALE(level_use), status_color[2]);
+
+        drawhline(x, y, x + SCALE(level_med), status_color[1]);
+        drawhline(x, y + 1, x + SCALE(level_med), status_color[1]);
+        drawhline(x, y + 2, x + SCALE(level_med), status_color[1]);
+        drawhline(x, y + 3, x + SCALE(level_med), status_color[1]);
+    }
+    else
+    {
+        drawhline(x, y, x + SCALE(level_use), status_color[0]);
+        drawhline(x, y + 1, x + SCALE(level_use), status_color[0]);
+        drawhline(x, y + 2, x + SCALE(level_use), status_color[0]);
+        drawhline(x, y + 3, x + SCALE(level_use), status_color[0]);
+    }
+
+    enddraw(0, 0, x + SCALE(level_max), y + 3);
+    force_redraw_soft();
 }
 
 /* Top left self interface Avatar, name, statusmsg, status icon */

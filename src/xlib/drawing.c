@@ -35,6 +35,24 @@ void force_redraw(void) {
     XFlush(display);
 }
 
+void force_redraw_soft(void) {
+    XEvent ev = {
+        .xclient = {
+            .type         = ClientMessage,
+            .display      = display,
+            .window       = curr->window,
+            .message_type = XRedraw,
+            .format       = 8,
+            .data = {
+                .s = { 0, 0 }
+            }
+        }
+    };
+
+    XSendEvent(display, curr->window, 0, 0, &ev);
+    XFlush(display);
+}
+
 void draw_image(const NATIVE_IMAGE *image, int x, int y, uint32_t width, uint32_t height, uint32_t imgx, uint32_t imgy) {
     XRenderComposite(display, PictOpOver, image->rgb, image->alpha, curr->renderpic, imgx, imgy, imgx, imgy, x, y, width,
                      height);
