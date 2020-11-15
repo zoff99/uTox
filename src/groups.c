@@ -329,7 +329,7 @@ void init_groups(Tox *tox) {
         return;
     }
 
-    LOG_INFO("Groupchats", "Group list size: %u", self.groups_list_size);
+    LOG_ERR("Groupchats", "init_groups:Group list size: %u", self.groups_list_size);
     group = calloc(self.groups_list_size, sizeof(GROUPCHAT));
     if (!group) {
         LOG_FATAL_ERR(EXIT_MALLOC, "Groupchats", "Could not allocate memory for groupchat array with size of: %u", self.groups_list_size);

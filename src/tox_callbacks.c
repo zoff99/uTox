@@ -257,6 +257,8 @@ static void callback_group_peer_list_changed(Tox *tox, uint32_t gid, void *UNUSE
 
     uint32_t number_peers = tox_conference_peer_count(tox, gid, NULL);
 
+    LOG_ERR("Tox Callbacks", "callback_group_peer_list_changed: gid=%u peers=%d", gid, (int)number_peers);
+
     g->peer = calloc(number_peers, sizeof(void *));
     if (!g->peer) {
         LOG_FATAL_ERR(EXIT_MALLOC, "Tox Callbacks", "Group:\tToxcore is very broken, but we couldn't alloc here.");
@@ -290,6 +292,7 @@ static void callback_group_peer_list_changed(Tox *tox, uint32_t gid, void *UNUSE
         g->peer[i]       = peer;
     }
     g->peer_count = number_peers;
+
 
     postmessage_utox(GROUP_PEER_CHANGE, gid, 0, NULL);
     pthread_mutex_unlock(&messages_lock); /* make sure that messages has posted before we continue */

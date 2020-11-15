@@ -641,6 +641,7 @@ void utox_message_dispatch(UTOX_MSG utox_msg_id, uint16_t param1, uint16_t param
                 g->last_recv_audio[param2]        = g->last_recv_audio[g->peer_count];
                 g->last_recv_audio[g->peer_count] = 0;
                 group_av_peer_remove(g, param2);
+                LOG_INFO("uTox", "GROUP_PEER_DEL:param2 g->peer_count", (int)param2, (int)g->peer_count);
                 g->source[param2] = g->source[g->peer_count];
             }
 
