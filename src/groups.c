@@ -60,6 +60,8 @@ bool group_create(uint32_t group_number, bool av_group) {
         return false;
     }
 
+    LOG_ERR("Groupchats", "group_create:av_group=%d", (int)av_group);
+
     group_init(g, group_number, av_group);
     return true;
 }
@@ -90,6 +92,9 @@ void group_init(GROUPCHAT *g, uint32_t group_number, bool av_group) {
 
     g->number   = group_number;
     g->notify   = settings.group_notifications;
+
+    LOG_ERR("Groupchats", "group_init:av_group=%d", (int)av_group);
+
     g->av_group = av_group;
     pthread_mutex_unlock(&messages_lock);
     self.groups_list_count++;
@@ -334,7 +339,16 @@ void init_groups(Tox *tox) {
     tox_conference_get_chatlist(tox, groups);
 
     for (size_t i = 0; i < self.groups_list_size; i++) {
-        group_create(groups[i], false); //TODO: figure out if groupchats are text or audio
+        TOX_ERR_CONFERENCE_GET_TYPE error;
+        TOX_CONFERENCE_TYPE type = tox_conference_get_type(tox, (uint32_t)groups[i], &error);
+        if (type == TOX_CONFERENCE_TYPE_AV)
+        {
+            group_create(groups[i], true);
+        }
+        else
+        {
+            group_create(groups[i], false);
+        }
     }
     LOG_INFO("Groupchat", "Initialzied groupchat array with %u groups", self.groups_list_size);
 }

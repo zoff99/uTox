@@ -310,7 +310,7 @@ void sourceplaybuffer(unsigned int f, const int16_t *data, int samples, uint8_t 
         return;
     }
 
-    // calculate audio out level -----------------
+    // calculate audio in level -----------------
     size_t sample_count = (size_t)(samples);
     global_audio_in_vu = AUDIO_VU_MIN_VALUE;
 
@@ -326,10 +326,10 @@ void sourceplaybuffer(unsigned int f, const int16_t *data, int samples, uint8_t 
             }
         }
     }
-    // calculate audio out level -----------------
+    // calculate audio in level -----------------
 
     // draw audio in level -----------------
-    draw_audio_bars(1, -4, 10, 10, (int)global_audio_in_vu, AUDIO_VU_MED_VALUE, AUDIO_VU_RED_VALUE, 200);
+    draw_audio_bars(1, -8, 10, 10, (int)global_audio_in_vu, AUDIO_VU_MED_VALUE, AUDIO_VU_RED_VALUE, 200);
     // draw audio in level -----------------
 
     ALuint source;
@@ -703,7 +703,7 @@ void utox_audio_thread(void *args) {
                     break;
                 }
                 case UTOXAUDIO_GROUPCHAT_START: {
-                    LOG_DEBUG("Audio", "Starting Groupchat Audio %u", m->param1);
+                    LOG_ERR("Audio", "Starting Groupchat Audio %u", m->param1);
                     GROUPCHAT *g = get_group(m->param1);
                     if (!g) {
                         LOG_ERR("uTox Audio", "Could not get group %u", m->param1);
@@ -716,15 +716,20 @@ void utox_audio_thread(void *args) {
 
                     audio_out_device_open();
                     audio_in_listen();
+                    int32_t res = toxav_groupchat_enable_av(toxav_get_tox(av), (uint32_t)g->number, callback_av_group_audio, (void *)NULL);
+                    LOG_ERR("Audio", "Starting Groupchat Audio:res=%d", res);
                     break;
                 }
                 case UTOXAUDIO_GROUPCHAT_STOP: {
-                    LOG_DEBUG("Audio", "Stopping Groupchat Audio %u", m->param1);
+                    LOG_ERR("Audio", "Stopping Groupchat Audio %u", m->param1);
                     GROUPCHAT *g = get_group(m->param1);
                     if (!g) {
                         LOG_ERR("uTox Audio", "Could not get group %u", m->param1);
                         break;
                     }
+
+                    int32_t res = toxav_groupchat_disable_av(toxav_get_tox(av), (uint32_t)g->number);
+                    LOG_ERR("Audio", "Stopping Groupchat Audio:res=%d", res);
 
                     if (g->audio_dest) {
                         audio_source_raze(&g->audio_dest);
@@ -1034,15 +1039,16 @@ void utox_audio_thread(void *args) {
 void callback_av_group_audio(void *UNUSED(tox), uint32_t groupnumber, uint32_t peernumber, const int16_t *pcm, unsigned int samples,
                              uint8_t channels, unsigned int sample_rate, void *UNUSED(userdata))
 {
+    LOG_ERR("uTox Audio", "Received audio in groupchat %i from peer %i samples %d", groupnumber, peernumber, (int)samples);
+
     GROUPCHAT *g = get_group(groupnumber);
     if (!g) {
         LOG_ERR("uTox Audio", "Could not get group with number: %i", groupnumber);
         return;
     }
-    LOG_INFO("uTox Audio", "Received audio in groupchat %i from peer %i", groupnumber, peernumber);
 
     if (!g->active_call) {
-        LOG_INFO("uTox Audio", "Packets for inactive call %u", groupnumber);
+        LOG_ERR("uTox Audio", "Packets for inactive call %u", groupnumber);
         return;
     }
 
@@ -1060,27 +1066,57 @@ void callback_av_group_audio(void *UNUSED(tox), uint32_t groupnumber, uint32_t p
     }
 
     if (g->muted) {
-        LOG_INFO("uTox Audio", "Group %u audio muted.", groupnumber);
+        LOG_ERR("uTox Audio", "Group %u audio muted.", groupnumber);
         return;
     }
 
     ALuint bufid;
-    ALint processed = 0, queued = 16;
+    ALint processed = 0;
+    ALint queued = 16;
     alGetSourcei(g->source[peernumber], AL_BUFFERS_PROCESSED, &processed);
     alGetSourcei(g->source[peernumber], AL_BUFFERS_QUEUED, &queued);
     alSourcei(g->source[peernumber], AL_LOOPING, AL_FALSE);
 
-    if (processed) {
+    if (processed)
+    {
         ALuint bufids[processed];
         alSourceUnqueueBuffers(g->source[peernumber], processed, bufids);
         alDeleteBuffers(processed - 1, bufids + 1);
         bufid = bufids[0];
-    } else if(queued < 16) {
-        alGenBuffers(1, &bufid);
-    } else {
-        LOG_WARN("uTox Audio", "dropped audio frame %i %i" , groupnumber, peernumber);
-        return;
     }
+    else if(queued < 16)
+    {
+        alGenBuffers(1, &bufid);
+    }
+    else
+    {
+        LOG_ERR("uTox Audio", "dropped audio frame %i %i" , groupnumber, peernumber);
+        //return;
+    }
+
+    // calculate audio in level (group chat) -----------------
+    size_t sample_count = (size_t)(samples);
+    global_audio_in_vu = AUDIO_VU_MIN_VALUE;
+
+    if (sample_count > 0)
+    {
+        float vu_value = audio_vu(pcm, sample_count);
+
+        if (isfinite(vu_value))
+        {
+            if (vu_value > AUDIO_VU_MIN_VALUE)
+            {
+                global_audio_in_vu = vu_value;
+            }
+        }
+    }
+    // calculate audio in level (group chat) -----------------
+
+    // draw audio in level (group chat) -----------------
+    LOG_ERR("uTox Audio", "icoming audio frame %i %i" , groupnumber, peernumber);
+    draw_audio_bars(1, -1, 10, 10, (int)global_audio_in_vu, AUDIO_VU_MED_VALUE, AUDIO_VU_RED_VALUE, 200);
+    // draw audio in level (group chat) -----------------
+
 
     alBufferData(bufid, (channels == 1) ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, pcm, samples * 2 * channels,
                     sample_rate);
@@ -1090,7 +1126,7 @@ void callback_av_group_audio(void *UNUSED(tox), uint32_t groupnumber, uint32_t p
     alGetSourcei(g->source[peernumber], AL_SOURCE_STATE, &state);
     if (state != AL_PLAYING) {
         alSourcePlay(g->source[peernumber]);
-        LOG_DEBUG("uTox Audio", "Starting source %i %i" , groupnumber, peernumber);
+        LOG_ERR("uTox Audio", "Starting source %i %i" , groupnumber, peernumber);
     }
 }
 

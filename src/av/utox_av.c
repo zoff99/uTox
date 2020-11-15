@@ -173,7 +173,7 @@ void utox_av_ctrl_thread(void *UNUSED(args)) {
 
                 case UTOXAV_GROUPCALL_START: {
                     call_count++;
-                    LOG_INFO("uToxAv", "Starting group call in groupchat %u", msg->param1);
+                    LOG_ERR("uToxAv", "Starting group call in groupchat %u", msg->param1);
                     postmessage_audio(UTOXAUDIO_GROUPCHAT_START, msg->param1, msg->param2, NULL);
                     break;
                 }
@@ -190,7 +190,7 @@ void utox_av_ctrl_thread(void *UNUSED(args)) {
                         break;
                     }
 
-                    LOG_INFO("uToxAv", "Ending group call in groupchat %u", msg->param1);
+                    LOG_ERR("uToxAv", "Ending group call in groupchat %u", msg->param1);
                     postmessage_audio(UTOXAUDIO_GROUPCHAT_STOP, msg->param1, msg->param2, NULL);
                     call_count--;
                     break;

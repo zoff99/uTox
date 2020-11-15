@@ -187,8 +187,10 @@ static void callback_group_invite(Tox *tox, uint32_t fid, TOX_CONFERENCE_TYPE ty
 
     GROUPCHAT *g = get_group(gid);
     if (!g) {
+        LOG_ERR("Tox Callbacks", "group_create type: %u", type);
         group_create(gid, type == TOX_CONFERENCE_TYPE_AV ? true : false);
     } else {
+        LOG_ERR("Tox Callbacks", "group_init type: %u", type);
         group_init(g, gid, type == TOX_CONFERENCE_TYPE_AV ? true : false);
     }
 

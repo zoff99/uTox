@@ -32,6 +32,9 @@ SCROLLABLE scrollbar_group = {
 };
 
 static void draw_group(int x, int UNUSED(y), int UNUSED(w), int UNUSED(height)) {
+
+    // LOG_ERR("Group", "draw_group:ENTER");
+
     GROUPCHAT *g = flist_get_groupchat();
     if (!g) {
         LOG_ERR("Group", "Could not get selected groupchat.");
@@ -85,6 +88,36 @@ static void draw_group(int x, int UNUSED(y), int UNUSED(w), int UNUSED(height)) 
         }
         i++;
     }
+
+    if (g->av_group)
+    {
+        // draw a vertical line if this is an audio group
+        drawvline(x + SCALE(60) - 5,
+            SCALE(2),
+            SCALE(2 + 30),
+            COLOR_STATUS_AWAY);
+
+        drawvline(x + SCALE(60) - 5 + 1,
+            SCALE(2),
+            SCALE(2 + 30),
+            COLOR_STATUS_AWAY);
+
+        drawvline(x + SCALE(60) - 5 + 2,
+            SCALE(2),
+            SCALE(2 + 30),
+            COLOR_STATUS_AWAY);
+
+        drawvline(x + SCALE(60) - 5 + 3,
+            SCALE(2),
+            SCALE(2 + 30),
+            COLOR_STATUS_AWAY);
+
+        drawvline(x + SCALE(60) - 5 + 4,
+            SCALE(2),
+            SCALE(2 + 30),
+            COLOR_STATUS_AWAY);
+    }
+
 }
 
 static void draw_group_settings(int x, int y, int UNUSED(width), int UNUSED(height)) {
@@ -104,6 +137,9 @@ static void draw_group_create(int x, int y, int UNUSED(width), int UNUSED(height
 }
 
 static void button_create_group_on_mup(void) {
+
+    LOG_ERR("Group", "button_create_group_on_mup:ENTER");
+
     postmessage_toxcore(TOX_GROUP_CREATE, 0, switch_group_type.switch_on, NULL);
 }
 
@@ -173,6 +209,9 @@ messages_group = {
 
 static void button_group_audio_on_mup(void) {
     GROUPCHAT *g = flist_get_groupchat();
+
+    LOG_ERR("Group", "button_group_audio_on_mup:ENTER");
+
     if (!g) {
         LOG_ERR("Group", "Could not get selected groupchat.");
         return;
@@ -189,10 +228,15 @@ static void button_group_audio_on_mup(void) {
 
 static void button_group_audio_update(BUTTON *b) {
     GROUPCHAT *g = flist_get_groupchat();
+
+    // LOG_ERR("Group", "button_group_audio_update:ENTER");
+
     if (!g) {
         LOG_ERR("Group", "Could not get selected groupchat.");
         return;
     }
+
+    // LOG_ERR("Group", "g->av_group=%d", (int)g->av_group);
 
     if (g->av_group) {
         b->disabled = false;
