@@ -56,6 +56,87 @@ void draw_audio_bars(int x, int y, int UNUSED(width), int UNUSED(height), int le
         return;
     }
 
+    int level_use = level;
+    if (level_use < 0)
+    {
+        level_use = 0;
+    }
+
+    if (y < 0)
+    {
+        y = SCALE(SIDEBAR_FILTER_FRIENDS_TOP) + y;
+    }
+    else
+    {
+        y += SCALE(SIDEBAR_PADDING / 2);
+    }
+
+    x += SCALE(SIDEBAR_PADDING / 2);
+
+    // LOG_ERR("uTox", "draw_audio_bars:x=%d y=%d level=%d", x, y, level);
+
+    uint32_t bg_color = COLOR_BKGRND_MENU;
+
+    drawhline(x, y, x + SCALE(level_max), bg_color);
+    drawhline(x, y + 1, x + SCALE(level_max), bg_color);
+    drawhline(x, y + 2, x + SCALE(level_max), bg_color);
+    drawhline(x, y + 3, x + SCALE(level_max), bg_color);
+
+    if (level_use > level_red)
+    {
+        drawhline(x, y, x + SCALE(level_use), status_color[2]);
+        drawhline(x, y + 1, x + SCALE(level_use), status_color[2]);
+        drawhline(x, y + 2, x + SCALE(level_use), status_color[2]);
+        drawhline(x, y + 3, x + SCALE(level_use), status_color[2]);
+
+        drawhline(x, y, x + SCALE(level_red), status_color[1]);
+        drawhline(x, y + 1, x + SCALE(level_red), status_color[1]);
+        drawhline(x, y + 2, x + SCALE(level_red), status_color[1]);
+        drawhline(x, y + 3, x + SCALE(level_red), status_color[1]);
+
+        drawhline(x, y, x + SCALE(level_med), status_color[0]);
+        drawhline(x, y + 1, x + SCALE(level_med), status_color[0]);
+        drawhline(x, y + 2, x + SCALE(level_med), status_color[0]);
+        drawhline(x, y + 3, x + SCALE(level_med), status_color[0]);
+    }
+    else if (level_use > level_med)
+    {
+        drawhline(x, y, x + SCALE(level_use), status_color[1]);
+        drawhline(x, y + 1, x + SCALE(level_use), status_color[1]);
+        drawhline(x, y + 2, x + SCALE(level_use), status_color[1]);
+        drawhline(x, y + 3, x + SCALE(level_use), status_color[1]);
+
+        drawhline(x, y, x + SCALE(level_med), status_color[0]);
+        drawhline(x, y + 1, x + SCALE(level_med), status_color[0]);
+        drawhline(x, y + 2, x + SCALE(level_med), status_color[0]);
+        drawhline(x, y + 3, x + SCALE(level_med), status_color[0]);
+    }
+    else
+    {
+        drawhline(x, y, x + SCALE(level_use), status_color[0]);
+        drawhline(x, y + 1, x + SCALE(level_use), status_color[0]);
+        drawhline(x, y + 2, x + SCALE(level_use), status_color[0]);
+        drawhline(x, y + 3, x + SCALE(level_use), status_color[0]);
+    }
+
+    enddraw(x, y, x + SCALE(level_max), y + 3);
+    force_redraw_soft();
+}
+
+/* hack to draw audio bars in the top left corner of the utox window */
+void draw_audio_bars2(int x, int y, int UNUSED(width), int UNUSED(height), int level, int level_med, int level_red, int level_max)
+{
+    draw_audio_bars_every_cur++;
+    if (draw_audio_bars_every_cur > draw_audio_bars_every)
+    {
+        draw_audio_bars_every_cur = 0;
+    }
+    else
+    {
+        // do not draw audio bars on every update
+        return;
+    }
+
     int level_use = level - 20;
     if (level_use < 0)
     {
@@ -114,6 +195,7 @@ void draw_audio_bars(int x, int y, int UNUSED(width), int UNUSED(height), int le
     enddraw(0, 0, x + SCALE(level_max), y + 3);
     force_redraw_soft();
 }
+
 
 /* Top left self interface Avatar, name, statusmsg, status icon */
 static void draw_user_badge(int x, int y, int width, int UNUSED(height)) {

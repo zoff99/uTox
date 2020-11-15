@@ -292,10 +292,45 @@ ALCdevice *utox_audio_out_device_get(void) {
     return NULL;
 }
 
+static float audio_vu(const int16_t *pcm_data, uint32_t sample_count)
+{
+    float sum = 0.0;
+
+    for (uint32_t i = 0; i < sample_count; i++)
+    {
+        sum += abs(pcm_data[i]) / 32767.0;
+    }
+
+    float vu = 20.0 * logf(sum);
+    return vu;
+}
+
 void sourceplaybuffer(unsigned int f, const int16_t *data, int samples, uint8_t channels, unsigned int sample_rate) {
     if (!channels || channels > 2) {
         return;
     }
+
+    // calculate audio out level -----------------
+    size_t sample_count = (size_t)(samples);
+    global_audio_in_vu = AUDIO_VU_MIN_VALUE;
+
+    if (sample_count > 0)
+    {
+        float vu_value = audio_vu(data, sample_count);
+
+        if (isfinite(vu_value))
+        {
+            if (vu_value > AUDIO_VU_MIN_VALUE)
+            {
+                global_audio_in_vu = vu_value;
+            }
+        }
+    }
+    // calculate audio out level -----------------
+
+    // draw audio in level -----------------
+    draw_audio_bars(1, -4, 10, 10, (int)global_audio_in_vu, AUDIO_VU_MED_VALUE, AUDIO_VU_RED_VALUE, 200);
+    // draw audio in level -----------------
 
     ALuint source;
     if (f >= self.friend_list_size) {
@@ -587,20 +622,6 @@ void postmessage_audio(uint8_t msg, uint32_t param1, uint32_t param2, void *data
 
     audio_thread_msg = 1;
 }
-
-static float audio_vu(const int16_t *pcm_data, uint32_t sample_count)
-{
-    float sum = 0.0;
-
-    for (uint32_t i = 0; i < sample_count; i++)
-    {
-        sum += abs(pcm_data[i]) / 32767.0;
-    }
-
-    float vu = 20.0 * logf(sum);
-    return vu;
-}
-
 
 // TODO: This function is 300 lines long. Cut it up.
 void utox_audio_thread(void *args) {
