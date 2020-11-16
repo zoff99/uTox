@@ -13,10 +13,12 @@ build_for='
 alpine:3.12.0
 ubuntu:18.04
 debian:10
+ubuntu:20.04
+debian:9
+ubuntu:16.04
 '
+
 # archlinux:20200605
-# debian:9
-# ubuntu:16.04
 
 for system_to_build_for in $build_for ; do
 
@@ -329,3 +331,6 @@ cp -av utox /artefacts/
      fi
 
 done
+
+ls -alh */artefacts/utox
+
