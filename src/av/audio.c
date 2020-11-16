@@ -932,10 +932,15 @@ void utox_audio_thread(void *args) {
                     preview_buffer_index += perframe;
                 }
 
-                if (voice) {
+                if (voice)
+                {
+
+
                     size_t active_call_count = 0;
-                    for (size_t i = 0; i < self.friend_list_count; i++) {
-                        if (UTOX_SEND_AUDIO(i)) {
+                    for (size_t i = 0; i < self.friend_list_count; i++)
+                    {
+                        if (UTOX_SEND_AUDIO(i))
+                        {
                             active_call_count++;
                             TOXAV_ERR_SEND_FRAME error = 0;
                             // LOG_TRACE("uTox Audio", "Sending audio frame!" );
@@ -950,28 +955,6 @@ void utox_audio_thread(void *args) {
                                 }
                             }
 #endif
-                            // calculate audio out level -----------------
-                            size_t sample_count = (size_t)(perframe);
-                            global_audio_out_vu = AUDIO_VU_MIN_VALUE;
-
-                            if (sample_count > 0)
-                            {
-                                float vu_value = audio_vu((const int16_t *)buf, sample_count);
-
-                                if (isfinite(vu_value))
-                                {
-                                    if (vu_value > AUDIO_VU_MIN_VALUE)
-                                    {
-                                        global_audio_out_vu = vu_value;
-                                    }
-                                }
-                            }
-                            // calculate audio out level -----------------
-
-                            // draw audio out level -----------------
-                            draw_audio_bars(1, 1, 10, 10, (int)global_audio_out_vu, AUDIO_VU_MED_VALUE, AUDIO_VU_RED_VALUE, 200);
-                            // draw audio out level -----------------
-
                             toxav_audio_send_frame(av, get_friend(i)->number, (const int16_t *)buf, perframe,
                                                    UTOX_DEFAULT_AUDIO_CHANNELS, UTOX_DEFAULT_SAMPLE_RATE_A, &error);
 
@@ -1009,6 +992,29 @@ void utox_audio_thread(void *args) {
                                     LOG_ERR("uTox Audio", "toxav_send_audio error friend == %lu, error ==  %i" , i, error);
                                 }
                             } else {
+
+                                // calculate audio out level -----------------
+                                size_t sample_count = (size_t)(perframe);
+                                global_audio_out_vu = AUDIO_VU_MIN_VALUE;
+
+                                if (sample_count > 0)
+                                {
+                                    float vu_value = audio_vu((const int16_t *)buf, sample_count);
+
+                                    if (isfinite(vu_value))
+                                    {
+                                        if (vu_value > AUDIO_VU_MIN_VALUE)
+                                        {
+                                            global_audio_out_vu = vu_value;
+                                        }
+                                    }
+                                }
+                                // calculate audio out level -----------------
+
+                                // draw audio out level -----------------
+                                draw_audio_bars(1, 1, 10, 10, (int)global_audio_out_vu, AUDIO_VU_MED_VALUE, AUDIO_VU_RED_VALUE, 200);
+                                // draw audio out level -----------------
+
                                 // LOG_TRACE("uTox Audio", "Send a frame to friend %i" ,i);
                                 if (active_call_count >= UTOX_MAX_CALLS) {
                                     LOG_ERR("uTox Audio", "We're calling more peers than allowed by UTOX_MAX_CALLS, This is a bug" );
@@ -1021,15 +1027,47 @@ void utox_audio_thread(void *args) {
                     Tox *tox = toxav_get_tox(av);
                     uint32_t num_chats = tox_conference_get_chatlist_size(tox);
 
-                    if (num_chats) {
-                        for (size_t i = 0 ; i < num_chats; ++i) {
-                            if (get_group(i) && get_group(i)->active_call) {
+                    int res_group_audio_send = -1;
+
+                    if (num_chats)
+                    {
+                        for (size_t i = 0 ; i < num_chats; ++i)
+                        {
+                            if (get_group(i) && get_group(i)->active_call)
+                            {
                                 LOG_TRACE("uTox Audio", "Sending audio in groupchat %u", i);
-                                toxav_group_send_audio(tox, i, (int16_t *)buf, perframe,
-                                                       UTOX_DEFAULT_AUDIO_CHANNELS, UTOX_DEFAULT_SAMPLE_RATE_A);
+                                res_group_audio_send = toxav_group_send_audio(tox, i, (int16_t *)buf, perframe,
+                                                            UTOX_DEFAULT_AUDIO_CHANNELS, UTOX_DEFAULT_SAMPLE_RATE_A);
                             }
                         }
+
+                        if (res_group_audio_send == 0)
+                        {
+                            // calculate audio out level -----------------
+                            size_t sample_count = (size_t)(perframe);
+                            global_audio_out_vu = AUDIO_VU_MIN_VALUE;
+
+                            if (sample_count > 0)
+                            {
+                                float vu_value = audio_vu((const int16_t *)buf, sample_count);
+
+                                if (isfinite(vu_value))
+                                {
+                                    if (vu_value > AUDIO_VU_MIN_VALUE)
+                                    {
+                                        global_audio_out_vu = vu_value;
+                                    }
+                                }
+                            }
+                            // calculate audio out level -----------------
+
+                            // draw audio out level -----------------
+                            draw_audio_bars(1, 1, 10, 10, (int)global_audio_out_vu, AUDIO_VU_MED_VALUE, AUDIO_VU_RED_VALUE, 200);
+                            // draw audio out level -----------------
+                        }
                     }
+
+
                 }
             }
         }
