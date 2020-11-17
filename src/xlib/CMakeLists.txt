@@ -95,8 +95,6 @@ install(FILES
     DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/applications"
     )
 
-install(DIRECTORY DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/applications/utox")
-
 install(FILES
     ../utox.1
     DESTINATION "${CMAKE_INSTALL_MANDIR}/man1"
