@@ -261,7 +261,7 @@ endif()
 
 if(UTOX_STATIC)
     if(UNIX)
-        add_cflag("-fPIC -Wl,-Bstatic -lm -Wl,-Bdynamic")
+        add_cflag("-fPIC")
     else()
         add_cflag("-static")
     endif()
