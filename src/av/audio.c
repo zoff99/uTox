@@ -55,7 +55,7 @@ static void utox_filter_audio_kill(Filter_Audio *filter_audio_handle) {
 
 bool utox_audio_thread_init = false;
 
-void draw_audio_bars(int x, int y, int UNUSED(width), int UNUSED(height), int level, int level_med, int level_red, int level_max);
+void draw_audio_bars(int x, int y, int UNUSED(width), int UNUSED(height), int level, int level_med, int level_red, int level_max, int channels);
 
 #define AUDIO_VU_MIN_VALUE -20
 #define AUDIO_VU_MED_VALUE 90 // 110
@@ -329,7 +329,7 @@ void sourceplaybuffer(unsigned int f, const int16_t *data, int samples, uint8_t 
     // calculate audio in level -----------------
 
     // draw audio in level -----------------
-    draw_audio_bars(1, -8, 10, 10, (int)global_audio_in_vu, AUDIO_VU_MED_VALUE, AUDIO_VU_RED_VALUE, 200);
+    draw_audio_bars(1, -8, 10, 10, (int)global_audio_in_vu, AUDIO_VU_MED_VALUE, AUDIO_VU_RED_VALUE, 200, channels);
     // draw audio in level -----------------
 
     ALuint source;
@@ -1012,7 +1012,7 @@ void utox_audio_thread(void *args) {
                                 // calculate audio out level -----------------
 
                                 // draw audio out level -----------------
-                                draw_audio_bars(1, 1, 10, 10, (int)global_audio_out_vu, AUDIO_VU_MED_VALUE, AUDIO_VU_RED_VALUE, 200);
+                                draw_audio_bars(1, 1, 10, 10, (int)global_audio_out_vu, AUDIO_VU_MED_VALUE, AUDIO_VU_RED_VALUE, 200, UTOX_DEFAULT_AUDIO_CHANNELS);
                                 // draw audio out level -----------------
 
                                 // LOG_TRACE("uTox Audio", "Send a frame to friend %i" ,i);
@@ -1062,7 +1062,7 @@ void utox_audio_thread(void *args) {
                             // calculate audio out level -----------------
 
                             // draw audio out level -----------------
-                            draw_audio_bars(1, 1, 10, 10, (int)global_audio_out_vu, AUDIO_VU_MED_VALUE, AUDIO_VU_RED_VALUE, 200);
+                            draw_audio_bars(1, 1, 10, 10, (int)global_audio_out_vu, AUDIO_VU_MED_VALUE, AUDIO_VU_RED_VALUE, 200, UTOX_DEFAULT_AUDIO_CHANNELS);
                             // draw audio out level -----------------
                         }
                     }
@@ -1177,7 +1177,7 @@ void callback_av_group_audio(void *UNUSED(tox), uint32_t groupnumber, uint32_t p
 
     // draw audio in level (group chat) -----------------
     // LOG_ERR("uTox Audio", "icoming audio frame %i %i" , groupnumber, peernumber);
-    draw_audio_bars(1, -1, 10, 10, (int)global_audio_in_vu, AUDIO_VU_MED_VALUE, AUDIO_VU_RED_VALUE, 200);
+    draw_audio_bars(1, -1, 10, 10, (int)global_audio_in_vu, AUDIO_VU_MED_VALUE, AUDIO_VU_RED_VALUE, 200, channels);
     // draw audio in level (group chat) -----------------
 
 

@@ -43,7 +43,7 @@ static int draw_audio_bars_every_cur = 0;
 static int draw_audio_bars_every = 2;
 
 /* hack to draw audio bars in the top left corner of the utox window */
-void draw_audio_bars(int x, int y, int UNUSED(width), int UNUSED(height), int level, int level_med, int level_red, int level_max)
+void draw_audio_bars(int x, int y, int UNUSED(width), int UNUSED(height), int level, int level_med, int level_red, int level_max, int channels)
 {
     draw_audio_bars_every_cur++;
     if (draw_audio_bars_every_cur > draw_audio_bars_every)
@@ -117,6 +117,14 @@ void draw_audio_bars(int x, int y, int UNUSED(width), int UNUSED(height), int le
         drawhline(x, y + 1, x + SCALE(level_use), status_color[0]);
         drawhline(x, y + 2, x + SCALE(level_use), status_color[0]);
         drawhline(x, y + 3, x + SCALE(level_use), status_color[0]);
+    }
+
+    if (channels == 2)
+    {
+        drawhline(x, y, x + SCALE(5), status_color[3]);
+        drawhline(x, y + 1, x + SCALE(5), status_color[3]);
+        drawhline(x, y + 2, x + SCALE(5), status_color[3]);
+        drawhline(x, y + 3, x + SCALE(5), status_color[3]);
     }
 
     enddraw(x, y, x + SCALE(level_max), y + 3);
