@@ -7,6 +7,6 @@ Comment=A lightweight Tox client
 TryExec=utox
 Exec=utox
 Icon=utox
-Categories=InstantMessaging;Network
+Categories=InstantMessaging;Network;
 Terminal=false
 MimeType=x-scheme-handler/tox;
