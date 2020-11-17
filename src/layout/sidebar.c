@@ -121,6 +121,7 @@ void draw_audio_bars(int x, int y, int UNUSED(width), int UNUSED(height), int le
 
     if (channels == 2)
     {
+        // draw a small red indicator if audio is stereo
         drawhline(x, y, x + SCALE(5), status_color[3]);
         drawhline(x, y + 1, x + SCALE(5), status_color[3]);
         drawhline(x, y + 2, x + SCALE(5), status_color[3]);
