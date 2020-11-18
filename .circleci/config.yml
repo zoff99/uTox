@@ -37,8 +37,29 @@ jobs:
       - run: cd ~/work/.localrun ; bash ./docker_it.sh
 
       - store_artifacts:
-          path: ~/work/artefacts
-          destination: artefacts_build
+          path: ~/work/.localrun/alpine_3.12.0/artefacts
+          destination: artefacts_alpine_3_12_0
+
+      - store_artifacts:
+          path: ~/work/.localrun/ubuntu_18.04/artefacts
+          destination: artefacts_ubuntu_18_04
+
+      - store_artifacts:
+          path: ~/work/.localrun/debian_10/artefacts
+          destination: artefacts_debian_10
+
+      - store_artifacts:
+          path: ~/work/.localrun/ubuntu_20.04/artefacts
+          destination: artefacts_ubuntu_20_04
+
+      - store_artifacts:
+          path: ~/work/.localrun/debian_9/artefacts
+          destination: artefacts_debian_9
+
+      - store_artifacts:
+          path: ~/work/.localrun/ubuntu_16.04/artefacts
+          destination: artefacts_ubuntu_16_04
+
 
   flatpak:
     working_directory: ~/work
@@ -66,7 +87,7 @@ jobs:
       - run: cd ~/work/.localrun ; bash ./flatpak_it.sh
 
       - store_artifacts:
-          path: ~/work/artefacts
+          path: ~/work/.localrun/ubuntu_20.04_flatpak/artefacts
           destination: artefacts_flatpak
 
 
@@ -96,7 +117,7 @@ jobs:
       - run: cd ~/work/.localrun ; bash ./appimage_it.sh
 
       - store_artifacts:
-          path: ~/work/artefacts
+          path: ~/work/.localrun/ubuntu_18.04_appimage/artefacts
           destination: artefacts_appimage
 
 
