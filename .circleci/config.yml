@@ -36,6 +36,10 @@ jobs:
       - run: docker --version
       - run: cd ~/work/.localrun ; bash ./docker_it.sh
 
+      - store_artifacts:
+          path: ~/work/artefacts
+          destination: artefacts_build
+
   flatpak:
     working_directory: ~/work
     machine:
@@ -60,6 +64,10 @@ jobs:
       - run: ls -al ~/work
       - run: docker --version
       - run: cd ~/work/.localrun ; bash ./flatpak_it.sh
+
+      - store_artifacts:
+          path: ~/work/artefacts
+          destination: artefacts_flatpak
 
 
   appimage:
@@ -86,5 +94,9 @@ jobs:
       - run: ls -al ~/work
       - run: docker --version
       - run: cd ~/work/.localrun ; bash ./appimage_it.sh
+
+      - store_artifacts:
+          path: ~/work/artefacts
+          destination: artefacts_appimage
 
 
