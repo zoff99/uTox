@@ -150,14 +150,14 @@ git clone https://github.com/zoff99/c-toxcore
 cd c-toxcore
 
 
-# cmake DCMAKE_C_FLAGS=" -DHW_CODEC_CONFIG_ACCELDEFAULT -D_GNU_SOURCE -g -O3 -fPIC " \
+# cmake DCMAKE_C_FLAGS=" -D_GNU_SOURCE -g -O3 -fPIC " \
 #  -DCMAKE_INSTALL_PREFIX:PATH=/workspace/inst/ . || exit 1
 
 pwd
 ls -al
 
 ./autogen.sh
-export CFLAGS=" -DHW_CODEC_CONFIG_ACCELDEFAULT -D_GNU_SOURCE -g -O3 -I$_INST_/include/ -fPIC "
+export CFLAGS=" -D_GNU_SOURCE -g -O3 -I$_INST_/include/ -fPIC "
 export LDFLAGS=" -O3 -L$_INST_/lib -fPIC "
 ./configure \
   --prefix=/workspace/inst/ \

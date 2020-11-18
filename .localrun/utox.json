@@ -98,7 +98,7 @@
             "buildsystem": "autotools",
             "build-options" : [
                 {
-                    "cflags": "-DHW_CODEC_CONFIG_ACCELDEFAULT -D_GNU_SOURCE -g -O3 -fPIC",
+                    "cflags": " -D_GNU_SOURCE -g -O3 -fPIC",
                     "ldflags": "-O3 -fPIC"
                 }
             ],
