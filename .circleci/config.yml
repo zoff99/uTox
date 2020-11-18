@@ -36,7 +36,6 @@ jobs:
       - run: docker --version
       - run: cd ~/work/.localrun ; bash ./docker_it.sh
 
-jobs:
   flatpak:
     working_directory: ~/work
     machine:
@@ -63,7 +62,6 @@ jobs:
       - run: cd ~/work/.localrun ; bash ./flatpak_it.sh
 
 
-jobs:
   appimage:
     working_directory: ~/work
     machine:
