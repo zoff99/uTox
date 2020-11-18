@@ -322,6 +322,7 @@ void raze_groups(void) {
     group = NULL;
 }
 
+/* this is called on startup, after loading the toxsave file */
 void init_groups(Tox *tox) {
     self.groups_list_size = tox_conference_get_chatlist_size(tox);
 
@@ -349,6 +350,45 @@ void init_groups(Tox *tox) {
         {
             group_create(groups[i], false);
         }
+
+        /* load conference titles */
+        TOX_ERR_CONFERENCE_TITLE error2;
+        size_t g_title_len =
+            tox_conference_get_title_size(tox, (uint32_t)groups[i], &error2);
+
+#define MAX_STR_LEN_FOR_TITLE 300
+
+        if ((error2 == TOX_ERR_CONFERENCE_TITLE_OK) && (g_title_len > 0) && (g_title_len < MAX_STR_LEN_FOR_TITLE))
+        {
+            GROUPCHAT *g = get_group(i);
+            if (g)
+            {
+                uint8_t *gr_title_string = calloc(1, (size_t)(g_title_len + 1));
+                if (gr_title_string)
+                {
+                    bool res4 = tox_conference_get_title(tox, (uint32_t)groups[i], gr_title_string, &error2);
+
+                    if (error2 == TOX_ERR_CONFERENCE_TITLE_OK)
+                    {
+                        // TODO: check that there always a NULL byte at the end of those strings
+                        if (sizeof(g->name) < MAX_STR_LEN_FOR_TITLE)
+                        {
+                            snprintf((char *)g->name, sizeof(g->name), gr_title_string);
+                            g->name_length = strnlen(g->name, sizeof(g->name) - 1);
+                        }
+                        else
+                        {
+                            snprintf((char *)g->name, MAX_STR_LEN_FOR_TITLE, gr_title_string);
+                            g->name_length = strnlen(g->name, MAX_STR_LEN_FOR_TITLE - 1);
+                        }
+                    }
+
+                    free(gr_title_string);
+                }
+            }
+        }
+        /* load conference titles */
+
     }
     LOG_INFO("Groupchat", "Initialzied groupchat array with %u groups", self.groups_list_size);
 }
