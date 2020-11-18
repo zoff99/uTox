@@ -52,17 +52,8 @@ static uint32_t       n_buffers;
 static struct v4lconvert_data *v4lconvert_data;
 #endif
 
-static struct v4l2_format fmt, dest_fmt = {
-    //.type = V4L2_BUF_TYPE_VIDEO_CAPTURE,
-    .fmt =
-        {
-            .pix =
-                {
-                    .pixelformat = V4L2_PIX_FMT_YUV420,
-                    //.field = V4L2_FIELD_NONE,
-                },
-        },
-};
+static struct v4l2_format fmt;
+static struct v4l2_format dest_fmt;
 
 bool v4l_init(char *dev_name) {
     // utox_v4l_fd = open(dev_name, O_RDWR /* required */ | O_NONBLOCK, 0);
@@ -126,18 +117,55 @@ bool v4l_init(char *dev_name) {
 #endif
 
     CLEAR(fmt);
+    CLEAR(dest_fmt);
 
     fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUV420;
+    // fmt.fmt.pix.field = V4L2_FIELD_NONE;
+    fmt.fmt.pix.width = 640;
+    fmt.fmt.pix.height = 480;
+
+#if 0
+    // --------- 720p camera video ---------
+    fmt.fmt.pix.width = 1280;
+    fmt.fmt.pix.height = 720;
+    // --------- 720p camera video ---------
+#endif
+
+    dest_fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    dest_fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUV420;
+    dest_fmt.fmt.pix.field = V4L2_FIELD_NONE;
+
+    if (-1 == xioctl(utox_v4l_fd, VIDIOC_S_FMT, &fmt)) {
+        LOG_ERR("v4l", "ERR:VIDIOC_S_FMT error %d, %s" , errno, strerror(errno));
+    }
 
     if (-1 == xioctl(utox_v4l_fd, VIDIOC_G_FMT, &fmt)) {
-        LOG_ERR("v4l", "VIDIOC_S_FMT error %d, %s" , errno, strerror(errno));
+        LOG_ERR("v4l", "ERR:VIDIOC_G_FMT error %d, %s" , errno, strerror(errno));
         return 0;
     }
 
-    if (fmt.fmt.pix.pixelformat != V4L2_PIX_FMT_YUYV) {
-        LOG_ERR("v4l", "Unsupported video format: %u %u %u %u\n", fmt.fmt.pix.width, fmt.fmt.pix.height,
-                fmt.fmt.pix.pixelformat, fmt.fmt.pix.field);
+    if (fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUV420)
+    {
+        LOG_ERR("v4l", "Video format(got): V4L2_PIX_FMT_YUV420");
     }
+    else if (fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_MJPEG)
+    {
+        LOG_ERR("v4l", "Video format(got): V4L2_PIX_FMT_MJPEG");
+    }
+    else if (fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_H264)
+    {
+        LOG_ERR("v4l", "H264 HW encoding would be supported");
+    }
+    else
+    {
+        LOG_ERR("v4l", "Video format(got): %u", fmt.fmt.pix.pixelformat);
+    }
+
+    LOG_ERR("v4l", "got video format: %u %u %u %u bytesperline=%d sizeimage=%d", fmt.fmt.pix.width, fmt.fmt.pix.height,
+                fmt.fmt.pix.pixelformat, fmt.fmt.pix.field,
+                (int)fmt.fmt.pix.bytesperline,
+                (int)fmt.fmt.pix.sizeimage);
 
     video_width             = fmt.fmt.pix.width;
     video_height            = fmt.fmt.pix.height;
@@ -147,12 +175,54 @@ bool v4l_init(char *dev_name) {
 
 
     /* Buggy driver paranoia. */
-    min = fmt.fmt.pix.width * 2;
+    /*
+    min = fmt.fmt.pix.width;
     if (fmt.fmt.pix.bytesperline < min)
+    {
+        LOG_ERR("v4l", "Video format(correcting bytesperline): %d", (int)min);
         fmt.fmt.pix.bytesperline = min;
-    min                          = fmt.fmt.pix.bytesperline * fmt.fmt.pix.height;
+    }
+
+    min = fmt.fmt.pix.bytesperline * fmt.fmt.pix.height;
     if (fmt.fmt.pix.sizeimage < min)
+    {
+        LOG_ERR("v4l", "Video format(correcting sizeimage): %d", (int)min);
         fmt.fmt.pix.sizeimage = min;
+    }
+    */
+
+    // HINT: set camera device fps -----------------------
+    struct v4l2_streamparm *setfps;
+    setfps = (struct v4l2_streamparm *)calloc(1, sizeof(struct v4l2_streamparm));
+
+    if (setfps)
+    {
+        LOG_ERR("v4l", "trying to set 25 fps for video capture ...");
+        memset(setfps, 0, sizeof(struct v4l2_streamparm));
+        setfps->type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        setfps->parm.capture.timeperframe.numerator = 1;
+        setfps->parm.capture.timeperframe.denominator = 25; // try to set ~25fps
+
+        if (-1 == xioctl(utox_v4l_fd, VIDIOC_S_PARM, setfps))
+        {
+            LOG_ERR("v4l", "ERR:VIDIOC_S_PARM Error");
+        }
+
+        if (-1 == xioctl(utox_v4l_fd, VIDIOC_G_PARM, setfps))
+        {
+            LOG_ERR("v4l", "ERR:VIDIOC_G_PARM Error");
+        }
+        LOG_ERR("v4l", "VIDIOC_G_PARM:fps got=%d / %d",
+            (int)setfps->parm.capture.timeperframe.numerator,
+            (int)setfps->parm.capture.timeperframe.denominator);
+
+        free(setfps);
+        setfps = NULL;
+    }
+
+    // HINT: set camera device fps -----------------------
+
+
 
 
     /* part 3*/
@@ -295,12 +365,9 @@ int v4l_getframe(uint8_t *y, uint8_t *UNUSED(u), uint8_t *UNUSED(v), uint16_t wi
             case EAGAIN:
                 LOG_ERR("v4l", "VIDIOC_DQBUF [1] error %d, %s" , errno, strerror(errno));
                 return 0;
-                break;
 
             case EIO:
             /* Could ignore EIO, see spec. */
-                return 0;
-                break;
 
             default:
                 LOG_ERR("v4l", "VIDIOC_DQBUF [2] error %d, %s" , errno, strerror(errno));

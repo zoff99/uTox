@@ -696,8 +696,8 @@ void utox_video_thread(void *args) {
 
             pthread_mutex_unlock(&video_thread_lock);
 
-            if (r == -99)
-            {
+            //if (r == -99)
+            //{
 
                 // --- FPS ----
                 // --- FPS ----
@@ -772,11 +772,12 @@ void utox_video_thread(void *args) {
                 // --- FPS ----
                 // --- FPS ----
 
-            }
-            else
-            {
+            //}
+            //else
+            //{
+                // TODO: make it better
                 // real camera, so do NOT sleep here, the camera will block anyway
-            }
+            //}
 
             continue;     /* We're running video, so don't sleep for an extra 100 ms */
         }
