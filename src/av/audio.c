@@ -197,19 +197,20 @@ static ALCcontext *context;
 static bool audio_out_device_open(void) {
     if (speakers_on) {
         speakers_count++;
+        LOG_ERR("uTox Audio", "speakers_count = %d", (int)speakers_count);
         return true;
     }
 
     audio_out_handle = alcOpenDevice(audio_out_device);
     if (!audio_out_handle) {
-        LOG_TRACE("uTox Audio", "alcOpenDevice() failed" );
+        LOG_ERR("uTox Audio", "alcOpenDevice() failed" );
         speakers_on = false;
         return false;
     }
 
     context = alcCreateContext(audio_out_handle, NULL);
     if (!alcMakeContextCurrent(context)) {
-        LOG_TRACE("uTox Audio", "alcMakeContextCurrent() failed" );
+        LOG_ERR("uTox Audio", "alcMakeContextCurrent() failed" );
         alcCloseDevice(audio_out_handle);
         audio_out_handle = NULL;
         speakers_on = false;
@@ -221,7 +222,7 @@ static bool audio_out_device_open(void) {
     /* Create the buffers for the ringtone */
     alGenSources((ALuint)1, &preview);
     if ((error = alGetError()) != AL_NO_ERROR) {
-        LOG_TRACE("uTox Audio", "Error generating source with err %x" , error);
+        LOG_ERR("uTox Audio", "Error generating source with err %x" , error);
         speakers_on = false;
         speakers_count = 0;
         return false;
@@ -229,14 +230,14 @@ static bool audio_out_device_open(void) {
     /* Create the buffers for incoming audio */
     alGenSources((ALuint)1, &ringtone);
     if ((error = alGetError()) != AL_NO_ERROR) {
-        LOG_TRACE("uTox Audio", "Error generating source with err %x" , error);
+        LOG_ERR("uTox Audio", "Error generating source with err %x" , error);
         speakers_on = false;
         speakers_count = 0;
         return false;
     }
     alGenSources((ALuint)1, &notifytone);
     if ((error = alGetError()) != AL_NO_ERROR) {
-        LOG_TRACE("uTox Audio", "Error generating source with err %x" , error);
+        LOG_ERR("uTox Audio", "Error generating source with err %x" , error);
         speakers_on = false;
         speakers_count = 0;
         return false;
@@ -261,8 +262,11 @@ static bool audio_out_device_close(void) {
     }
 
     alDeleteSources((ALuint)1, &preview);
+    preview = 0;
     alDeleteSources((ALuint)1, &ringtone);
+    ringtone = 0;
     alDeleteSources((ALuint)1, &notifytone);
+    notifytone = 0;
     alcMakeContextCurrent(NULL);
     alcDestroyContext(context);
     alcCloseDevice(audio_out_handle);
@@ -339,6 +343,19 @@ void sourceplaybuffer(unsigned int f, const int16_t *data, int samples, uint8_t 
         source = get_friend(f)->audio_dest;
     }
 
+    if (source == 0)
+    {
+        if (f >= self.friend_list_size) {
+            // LOG_ERR("uTox Audio", "preview: preview=%d", (int)preview);
+            alGenSources(1, &preview);
+            source = preview;
+        } else {
+            // LOG_ERR("uTox Audio", "normal: source=%d", (int)get_friend(f)->audio_dest);
+            alGenSources(1, &get_friend(f)->audio_dest);
+            source = get_friend(f)->audio_dest;
+        }        
+    }
+
     ALuint bufid;
     ALint processed = 0;
     ALint queued = 16;
@@ -354,7 +371,7 @@ void sourceplaybuffer(unsigned int f, const int16_t *data, int samples, uint8_t 
     } else if (queued < 16) {
         alGenBuffers(1, &bufid);
     } else {
-        LOG_TRACE("uTox Audio", "dropped audio frame" );
+        // LOG_ERR("uTox Audio", "dropped audio frame: source=%d", (int)source);
         return;
     }
 
@@ -362,13 +379,13 @@ void sourceplaybuffer(unsigned int f, const int16_t *data, int samples, uint8_t 
                  sample_rate);
     alSourceQueueBuffers(source, 1, &bufid);
 
-    // LOG_TRACE("uTox Audio", "audio frame || samples == %i channels == %u rate == %u " , samples, channels, sample_rate);
+    LOG_ERR("uTox Audio", "audio frame || samples == %i channels == %u rate == %u " , samples, channels, sample_rate);
 
     ALint state;
     alGetSourcei(source, AL_SOURCE_STATE, &state);
     if (state != AL_PLAYING) {
         alSourcePlay(source);
-        // LOG_TRACE("uTox Audio", "Starting source %u" , i);
+        LOG_ERR("uTox Audio", "Starting source : %d", (int)source);
     }
 }
 
@@ -443,10 +460,10 @@ static bool audio_source_init(ALuint *source) {
     ALint error;
     alGetError();
     alGenSources((ALuint)1, source);
-    //if ((error = alGetError()) != AL_NO_ERROR) {
-    //    LOG_TRACE("uTox Audio", "Error generating source with err %x" , error);
-    //    return false;
-    //}
+    if ((error = alGetError()) != AL_NO_ERROR) {
+        LOG_ERR("uTox Audio", "Error generating source with err %x" , error);
+        return false;
+    }
     return true;
 }
 
@@ -685,19 +702,27 @@ void utox_audio_thread(void *args) {
                     break;
                 }
                 case UTOXAUDIO_START_FRIEND: {
+                    LOG_ERR("Audio", "Starting Friend Audio %u", m->param1);
+
+                    audio_out_device_open();
+
                     FRIEND *f = get_friend(m->param1);
                     if (f && !f->audio_dest) {
+                        LOG_ERR("Audio", "Starting Friend Audio %u audio_source_init %d", m->param1, (int)f->audio_dest);
                         audio_source_init(&f->audio_dest);
+                        LOG_ERR("Audio", "Starting Friend Audio %u audio_source_init %d -> done", m->param1, (int)f->audio_dest);
                     }
-                    audio_out_device_open();
                     audio_in_listen();
                     break;
                 }
                 case UTOXAUDIO_STOP_FRIEND: {
+                    LOG_ERR("Audio", "Stoping Friend Audio %u", m->param1);
                     FRIEND *f = get_friend(m->param1);
                     if (f && f->audio_dest) {
+                        LOG_ERR("Audio", "Stoping Friend Audio %u audio_source_init %d", m->param1, (int)f->audio_dest);
                         audio_source_raze(&f->audio_dest);
                         f->audio_dest = 0;
+                        LOG_ERR("Audio", "Stoping Friend Audio %u audio_source_init %d -> done", m->param1, (int)f->audio_dest);
                     }
                     audio_in_ignore();
                     audio_out_device_close();
@@ -1082,7 +1107,9 @@ void utox_audio_thread(void *args) {
 
     // missing some cleanup ?
     alDeleteSources(1, &ringtone);
+    ringtone = 0;
     alDeleteSources(1, &preview);
+    preview = 0;
     alDeleteBuffers(1, &RingBuffer);
 
     while (audio_in_device_close()) { continue; }
