@@ -202,7 +202,7 @@ make install DESTDIR=AppDir || exit 1
 linuxdeploy --appdir AppDir --output appimage
 
 ls -hal /workspace/uTox/build2/uTox*x86_64.AppImage || exit 1
-cp -av /workspace/uTox/build2/uTox*x86_64.AppImage /artefacts/
+cp -av /workspace/uTox/build2/uTox*x86_64.AppImage /artefacts/uTox_x86_64.AppImage
 
 #------------------------
 
