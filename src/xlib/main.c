@@ -795,6 +795,18 @@ int main(int argc, char *argv[]) {
     /* Xft draw context/color */
     main_window.renderpic = XRenderCreatePicture(display, main_window.drawbuf, main_window.pictformat, 0, NULL);
 
+    /* set WM_CLASS */
+    if (settings.portable_mode)
+    {
+        XClassHint hint = {.res_name = "portable_utoxmain", .res_class = "portable_utoxmain" };
+        XSetClassHint(display, main_window.window, &hint);
+    }
+    else
+    {
+        XClassHint hint = {.res_name = "utoxmain", .res_class = "utoxmain" };
+        XSetClassHint(display, main_window.window, &hint);
+    }
+
 
     XRenderColor xrcolor = { 0,0,0,0 };
     main_window.colorpic = XRenderCreateSolidFill(display, &xrcolor);
