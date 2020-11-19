@@ -1220,20 +1220,20 @@ void callback_av_group_audio(void *UNUSED(tox), uint32_t groupnumber, uint32_t p
     ALint queued = 16;
     alGetSourcei(g->source[peernumber], AL_BUFFERS_PROCESSED, &processed);
     alGetSourcei(g->source[peernumber], AL_BUFFERS_QUEUED, &queued);
-    LOG_ERR("uTox Audio", "alSourcei:006");
+    // LOG_ERR("uTox Audio", "alSourcei:006");
     alSourcei(g->source[peernumber], AL_LOOPING, AL_FALSE);
 
     if (processed)
     {
         ALuint bufids[processed];
         alSourceUnqueueBuffers(g->source[peernumber], processed, bufids);
-        LOG_ERR("uTox Audio", "alDeleteBuffers:003");
+        // LOG_ERR("uTox Audio", "alDeleteBuffers:003");
         alDeleteBuffers(processed - 1, bufids + 1);
         bufid = bufids[0];
     }
     else if(queued < 16)
     {
-        LOG_ERR("uTox Audio", "alGenBuffers:003");
+        // LOG_ERR("uTox Audio", "alGenBuffers:003");
         alGenBuffers(1, &bufid);
     }
     else
@@ -1266,7 +1266,7 @@ void callback_av_group_audio(void *UNUSED(tox), uint32_t groupnumber, uint32_t p
     // draw audio in level (group chat) -----------------
 
 
-    LOG_ERR("uTox Audio", "alBufferData:003");
+    // LOG_ERR("uTox Audio", "alBufferData:003");
     alBufferData(bufid, (channels == 1) ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, pcm, samples * 2 * channels,
                     sample_rate);
     alSourceQueueBuffers(g->source[peernumber], 1, &bufid);
