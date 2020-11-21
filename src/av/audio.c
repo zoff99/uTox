@@ -1187,7 +1187,7 @@ void callback_av_group_audio(void *UNUSED(tox), uint32_t groupnumber, uint32_t p
     }
 
     if (!g->active_call) {
-        LOG_ERR("uTox Audio", "Packets for inactive call %u", groupnumber);
+        // LOG_ERR("uTox Audio", "Packets for inactive call %u", groupnumber);
         return;
     }
 
@@ -1238,7 +1238,7 @@ void callback_av_group_audio(void *UNUSED(tox), uint32_t groupnumber, uint32_t p
     }
     else
     {
-        LOG_ERR("uTox Audio", "dropped audio frame gid=%i peernum=%i audiosource=%d" , groupnumber, peernumber, (int)g->source[peernumber]);
+        // LOG_ERR("uTox Audio", "dropped audio frame gid=%i peernum=%i audiosource=%d" , groupnumber, peernumber, (int)g->source[peernumber]);
         return;
     }
 
