@@ -244,6 +244,11 @@ static void callback_group_peer_name_change(Tox *UNUSED(tox), uint32_t gid, uint
     postmessage_utox(GROUP_PEER_NAME, gid, pid, NULL);
 }
 
+#define NUM_GROUP_CHAT_PEER_COLORS 5
+static int chat_peer_colors_r[NUM_GROUP_CHAT_PEER_COLORS] = { 0x66,0x00,0x80,0xf0,0x00 };
+static int chat_peer_colors_g[NUM_GROUP_CHAT_PEER_COLORS] = { 0x66,0x80,0x00,0x62,0xff };
+static int chat_peer_colors_b[NUM_GROUP_CHAT_PEER_COLORS] = { 0xff,0x00,0x00,0x69,0xff };
+
 static void callback_group_peer_list_changed(Tox *tox, uint32_t gid, void *UNUSED(userdata)){
     GROUPCHAT *g = get_group(gid);
     if (!g) {
@@ -282,13 +287,14 @@ static void callback_group_peer_list_changed(Tox *tox, uint32_t gid, void *UNUSE
         uint8_t pkey[TOX_PUBLIC_KEY_SIZE];
         tox_conference_peer_get_public_key(tox, gid, i, pkey, NULL);
         uint64_t pkey_to_number = 0;
-        for (int key_i = 0; key_i < TOX_PUBLIC_KEY_SIZE; ++key_i) {
-            pkey_to_number += pkey[key_i];
+        for (int key_i = 0; key_i < 2; ++key_i) {
+            pkey_to_number += (pkey[key_i] << (key_i * 8));
         }
-        /* uTox doesnt' really use this for too much so let's fuck with the random seed.
-         * If you know crypto, and cringe, I know me too... you can blame @irungentoo */
-        srand(pkey_to_number);
-        peer->name_color = RGB(rand(), rand(), rand());
+        peer->name_color = RGB(
+            chat_peer_colors_r[pkey_to_number % NUM_GROUP_CHAT_PEER_COLORS],
+            chat_peer_colors_g[pkey_to_number % NUM_GROUP_CHAT_PEER_COLORS],
+            chat_peer_colors_b[pkey_to_number % NUM_GROUP_CHAT_PEER_COLORS]
+            );
         g->peer[i]       = peer;
     }
     g->peer_count = number_peers;
