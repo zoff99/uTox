@@ -1,3 +1,4 @@
+#include "command_funcs.h"
 
 #include "friend.h"
 #include "groups.h"
@@ -5,8 +6,6 @@
 #include "tox.h"
 #include <tox/toxav.h>
 #include "macros.h"
-
-#include "command_funcs.h"
 
 #include <stdlib.h>
 #include <string.h>

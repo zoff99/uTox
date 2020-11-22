@@ -17,6 +17,11 @@
  * UI and Toxcore Limits
  *********************************************************/
 
+#if TOX_VERSION_IS_API_COMPATIBLE(0, 2, 0)
+// YAY!!
+#else
+  #error "Unable to compile uTox with this Toxcore version. uTox expects v0.2.*!"
+#endif
 
 #define MAIN_WIDTH 750
 #define MAIN_HEIGHT 500
@@ -60,7 +65,6 @@ uint8_t *utox_data_load_tox(size_t *size);
  * Parses the arguments passed to uTox
  */
 void parse_args(int argc, char *argv[],
-                bool *skip_updater,
                 int8_t *should_launch_at_startup,
                 int8_t *set_show_window,
                 bool *allow_root);

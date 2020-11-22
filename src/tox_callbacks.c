@@ -299,7 +299,6 @@ static void callback_group_peer_list_changed(Tox *tox, uint32_t gid, void *UNUSE
     }
     g->peer_count = number_peers;
 
-
     postmessage_utox(GROUP_PEER_CHANGE, gid, 0, NULL);
     pthread_mutex_unlock(&messages_lock); /* make sure that messages has posted before we continue */
 }

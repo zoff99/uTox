@@ -8,19 +8,17 @@
 #define TITLE "uTox"
 #define SUB_TITLE "(Alpha)"
 
-// The updater relies on these version numbers, and values greater than an octet were never tested
-#define VERSION "0.17.1"
+#define VERSION "0.17.2"
 #define VER_MAJOR 0
 #define VER_MINOR 17
-#define VER_PATCH 1
+#define VER_PATCH 2
 #define UTOX_VERSION_NUMBER (VER_MAJOR << 16 | VER_MINOR << 8 | VER_PATCH)
 
 // Assembly info
 #define UTOX_FILE_DESCRIPTION "The lightweight Tox client"
-#define UTOX_COPYRIGHT "Copyleft 2019 uTox contributors. Some rights reserved."
+#define UTOX_COPYRIGHT "Copyleft 2020 uTox contributors. Some rights reserved."
 #define UTOX_FILENAME_WINDOWS "uTox.exe"
 
 // Defaults
 #define DEFAULT_NAME "uTox User"
 #define DEFAULT_STATUS "Toxing on uTox, from the future!"
-#define DEFAULT_SCALE 11

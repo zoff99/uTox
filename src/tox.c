@@ -18,7 +18,6 @@
 #include "av/utox_av.h"
 #include "av/video.h"
 
-
 #include "ui/edit.h"     // FIXME the toxcore thread shouldn't be interacting directly with the UI
 #include "ui/switch.h"   // FIXME the toxcore thread shouldn't be interacting directly with the UI
 #include "ui/dropdown.h"
@@ -36,6 +35,13 @@
 #include <tox/toxencryptsave.h>
 
 #include "main.h" // utox_data_save/load, DEFAULT_NAME, DEFAULT_STATUS
+
+UTOX_TOX_THREAD_INIT tox_thread_init;
+
+TOX_MSG       tox_msg, audio_msg, toxav_msg;
+volatile bool tox_thread_msg, audio_thread_msg, video_thread_msg;
+
+bool tox_connected;
 
 static bool save_needed = true;
 
@@ -246,10 +252,8 @@ void tox_settingschanged(void) {
     dropdown_list_clear(&dropdown_audio_out);
     dropdown_list_clear(&dropdown_video);
 
-    // send the reconfig message!
-    postmessage_toxcore(0, 1, 0, NULL);
-
     LOG_NOTE("Toxcore", "Restarting Toxcore");
+    postmessage_toxcore(TOX_KILL, 1, 0, NULL); // send the reconfig message!
     while (!tox_thread_init) {
         yieldcpu(1);
     }
@@ -376,11 +380,11 @@ static int init_toxcore(Tox **tox) {
 
     tox_options_set_log_callback(&topt, log_callback);
 
-    tox_options_set_ipv6_enabled(&topt, settings.enable_ipv6);
-    tox_options_set_udp_enabled(&topt, settings.enable_udp);
+    tox_options_set_ipv6_enabled(&topt, settings.enableipv6);
+    tox_options_set_udp_enabled(&topt, !settings.disableudp);
 
     tox_options_set_proxy_type(&topt, TOX_PROXY_TYPE_NONE);
-    tox_options_set_proxy_host(&topt, proxy_address);
+    tox_options_set_proxy_host(&topt, (char *)settings.proxy_ip);
     tox_options_set_proxy_port(&topt, settings.proxy_port);
 
     #ifdef ENABLE_MULTIDEVICE
@@ -413,7 +417,7 @@ static int init_toxcore(Tox **tox) {
     }
     postmessage_utox(REDRAW, 0, 0, NULL);
 
-    if (settings.use_proxy) {
+    if (settings.proxyenable) {
         topt.proxy_type = TOX_PROXY_TYPE_SOCKS5;
     }
 
@@ -438,7 +442,7 @@ static int init_toxcore(Tox **tox) {
 
         // reset proxy options as well as GUI and settings
         topt.proxy_type = TOX_PROXY_TYPE_NONE;
-        settings.use_proxy = settings.force_proxy = 0;
+        settings.proxyenable = settings.force_proxy = 0;
         switch_proxy.switch_on = 0;
 
         *tox = tox_new(&topt, &tox_new_err);
@@ -448,7 +452,7 @@ static int init_toxcore(Tox **tox) {
 
             // reset IPv6 options as well as GUI and settings
             topt.ipv6_enabled = 0;
-            switch_ipv6.switch_on = settings.enable_ipv6 = 0;
+            switch_ipv6.switch_on = settings.enableipv6 = 0;
 
             *tox = tox_new(&topt, &tox_new_err);
 
@@ -465,7 +469,7 @@ static int init_toxcore(Tox **tox) {
     set_callbacks(*tox);
 
     /* Connect to bootstrapped nodes in "tox_bootstrap.h" */
-    toxcore_bootstrap(*tox, settings.enable_ipv6);
+    toxcore_bootstrap(*tox, settings.enableipv6);
 
     if (save_status == -2) {
         LOG_NOTE("Toxcore", "No save file, using defaults" );
@@ -509,8 +513,8 @@ void toxcore_thread(void *UNUSED(args)) {
                 // avoid trying the creation of thousands of tox instances before user changes the settings
                 if (tox_thread_msg) {
                     TOX_MSG *msg = &tox_msg;
-                    // If msg->msg is 0, reconfig
-                    if (!msg->msg) {
+
+                    if (msg->msg == TOX_KILL) {
                         reconfig = (bool) msg->param1;
                         tox_thread_init = UTOX_TOX_THREAD_INIT_NONE;
                     }
@@ -551,6 +555,7 @@ void toxcore_thread(void *UNUSED(args)) {
             postmessage_utox(UPDATE_TRAY, 0, 0, NULL);
             postmessage_utox(PROFILE_DID_LOAD, 0, 0, NULL);
 
+            thread(utox_av_ctrl_thread, NULL);
             postmessage_utoxav(UTOXAV_NEW_TOX_INSTANCE, 0, 0, av);
         }
 
@@ -572,7 +577,7 @@ void toxcore_thread(void *UNUSED(args)) {
             if (time - last_connection >= (uint64_t)10 * 1000 * 1000 * 1000) {
                 last_connection = time;
                 if (!connected) {
-                    toxcore_bootstrap(tox, settings.enable_ipv6);
+                    toxcore_bootstrap(tox, settings.enableipv6);
                 }
 
                 // save every 1000.
@@ -587,9 +592,9 @@ void toxcore_thread(void *UNUSED(args)) {
             // If there's a message, load it, and send to the tox message thread
             if (tox_thread_msg) {
                 TOX_MSG *msg = &tox_msg;
-                // If msg->msg is 0, reconfig if needed and break from tox_do
-                if (!msg->msg) {
-                    reconfig        = msg->param1;
+
+                if (msg->msg == TOX_KILL) {
+                    reconfig        = msg->param1; // reconfig if needed
                     tox_thread_msg  = 0;
                     tox_thread_init = UTOX_TOX_THREAD_INIT_NONE;
                     break;
@@ -599,12 +604,12 @@ void toxcore_thread(void *UNUSED(args)) {
                 typing_state.sent = (msg->msg == TOX_SEND_MESSAGE || msg->msg == TOX_SEND_ACTION);
             }
 
-            if (settings.send_typing_status) {
+            if (!settings.no_typing_notifications) {
                 // Thread active transfers and check if friend is typing
                 utox_thread_work_for_typing_notifications(tox, time);
             }
 
-            /* Ask toxcore how many ms to wait, then wait at the most 3ms */
+            /* Ask toxcore how many ms to wait, then wait at the most 20ms */
             uint32_t interval = tox_iteration_interval(tox);
             // Zoff: !!!!!!!!!!!------------
             yieldcpu((interval > 3) ? 3 : interval);
@@ -616,16 +621,24 @@ void toxcore_thread(void *UNUSED(args)) {
         write_save(tox);
         edit_setstr(&edit_profile_password, (char *)"", 0);
 
-        // Stop toxcore.
+        postmessage_utoxav(UTOXAV_KILL, 0, 0, NULL);
+
+        int max_counter = 20;
+        int counter = 0;
+        while (utox_av_ctrl_init) {
+            yieldcpu(1);
+            counter++;
+            if (counter > max_counter)
+            {
+                LOG_ERR("postmessage_toxcore", "endless loos, caught!!");
+                break;
+            }
+        }
         LOG_TRACE("Toxcore", "tox thread ending");
-        
+
         yieldcpu(300); // wait for ToxAV kill to finish, hopefully?
 
-        postmessage_utoxav(UTOXAV_KILL, 0, 0, NULL);
-        postmessage_toxcore(TOX_KILL, 0, 0, NULL);
-
-        // toxav_kill(av);        
-        // tox_kill(tox);
+        tox_kill(tox);
     }
 
     tox_thread_init = UTOX_TOX_THREAD_INIT_NONE;
@@ -1106,18 +1119,23 @@ static void tox_thread_message(Tox *tox, ToxAV *av, uint64_t time, uint8_t msg, 
                 g_num = tox_conference_new(tox, &error);
             }
 
-            if (g_num != -1) {
-                GROUPCHAT *g = get_group(g_num);
-                if (!g) {
-                    if (!group_create(g_num, param2)) {
-                        LOG_ERR("Toxcore", "Failed creating group %u", g_num);
-                        break;
-                    }
-                } else {
-                    group_init(g, g_num, param2);
-                }
-                postmessage_utox(GROUP_ADD, g_num, param2, NULL);
+            if (g_num == -1) {
+                LOG_ERR("Tox", "Failed to create groupchat.");
+                break;
             }
+
+            GROUPCHAT *g = get_group(g_num);
+            if (!g) {
+                g = group_create(g_num, param2);
+                if (!g) {
+                    LOG_ERR("Tox", "Failed creating group (number: %u type: %u)", g_num, param2);
+                    break;
+                }
+            } else {
+                group_init(g, g_num, param2);
+            }
+
+            postmessage_utox(GROUP_ADD, g_num, param2, NULL);
 
             uint8_t pkey[TOX_PUBLIC_KEY_SIZE];
             tox_conference_peer_get_public_key(tox, g_num, 0, pkey, NULL);
@@ -1128,8 +1146,8 @@ static void tox_thread_message(Tox *tox, ToxAV *av, uint64_t time, uint8_t msg, 
             srand(pkey_to_number);
             uint32_t name_color = RGB(rand(), rand(), rand());
 
-            group_peer_add(get_group(g_num), 0, 1, name_color);
-            group_peer_name_change(get_group(g_num), 0, (uint8_t *)self.name, self.name_length);
+            group_peer_add(g, 0, 1, name_color);
+            group_peer_name_change(g, 0, (uint8_t *)self.name, self.name_length);
             postmessage_utox(GROUP_PEER_ADD, g_num, 0, NULL);
 
             save_needed = true;

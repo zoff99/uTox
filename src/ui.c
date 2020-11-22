@@ -28,6 +28,15 @@
 #include "ui/text.h"
 #include "ui/tooltip.h"
 
+struct utox_mouse mouse;
+
+uint8_t cursor;
+bool mdown;
+
+char search_data[1024]; // TODO this is NOT where this belongs
+
+double ui_scale;
+
 /* These remain for legacy reasons, PANEL_MAIN calls these by default when not given it's own function to call */
 static void background_draw(PANEL *UNUSED(p), int UNUSED(x), int UNUSED(y), int UNUSED(width), int UNUSED(height)) {
     return;
@@ -153,11 +162,11 @@ static void settings_ADV(void) {
 
 
     const int show_nospam_x = 30 + UN_SCALE(MAX(UTOX_STR_WIDTH(SHOW_UI_PASSWORD), UTOX_STR_WIDTH(HIDE_UI_PASSWORD)));
-    CREATE_BUTTON(show_nospam, show_nospam_x, 207, _BM_SBUTTON_WIDTH, _BM_SBUTTON_HEIGHT);
+    CREATE_BUTTON(show_nospam, show_nospam_x, 177, _BM_SBUTTON_WIDTH, _BM_SBUTTON_HEIGHT);
 
 
     const int revert_nospam_x = 30 + UN_SCALE(UTOX_STR_WIDTH(RANDOMIZE_NOSPAM));
-    CREATE_BUTTON(revert_nospam, revert_nospam_x, 295, _BM_SBUTTON_WIDTH, _BM_SBUTTON_HEIGHT);
+    CREATE_BUTTON(revert_nospam, revert_nospam_x, 265, _BM_SBUTTON_WIDTH, _BM_SBUTTON_HEIGHT);
 
 }
 

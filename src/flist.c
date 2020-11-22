@@ -66,7 +66,7 @@ static ITEM *right_mouse_item;
 
 static bool mouse_in_list;
 static bool selected_item_mousedown;
-static bool selected_item_mousedown_move_pend;
+static ITEM *selected_item_mousedown_move_pend;
 
 static int selected_item_dy; // y offset of selected item being dragged from its original position
 
@@ -954,30 +954,30 @@ void flist_reload_contacts(void) {
     pop_selected();
 }
 
-FRIEND *flist_get_friend(void) {
-    if (flist_get_type() == ITEM_FRIEND) {
+FRIEND *flist_get_sel_friend(void) {
+    if (flist_get_sel_item_type() == ITEM_FRIEND) {
         return get_friend(selected_item->id_number);
     }
     return NULL;
 }
 
-FREQUEST *flist_get_frequest(void) {
-    if (flist_get_type() == ITEM_FREQUEST) {
+FREQUEST *flist_get_sel_frequest(void) {
+    if (flist_get_sel_item_type() == ITEM_FREQUEST) {
         return get_frequest(selected_item->id_number);
     }
 
     return NULL;
 }
 
-GROUPCHAT *flist_get_groupchat(void) {
-    if (flist_get_type() == ITEM_GROUP) {
+GROUPCHAT *flist_get_sel_group(void) {
+    if (flist_get_sel_item_type() == ITEM_GROUP) {
         return get_group(selected_item->id_number);
     }
 
     return NULL;
 }
 
-ITEM_TYPE flist_get_type(void) {
+ITEM_TYPE flist_get_sel_item_type(void) {
     return selected_item->type;
 }
 
@@ -1080,9 +1080,9 @@ bool flist_mmove(void *UNUSED(n), int UNUSED(x), int UNUSED(y), int UNUSED(width
         selected_item_dy += dy;
         nitem = NULL;
 
-        if (selected_item_mousedown_move_pend == true && (selected_item_dy >= 5 || selected_item_dy <= -5)) {
-            selected_item_mousedown_move_pend = false;
-            show_page(i);
+        if (selected_item_mousedown_move_pend != NULL && (selected_item_dy >= 5 || selected_item_dy <= -5)) {
+            show_page(selected_item_mousedown_move_pend);
+            selected_item_mousedown_move_pend = NULL;
         }
 
         if (abs(selected_item_dy) >= real_height / 2) {
@@ -1117,7 +1117,7 @@ bool flist_mdown(void *UNUSED(n)) {
     if (mouseover_item) {
         // show_page(mouseover_item);
         selected_item_mousedown           = true;
-        selected_item_mousedown_move_pend = true;
+        selected_item_mousedown_move_pend = mouseover_item;
         return true;
     }
 
@@ -1324,8 +1324,8 @@ bool flist_mup(void *UNUSED(n)) {
     bool draw = false;
     tooltip_mup(); /* may need to return one true */
 
-    if (mouseover_item && selected_item_mousedown_move_pend == true) {
-        show_page(mouseover_item);
+    if (mouseover_item && selected_item_mousedown_move_pend != NULL) {
+        show_page(selected_item_mousedown_move_pend);
         draw = true;
     }
 
@@ -1366,7 +1366,7 @@ bool flist_mup(void *UNUSED(n)) {
     }
 
     selected_item_mousedown           = 0;
-    selected_item_mousedown_move_pend = 0;
+    selected_item_mousedown_move_pend = NULL;
     selected_item_dy                  = 0;
 
     return draw;

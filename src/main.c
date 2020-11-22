@@ -3,7 +3,6 @@
 #include "debug.h"
 #include "settings.h"
 #include "theme.h"
-#include "updater.h"
 
 #include "native/filesys.h"
 #include "native/main.h"
@@ -124,16 +123,11 @@ bool utox_data_save_ftinfo(char hex[TOX_PUBLIC_KEY_SIZE * 2], uint8_t *data, siz
 
 /* Shared function between all four platforms */
 void parse_args(int argc, char *argv[],
-                bool *skip_updater,
                 int8_t *should_launch_at_startup,
                 int8_t *set_show_window,
                 bool *allow_root
                 ) {
     // set default options
-    if (skip_updater) {
-        *skip_updater = false;
-    }
-
     if (should_launch_at_startup) {
         *should_launch_at_startup = 0;
     }
@@ -149,7 +143,6 @@ void parse_args(int argc, char *argv[],
     static struct option long_options[] = {
         { "theme", required_argument, NULL, 't' },      { "portable", no_argument, NULL, 'p' },
         { "set", required_argument, NULL, 's' },        { "unset", required_argument, NULL, 'u' },
-        { "skip-updater", no_argument, NULL, 'N' },     { "delete-updater", required_argument, NULL, 'D'},
         { "version", no_argument, NULL, 0 },            { "silent", no_argument, NULL, 'S' },
         { "verbose", no_argument, NULL, 'v' },          { "help", no_argument, NULL, 'h' },
         { "debug", required_argument, NULL, 1 },        { "allow-root", no_argument, NULL, 2 },
@@ -224,30 +217,12 @@ void parse_args(int argc, char *argv[],
                 break;
             }
 
-            case 'N': {
-                if (skip_updater) {
-                    *skip_updater = true;
-                }
-                break;
-            }
-            case 'D': {
-                if (strstr(optarg, "uTox_updater")) {
-                    // We're using the windows version of strstr() here
-                    // because it's currently the only platform supported
-                    // by the updater.
-                    // TODO expose this as a function in updater.c
-                    remove(optarg);
-                }
-                break;
-            }
-
             case 0: {
                 LOG_NORM("uTox version: %s\n", VERSION);
                 #ifdef GIT_VERSION
                 LOG_NORM("git version %s\n", GIT_VERSION);
                 #endif
                 exit(EXIT_SUCCESS);
-                break;
             }
 
             case 'S': {
@@ -281,23 +256,24 @@ void parse_args(int argc, char *argv[],
                 LOG_NORM("µTox - Lightweight Tox client version %s.\n\n", VERSION);
                 LOG_NORM("The following options are available:\n");
                 LOG_NORM("  -t --theme=<theme-name>  Specify a UI theme, where <theme-name> can be one of default, "
-                            "dark, light, highcontrast, zenburn.\n");
+                            "dark, light, highcontrast, zenburn, solarized-light, solarized-dark.\n");
                 LOG_NORM("  -p --portable            Launch in portable mode: All data will be saved to the tox "
                             "folder in the current working directory.\n");
                 LOG_NORM("  -s --set=<option>        Set an option: start-on-boot, show-window, hide-window.\n");
                 LOG_NORM("  -u --unset=<option>      Unset an option: start-on-boot.\n");
-                LOG_NORM("  -n --no-updater          Disable the updater.\n");
                 LOG_NORM("  -v --verbose             Increase the amount of output, use -v multiple times to get "
                             "full debug output.\n");
                 LOG_NORM("  -h --help                Shows this help text.\n");
                 LOG_NORM("  --version                Print the version and exit.\n");
                 LOG_NORM("  --silent                 Set the verbosity level to 0, disable all debugging output.\n");
-                LOG_NORM("  --debug                  Set a file for utox to log errors to.\n");
+                LOG_NORM("  --debug=<file>           Set a file for utox to log errors to.\n");
                 exit(EXIT_SUCCESS);
-                break;
             }
 
-            case '?': LOG_TRACE("uTox", "%c", (char)optopt ); break;
+            case '?': {
+                LOG_TRACE("uTox", "%c", (char)optopt);
+                exit(EXIT_FAILURE);
+            }
         }
     }
 }
@@ -320,18 +296,14 @@ void utox_init(void) {
         settings.debug_file = stdout;
     }
 
-    UTOX_SAVE *save = config_load();
-    free(save);
+    config_load();
 
     /* Called by the native main for every platform after loading utox setting,
      * before showing/drawing any windows. */
-    if (settings.curr_version != settings.last_version) {
+    if (settings.utox_last_version != settings.last_version) {
         settings.show_splash = true;
+        settings.utox_last_version = settings.last_version;
     }
-
-    // We likely want to start this on every system.
-    thread(updater_thread, (void*)1);
-    thread(utox_av_ctrl_thread, NULL);
 }
 
 void utox_raze(void) {

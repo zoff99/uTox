@@ -8,7 +8,6 @@
 #define TITLE "uTox"
 #define SUB_TITLE "(Alpha)"
 
-// The updater relies on these version numbers, and values greater than an octet were never tested
 #define VERSION "@PROJECT_VERSION@"
 #define VER_MAJOR @PROJECT_VERSION_MAJOR@
 #define VER_MINOR @PROJECT_VERSION_MINOR@
@@ -23,4 +22,3 @@
 // Defaults
 #define DEFAULT_NAME "uTox User"
 #define DEFAULT_STATUS "Toxing on uTox, from the future!"
-#define DEFAULT_SCALE 11

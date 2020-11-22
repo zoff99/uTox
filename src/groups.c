@@ -53,17 +53,17 @@ static GROUPCHAT *group_make(uint32_t group_number) {
     return &group[group_number];
 }
 
-bool group_create(uint32_t group_number, bool av_group) {
+GROUPCHAT *group_create(uint32_t group_number, bool av_group) {
     GROUPCHAT *g = group_make(group_number);
     if (!g) {
         LOG_ERR("Groupchats", "Could not get/create group %u", group_number);
-        return false;
+        return NULL;
     }
 
     LOG_ERR("Groupchats", "group_create:av_group=%d", (int)av_group);
 
     group_init(g, group_number, av_group);
-    return true;
+    return g;
 }
 
 void group_init(GROUPCHAT *g, uint32_t group_number, bool av_group) {
@@ -409,7 +409,7 @@ void group_notify_msg(GROUPCHAT *g, const char *msg, size_t msg_length) {
     size_t title_length = strnlen(title, sizeof(title) - 1);
     notify(title, title_length, msg, msg_length, g, 1);
 
-    if (flist_get_groupchat() != g) {
+    if (flist_get_sel_group() != g) {
         postmessage_audio(UTOXAUDIO_PLAY_NOTIFICATION, NOTIFY_TONE_FRIEND_NEW_MSG, 0, NULL);
     }
 }

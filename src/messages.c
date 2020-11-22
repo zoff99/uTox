@@ -36,6 +36,8 @@
 
 #define UTOX_MAX_BACKLOG_MESSAGES 256
 
+pthread_mutex_t messages_lock;
+
 /** Appends a messages from self or friend to the message list;
  * will realloc or trim messages as needed;
  *
@@ -189,10 +191,16 @@ static uint32_t message_add(MESSAGES *m, MSG_HEADER *msg) {
 
     message_updateheight(m, msg);
 
-    if (flist_get_groupchat() && m->is_groupchat && flist_get_groupchat() == get_group(m->id)) {
-        m->panel.content_scroll->content_height = m->height;
-    } else if (flist_get_friend() && flist_get_friend()->number == get_friend(m->id)->number) {
-        m->panel.content_scroll->content_height = m->height;
+    if (m->is_groupchat) {
+        const GROUPCHAT *groupchat = flist_get_sel_group();
+        if (groupchat && groupchat == get_group(m->id)) {
+            m->panel.content_scroll->content_height = m->height;
+        }
+    } else {
+        const FRIEND *friend = flist_get_sel_friend();
+        if (friend && friend == get_friend(m->id)) {
+            m->panel.content_scroll->content_height = m->height;
+        }
     }
 
     pthread_mutex_unlock(&messages_lock);
@@ -1791,9 +1799,9 @@ void messages_updateheight(MESSAGES *m, int width) {
 bool messages_char(uint32_t ch) {
     MESSAGES *m;
 
-    if (flist_get_friend()) {
+    if (flist_get_sel_friend()) {
         m = messages_friend.object;
-    } else if (flist_get_groupchat()) {
+    } else if (flist_get_sel_group()) {
         m = messages_group.object;
     } else {
         LOG_TRACE("Messages", "Can't type to nowhere");
