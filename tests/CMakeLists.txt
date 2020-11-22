@@ -4,6 +4,7 @@ include(CTest)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 find_package(Check REQUIRED)
+link_directories(${CHECK_LIBRARY_DIRS})
 
 function(make_test name)
     add_executable(test_${name} test_${name}.c)
@@ -35,10 +36,5 @@ target_link_libraries(utox-test-mock pthread)
 #
 # TODO add a cmake macro for adding tests, this will be too verbose if we add more.
 make_test(chatlog)
-
-if(ENABLE_AUTOUPDATE)
-  make_test(updater)
-      target_link_libraries(test_updater sodium)
-endif()
 
 make_test(chrono)
