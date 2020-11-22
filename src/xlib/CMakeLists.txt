@@ -78,8 +78,6 @@ target_link_libraries(utoxNATIVE
         ${X11_Xrender_LIB}
         ${FREETYPE_LIBRARIES}
         ${DBUS_LIBRARIES}
-    PRIVATE
-        stb
 )
 
 if(LINUX OR NETBSD)

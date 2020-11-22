@@ -14,6 +14,7 @@
 #include "../macros.h"
 #include "../main.h" // MAIN_WIDTH, MAIN_WIDTH, parse_args, utox_init
 #include "../settings.h"
+#include "../stb.h"
 #include "../text.h"
 #include "../theme.h"
 #include "../tox.h"
@@ -32,8 +33,6 @@
 #include "../layout/friend.h"
 #include "../layout/group.h"
 #include "../layout/settings.h"
-
-#include "stb.h"
 
 #include <ctype.h>
 #include <locale.h>
