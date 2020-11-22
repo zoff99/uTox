@@ -127,6 +127,9 @@ jobs:
 
       - store_artifacts:
           path: ~/work/.localrun/ubuntu_18.04_appimage/artefacts
-          destination: artefacts_appimage
+          destination: artefacts_appimage_ubuntu_18_04
 
+      - store_artifacts:
+          path: ~/work/.localrun/ubuntu_16.04_appimage/artefacts
+          destination: artefacts_appimage_ubuntu_16_04
 

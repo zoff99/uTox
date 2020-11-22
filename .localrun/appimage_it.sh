@@ -10,6 +10,7 @@ cd $_HOME_
 
 
 build_for='
+ubuntu:16.04
 ubuntu:18.04
 '
 
@@ -75,10 +76,67 @@ pkgs_Ubuntu_18_04="
     libfreetype6-dev
     libfontconfig1-dev
     libxext-dev
-    ffmpeg
     libasound2-dev
     libopenal-dev
     alsa-utils
+    libv4l-dev
+    v4l-conf
+    v4l-utils
+    libjpeg8-dev
+    libavcodec-dev
+    libavdevice-dev
+    libsodium-dev
+    libvpx-dev
+    libopus-dev
+    libx264-dev
+"
+
+
+pkgs_Ubuntu_16_04="
+    :u:
+    software-properties-common
+    :c:add-apt-repository\sppa:jonathonf/ffmpeg-4\s-y
+    :u:
+    libfuse-dev
+    libfuse2
+    ca-certificates
+    shtool
+    elfutils
+    xz-utils
+    patch
+    bzip2
+    librsvg2-2
+    librsvg2-common
+    flatpak
+    flatpak-builder
+    vim
+    devscripts
+    debhelper
+    libconfig-dev
+    cmake
+    wget
+    unzip
+    zip
+    passwd
+    ffmpeg
+    automake
+    autotools-dev
+    build-essential
+    check
+    checkinstall
+    libtool
+    pkg-config
+    rsync
+    git
+    libx11-dev
+    x11-common
+    x11-utils
+    libxrender-dev
+    libfreetype6-dev
+    libfontconfig1-dev
+    libxext-dev
+    libasound2-dev
+    libopenal-dev
     libv4l-dev
     v4l-conf
     v4l-utils
