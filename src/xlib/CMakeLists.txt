@@ -24,19 +24,14 @@ set_target_properties( icon PROPERTIES LINKER_LANGUAGE C )
 #########################################
 add_library(utoxNATIVE STATIC
     audio.c
-    dbus.c
-    dbus.h
+    $<$<BOOL:${ENABLE_DBUS}>:dbus.c>
     drawing.c
     event.c
     filesys.c
     freetype.c
-    freetype.h
     gtk.c
-    keysym2ucs.h
     main.c
-    main.h
-    mmenu.c
-    mmenu.h
+    $<$<BOOL:${ENABLE_UNITY_MMENU}>:mmenu.c>
     screen_grab.c
     tray.c
     v4l.c
@@ -52,12 +47,20 @@ message("Found Freetype version ${FREETYPE_VERSION_STRING}")
 message("Freetype include: ${FREETYPE_INCLUDE_DIRS}")
 message("Freetype library: ${FREETYPE_LIBRARIES}")
 
-find_package(X11 REQUIRED)
+find_package(libfontconfig REQUIRED)
+include_directories("${LIBFONTCONFIG_INCLUDE_DIRS}")
+message("FontConfig include: ${LIBFONTCONFIG_INCLUDE_DIRS}")
+message("FontConfig library: ${LIBFONTCONFIG_LIBRARIES}")
 
 message("X include:         ${X11_INCLUDE_DIR}")
 message("X library:         ${X11_LIBRARIES}")
 message("Xrender include:   ${X11_Xrender_INCLUDE_PATH}")
 message("Xrender library:   ${X11_Xrender_LIB}")
+
+find_package(libv4lconvert REQUIRED)
+include_directories("${LIBV4LCONVERT_INCLUDE_DIRS}")
+message("V4Lconvert include: ${LIBV4LCONVERT_INCLUDE_DIRS}")
+message("V4Lconvert library: ${LIBV4LCONVERT_LIBRARIES}")
 
 if(ENABLE_DBUS AND DBUS_LIBRARIES)
     message("DBus include:  ${DBUS_INCLUDE_DIRS}")
@@ -67,25 +70,30 @@ else()
 endif()
 
 target_link_libraries(utoxNATIVE
+    PUBLIC
         icon
-        v4lconvert
+        ${LIBV4LCONVERT_LIBRARIES}
+        ${LIBFONTCONFIG_LIBRARIES}
         ${X11_LIBRARIES}
         ${X11_Xrender_LIB}
-        fontconfig
         ${FREETYPE_LIBRARIES}
-        )
+        ${DBUS_LIBRARIES}
+    PRIVATE
+        stb
+)
 
 if(LINUX OR NETBSD)
     target_link_libraries(utoxNATIVE
-        resolv
-        )
+        PUBLIC
+            resolv
+    )
 endif()
 
 if(LINUX)
     target_link_libraries(utoxNATIVE
-        dl
-        ${DBUS_LIBRARIES}
-        )
+        PUBLIC
+            dl
+    )
 endif()
 
 include(GNUInstallDirs)
@@ -96,7 +104,7 @@ install(FILES
     )
 
 install(FILES
-    ../utox.1
+    ../../man/utox.1
     DESTINATION "${CMAKE_INSTALL_MANDIR}/man1"
     )
 

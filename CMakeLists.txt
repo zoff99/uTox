@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.2)
-set(CMAKE_OSX_DEPLOYMENT_TARGET 10.6 CACHE STRING "Minimum OS X deployment version")
 project(uTox LANGUAGES C)
 
 #####################
@@ -8,10 +7,10 @@ project(uTox LANGUAGES C)
 
 set(PROJECT_VERSION_MAJOR "0")
 set(PROJECT_VERSION_MINOR "17")
-set(PROJECT_VERSION_PATCH "1")
+set(PROJECT_VERSION_PATCH "2")
 set(PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
 
-set(PROJECT_COPYRIGHT "Copyleft 2019 uTox contributors. Some rights reserved.")
+set(PROJECT_COPYRIGHT "Copyleft 2020 uTox contributors. Some rights reserved.")
 
 string(TIMESTAMP BUILD_YEAR "%Y" UTC)
 string(TIMESTAMP BUILD_MONTH "%B" UTC)
@@ -30,17 +29,16 @@ endif()
 if(WIN32)
     set(WINDOWS TRUE)
 elseif(APPLE)
-    if(CMAKE_SYSTEM_NAME MATCHES ".*MacOS.*")
+    if(CMAKE_SYSTEM_NAME MATCHES "MacOS")
+        set(CMAKE_OSX_DEPLOYMENT_TARGET 10.6 CACHE STRING "Minimum OS X deployment version")
         set(MACOSX TRUE)
     endif()
 elseif(UNIX)
-    if(CMAKE_SYSTEM_NAME MATCHES ".*Linux")
+    if(CMAKE_SYSTEM_NAME MATCHES "Linux")
         set(LINUX TRUE)
-    elseif(CMAKE_SYSTEM_NAME MATCHES "kOpenBSD.*|OpenBSD.*")
-        set(OPENBSD TRUE)
-    elseif(CMAKE_SYSTEM_NAME MATCHES "kNetBSD.*|NetBSD.*")
+    elseif(CMAKE_SYSTEM_NAME MATCHES "NetBSD")
         set(NETBSD TRUE)
-    elseif(CMAKE_SYSTEM_NAME MATCHES "kFreeBSD.*|FreeBSD")
+    elseif(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
         set(FREEBSD TRUE)
     endif()
 endif()
@@ -103,10 +101,6 @@ if(WINDOWS AND NOT CROSS_COMPILING)
         # Helping Cygwin out again..
         set(WIN64 TRUE)
     endif()
-elseif(FREEBSD)
-    include(cmake/toolchain-freebsd.cmake)
-elseif(OPENBSD OR NETBSD)
-    include(cmake/toolchain-openbsd.cmake)
 elseif(APPLE)
     include(cmake/macOS.cmake)
 endif()
@@ -124,8 +118,8 @@ configure_file(${uTox_SOURCE_DIR}/src/cocoa/Info.plist.in
                ${uTox_SOURCE_DIR}/src/cocoa/Info.plist)
 configure_file(${uTox_SOURCE_DIR}/src/android/AndroidManifest.xml.in
                ${uTox_SOURCE_DIR}/src/android/AndroidManifest.xml)
-configure_file(${uTox_SOURCE_DIR}/src/utox.1.in
-               ${uTox_SOURCE_DIR}/src/utox.1)
+configure_file(${uTox_SOURCE_DIR}/man/utox.1.in
+               ${uTox_SOURCE_DIR}/man/utox.1)
 
 if(${CMAKE_BUILD_TYPE} MATCHES Debug)
     execute_process(COMMAND git describe --abbrev=8 --dirty --always --tags
@@ -227,6 +221,10 @@ elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os")
     set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL} -Oz -s")
 
+    if(FREEBSD)
+        set(LIBRARIES ${LIBRARIES} "cxxrt")
+    endif()
+
     if(NOT ENABLE_ASAN)
         if(NOT APPLE)
             add_cflag("-fsanitize=safe-stack")
@@ -265,10 +263,6 @@ if(UTOX_STATIC)
     else()
         add_cflag("-static")
     endif()
-endif()
-
-if(ENABLE_AUTOUPDATE)
-    add_cflag("-DENABLE_AUTOUPDATE=1")
 endif()
 
 if(ENABLE_FILTERAUDIO)
@@ -328,14 +322,19 @@ elseif(APPLE)
     add_definitions("-x objective-c")
     add_subdirectory(src/cocoa)
 elseif(UNIX)
+    find_package(X11 REQUIRED)
+    include_directories(${X11_INCLUDE_DIR})
+
     add_subdirectory(src/xlib)
 
     if(LINUX)
         # Required for v4l (at least in the Linux static builds on Jenkins)
         set(LIBRARIES ${LIBRARIES} "rt")
     endif()
-
 endif()
+
+
+
 
 # include utoxLAYOUT
 add_subdirectory(src/layout)
@@ -368,15 +367,14 @@ add_executable(utox ${GUI_TYPE}
     src/screen_grab.c
     src/self.c
     src/settings.c
-    src/sized_string.h
     src/stb.c
     src/text.c
     src/theme.c
+    src/theme_tables.c
     src/tox.c
     src/tox_callbacks.c
     src/ui.c
     src/ui_i18n.c
-    src/updater.c
     src/utox.c
     src/window.c
     third-party/minini/dev/minIni.c
@@ -435,7 +433,7 @@ include(CPack)
 
 if(ENABLE_TESTS)
   if(UNIX)
-    # Tests currently only run on Linux and macOS.
+    # Tests currently only run on Unix-like OSes.
     enable_testing()
     add_subdirectory(tests)
   endif()
@@ -452,7 +450,6 @@ message("----------------------------------")
 message("- Add ASAN:                ${ENABLE_ASAN}")
 message("- Error on Warning:        ${ENABLE_WERROR}")
 message("- Filter Audio:            ${ENABLE_FILTERAUDIO}")
-message("- Auto Updater:            ${ENABLE_AUTOUPDATE}")
 message("- uTox Static:             ${UTOX_STATIC}")
 message("- Toxcore Static:          ${TOXCORE_STATIC}")
 message("-- Platform Options --------------")

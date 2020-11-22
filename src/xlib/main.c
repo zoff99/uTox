@@ -12,13 +12,11 @@
 #include "../flist.h"
 #include "../friend.h"
 #include "../macros.h"
-#include "../main.h" // MAIN_WIDTH, MAIN_WIDTH, DEFAULT_SCALE, parse_args, utox_init
+#include "../main.h" // MAIN_WIDTH, MAIN_WIDTH, parse_args, utox_init
 #include "../settings.h"
-#include "../stb.h"
 #include "../text.h"
 #include "../theme.h"
 #include "../tox.h"
-#include "../updater.h"
 #include "../utox.h"
 
 #include "../av/utox_av.h"
@@ -35,6 +33,8 @@
 #include "../layout/group.h"
 #include "../layout/settings.h"
 
+#include "stb.h"
+
 #include <ctype.h>
 #include <locale.h>
 #include <stdlib.h>
@@ -45,7 +45,30 @@
 extern pthread_mutex_t save_file_write_lock;
 extern int global_shutdown;
 
-bool hidden = false;
+
+
+Atom wm_protocols, wm_delete_window;
+Atom XA_CLIPBOARD, XA_NET_NAME, XA_UTF8_STRING, targets, XA_INCR;
+Atom XdndAware, XdndEnter, XdndLeave, XdndPosition, XdndStatus, XdndDrop, XdndSelection, XdndDATA, XdndActionCopy;
+Atom XA_URI_LIST, XA_PNG_IMG;
+Atom XRedraw;
+
+Picture bitmap[BM_ENDMARKER];
+Cursor  cursors[8];
+
+uint8_t pointergrab;
+
+bool     _redraw;
+
+XImage *screen_image;
+
+void *libgtk;
+
+struct utox_clipboard clipboard;
+struct utox_primary primary;
+struct utox_pastebuf pastebuf;
+
+static bool hidden = false;
 
 XIC xic = NULL;
 static XSizeHints *xsh = NULL;
@@ -278,9 +301,9 @@ void copy(int value) {
     int len;
     if (edit_active()) {
         len = edit_copy((char *)clipboard.data, sizeof(clipboard.data));
-    } else if (flist_get_friend()) {
+    } else if (flist_get_sel_friend()) {
         len = messages_selection(&messages_friend, clipboard.data, sizeof(clipboard.data), value);
-    } else if (flist_get_groupchat()) {
+    } else if (flist_get_sel_group()) {
         len = messages_selection(&messages_group, clipboard.data, sizeof(clipboard.data), value);
     } else {
         LOG_ERR("XLIB", "Copy from Unsupported flist type.");
@@ -390,7 +413,7 @@ void pastedata(void *data, Atom type, size_t len, bool select) {
 
     size_t size = len;
     if (type == XA_PNG_IMG) {
-        FRIEND *f = flist_get_friend();
+        FRIEND *f = flist_get_sel_friend();
         if (!f) {
             LOG_ERR("XLIB", "Can't paste data to missing friend.");
             return;
@@ -412,7 +435,7 @@ void pastedata(void *data, Atom type, size_t len, bool select) {
             friend_sendimage(f, native_image, width, height, png_image, size);
         }
     } else if (type == XA_URI_LIST) {
-        FRIEND *f = flist_get_friend();
+        FRIEND *f = flist_get_sel_friend();
         if (!f) {
             LOG_ERR("XLIB", "Can't paste data to missing friend.");
             return;
@@ -635,13 +658,6 @@ void edit_will_deactivate(void) {}
 
 void update_tray(void) {}
 
-void config_osdefaults(UTOX_SAVE *r) {
-    r->window_x      = 0;
-    r->window_y      = 0;
-    r->window_width  = DEFAULT_WIDTH;
-    r->window_height = DEFAULT_HEIGHT;
-}
-
 static void atom_init(void) {
     wm_protocols     = XInternAtom(display, "WM_PROTOCOLS", 0);
     wm_delete_window = XInternAtom(display, "WM_DELETE_WINDOW", 0);
@@ -703,10 +719,8 @@ int main(int argc, char *argv[]) {
 
     int8_t should_launch_at_startup;
     int8_t set_show_window;
-    bool   skip_updater;
     bool allow_root;
     parse_args(argc, argv,
-               &skip_updater,
                &should_launch_at_startup,
                &set_show_window,
                &allow_root);
@@ -721,11 +735,6 @@ int main(int argc, char *argv[]) {
 
     if (should_launch_at_startup == 1 || should_launch_at_startup == -1) {
         LOG_NOTE("XLIB", "Start on boot not supported on this OS, please use your distro suggested method!\n");
-    }
-
-    if (skip_updater == true) {
-        LOG_ERR("XLIB", "Disabling the updater is not supported on this OS. "
-                        "Updates are managed by your distro's package manager.\n");
     }
 
     LOG_INFO("XLIB MAIN", "Setting theme to:\t%d", settings.theme);
@@ -877,6 +886,20 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    Window       root_return, child_return;
+    int          x_return, y_return;
+    unsigned int width_return, height_return, i;
+    XGetGeometry(display, main_window.window, &root_return, &x_return, &y_return, &width_return, &height_return, &i, &i);
+
+    XTranslateCoordinates(display, main_window.window, root_return, 0, 0, &x_return, &y_return, &child_return);
+
+    settings.window_x      = x_return < 0 ? 0 : x_return;
+    settings.window_y      = y_return < 0 ? 0 : y_return;
+    settings.window_width  = width_return;
+    settings.window_height = height_return;
+
+    config_save();
+
     postmessage_utoxav(UTOXAV_KILL, 0, 0, NULL);
     postmessage_toxcore(TOX_KILL, 0, 0, NULL);
 
@@ -885,22 +908,6 @@ int main(int argc, char *argv[]) {
     }
 
     destroy_tray_icon();
-
-    Window       root_return, child_return;
-    int          x_return, y_return;
-    unsigned int width_return, height_return, i;
-    XGetGeometry(display, main_window.window, &root_return, &x_return, &y_return, &width_return, &height_return, &i, &i);
-
-    XTranslateCoordinates(display, main_window.window, root_return, 0, 0, &x_return, &y_return, &child_return);
-
-    UTOX_SAVE d = {
-        .window_x      = x_return < 0 ? 0 : x_return,
-        .window_y      = y_return < 0 ? 0 : y_return,
-        .window_width  = width_return,
-        .window_height = height_return,
-    };
-
-    config_save(&d);
 
     FcFontSetSortDestroy(fs);
     freefonts();

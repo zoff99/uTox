@@ -19,7 +19,7 @@
 #include <sys/shm.h>
 #include <sys/stat.h>
 
-#define MAX_VID_WINDOWS 100 // TODO drop this for dynamic allocation
+#define MAX_VID_WINDOWS 200 // TODO drop this for dynamic allocation
 static Window video_win[MAX_VID_WINDOWS]; // TODO we should allocate this dynamically but this'll work for now
 static Window preview;        // Video preview
 
