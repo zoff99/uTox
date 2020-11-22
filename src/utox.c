@@ -579,7 +579,7 @@ void utox_message_dispatch(UTOX_MSG utox_msg_id, uint16_t param1, uint16_t param
             break;
         }
         case AV_VIDEO_FRAME: {
-            /* param1: video handle to send frame to (friend id + 1 or 0 for preview)
+            /* param1: video handle to send frame to ("friendnumber" -> incoming video or "UINT16_MAX" -> preview)
                param2: self preview frame for pending call.
                data: packaged frame data */
 
