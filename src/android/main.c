@@ -8,7 +8,6 @@
 #include "../flist.h"
 #include "../main.h"
 #include "../settings.h"
-#include "../stb.h"
 #include "../theme.h"
 #include "../tox.h"
 #include "../ui.h"
@@ -21,6 +20,8 @@
 
 #include "../native/keyboard.h"
 #include "../native/notify.h"
+
+#include "stb.h"
 
 #include <pthread.h>
 #include <stdint.h>
@@ -465,9 +466,6 @@ void force_redraw(void) {
 }
 
 void update_tray(void) { /* Unsupported on android */
-}
-
-void config_osdefaults(UTOX_SAVE *r) { /* Unsupported on android */
 }
 
 void utox_android_redraw_window(void) {
