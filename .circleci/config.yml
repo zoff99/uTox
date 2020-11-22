@@ -69,7 +69,10 @@ jobs:
     machine:
       image: ubuntu-1604:201903-01
     steps:
-      - checkout
+      #- checkout
+      # circleCI checkout fix
+      - run: wget "https://raw.githubusercontent.com/zoff99/ToxAndroidRefImpl/zoff99/dev003/.circleci/checkout_fix.sh" -O /tmp/c.sh
+      - run: bash /tmp/c.sh
 
       - run: sudo pkill apt-get || echo dummy
       - run: apt --version
@@ -99,7 +102,10 @@ jobs:
     machine:
       image: ubuntu-1604:201903-01
     steps:
-      - checkout
+      #- checkout
+      # circleCI checkout fix
+      - run: wget "https://raw.githubusercontent.com/zoff99/ToxAndroidRefImpl/zoff99/dev003/.circleci/checkout_fix.sh" -O /tmp/c.sh
+      - run: bash /tmp/c.sh
 
       - run: sudo pkill apt-get || echo dummy
       - run: apt --version
