@@ -514,3 +514,4 @@ void config_save(void) {
     if (!utox_save_config()) {
         LOG_ERR("uTox", "Unable to save uTox settings.");
     }
+}

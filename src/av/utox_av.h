@@ -7,19 +7,7 @@
 #include <stdint.h>
 // Zoff ---------------
 #include <tox/tox.h>
-
-#ifndef TOXCOMPAT_H_
-#define TOXCOMPAT_H_
-#endif
-
-#if TOX_VERSION_IS_API_COMPATIBLE(0, 2, 0)
-#else
-#endif
-
 // Zoff ---------------
-
-
-#include <stdint.h>
 
 extern bool utox_av_ctrl_init;
 
