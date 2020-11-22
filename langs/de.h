@@ -288,7 +288,13 @@ msgid(AUDIOOUTPUTDEVICE)
 msgstr("Audioausgabegerät")
 
 msgid(VIDEOINPUTDEVICE)
-msgstr("Videoeingabegerät")
+msgstr("Video-Eingabegerät")
+
+msgid(VIDEOFRAMERATE)
+msgstr("Bilder pro Sekunde (FPS)")
+
+msgid(PUSH_TO_TALK)
+msgstr("Push-to-Talk")
 
 msgid(STATUS_AWAY)
 msgstr("Abwesend")
