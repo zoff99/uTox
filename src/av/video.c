@@ -581,7 +581,7 @@ void utox_video_thread(void *args) {
             timspan_in_ms2 = current_time_monotonic_default();
 
             // capturing is enabled, capture frames
-            // LOG_ERR("uToxVideo", "native_video_getframe: START");
+            // LOG_ERR("uToxVideo", "native_video_getframe: START:w=%d h=%d", utox_video_frame.w, utox_video_frame.h);
             const int r = native_video_getframe(utox_video_frame.y, utox_video_frame.u, utox_video_frame.v,
                                                 utox_video_frame.w, utox_video_frame.h);
             // LOG_ERR("uToxVideo", "native_video_getframe: DONE");
