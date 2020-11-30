@@ -282,6 +282,8 @@ bool native_video_init(void *handle) {
             video_height++;
         }
 
+        LOG_ERR("Video", "x=%d y=%d w=%d h=%d", video_x, video_y, video_width, video_height);
+
         if (!(screen_image = XShmCreateImage(deskdisplay, DefaultVisual(deskdisplay, deskscreen),
                                              DefaultDepth(deskdisplay, deskscreen), ZPixmap, NULL, &shminfo,
                                              video_width, video_height))) {

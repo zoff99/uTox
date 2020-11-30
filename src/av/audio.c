@@ -681,10 +681,10 @@ void utox_audio_thread(void *args) {
     // bool call[MAX_CALLS] = {0}, preview = 0;
 
     const int perframe = (UTOX_DEFAULT_FRAME_A * UTOX_DEFAULT_SAMPLE_RATE_A) / 1000;
-    uint8_t buf[perframe * 2 * UTOX_DEFAULT_AUDIO_CHANNELS]; //, dest[perframe * 2 * UTOX_DEFAULT_AUDIO_CHANNELS];
-    memset(buf, 0, sizeof(buf));
+    uint8_t *buf = calloc(1, (perframe * 2 * UTOX_DEFAULT_AUDIO_CHANNELS) * 10);
 
-    LOG_TRACE("uTox Audio", "frame size: %u" , perframe);
+    LOG_ERR("uTox Audio", "frame size: %d" , (int)perframe);
+    LOG_ERR("uTox Audio", "buf size: %d" , (int)(perframe * 2 * UTOX_DEFAULT_AUDIO_CHANNELS));
 
     /* init Microphone */
     audio_in_init();
@@ -1167,6 +1167,11 @@ void utox_audio_thread(void *args) {
     {
         LOG_ERR("uTox Audio", "audio_out_device_close:007");
         continue;
+    }
+
+    if (buf)
+    {
+        free(buf);
     }
 
     audio_thread_msg       = 0;

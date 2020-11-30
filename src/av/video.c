@@ -507,6 +507,19 @@ static void *video_play(void *video_frame_data)
             new_height = global_utox_max_desktop_capture_height;
         }
 
+        if (new_width & 1)
+        {
+            // x264 can not handle odd width
+            if (new_width > 2)
+            {
+                new_width--;
+            }
+            else
+            {
+                new_width = 2;
+            }
+        }
+
         frame->w              = new_width;
         frame->h              = new_height;
         frame->img            = malloc(((new_width * new_height) * 3 / 2) + 1000 ); // YUV buffer
