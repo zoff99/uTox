@@ -59,7 +59,14 @@ bool v4l_init(char *dev_name) {
     // utox_v4l_fd = open(dev_name, O_RDWR /* required */ | O_NONBLOCK, 0);
     utox_v4l_fd = open(dev_name, O_RDWR /* required */, 0);
 
-    if (-1 == utox_v4l_fd) {
+#if 0
+    if (dev_name)
+    {
+        LOG_ERR("v4l", "video device name=%s", dev_name);
+    }
+#endif
+
+    if (utox_v4l_fd == -1) {
         LOG_ERR("v4l", "Cannot open '%s': %d, %s" , dev_name, errno, strerror(errno));
         return 0;
     }
@@ -290,6 +297,7 @@ bool v4l_init(char *dev_name) {
             return 0;
         }
     }*/
+    LOG_ERR("v4l", "v4l_init:return 1");
     return 1;
 }
 

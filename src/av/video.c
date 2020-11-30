@@ -203,7 +203,16 @@ static bool video_device_stop(void) {
 void utox_video_append_device(void *device, bool localized, void *name, bool default_) {
     video_device[video_device_count++] = device;
 
-    LOG_ERR("v4l", "utox_video_append_device:cur=%d count=%d", (int)video_device_current, (int)video_device_count);
+#if 0
+    if ((name)&&(!localized))
+    {
+        LOG_ERR("v4l", "utox_video_append_device:cur=%d name=%s count=%d", (int)video_device_current, name, (int)video_device_count);
+    }
+    else
+    {
+        LOG_ERR("v4l", "utox_video_append_device:cur=%d count=%d", (int)video_device_current, (int)video_device_count);
+    }
+#endif
 
     if (localized) {
         // Device name is localized with name containing UTOX_I18N_STR.
@@ -343,7 +352,11 @@ void postmessage_video(uint8_t msg, uint32_t param1, uint32_t param2, void *data
 // Populates the video device dropdown.
 static void init_video_devices(void) {
     // Add always-present null video input device.
+#ifdef UTOX_USAGE__HQAV_APPLICATION
     utox_video_append_device(NULL, 1, (void *)STR_VIDEO_IN_NONE, 0);
+#else
+    utox_video_append_device(NULL, 1, (void *)STR_VIDEO_IN_NONE, 1);
+#endif
 
     // select a video device (autodectect)
     video_device_current = native_video_detect();

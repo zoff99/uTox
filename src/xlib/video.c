@@ -171,9 +171,13 @@ uint16_t native_video_detect(void) {
     uint16_t device_count = 1; /* start at 1 for the desktop input */
 
     // Indicate that we support desktop capturing.
+#ifdef UTOX_USAGE__HQAV_APPLICATION
     utox_video_append_device((void *)1, 1, (void *)STR_VIDEO_IN_DESKTOP, 1);
+#else
+    utox_video_append_device((void *)1, 1, (void *)STR_VIDEO_IN_DESKTOP, 0);
+#endif
 
-    for (int i = 0; i != 64; i++) { /* TODO: magic numbers are bad mm'kay? */
+    for (int i = 63; i >= 0; i--) { /* TODO: magic numbers are bad mm'kay? */
         snprintf(dev_name + 10, sizeof(dev_name) - 10, "%i", i);
 
         struct stat st;
@@ -193,9 +197,15 @@ uint16_t native_video_detect(void) {
         memcpy(p, &pp, sizeof(void *));
         memcpy(p + sizeof(void *), dev_name, sizeof(dev_name));
 
+        // LOG_ERR("Video", "%s device #%d" , dev_name, i);
+
         if (!first) {
             first = pp;
+#ifdef UTOX_USAGE__HQAV_APPLICATION
             utox_video_append_device((void *)p, 0, p + sizeof(void *), 0);
+#else
+            utox_video_append_device((void *)p, 0, p + sizeof(void *), 1);
+#endif
         } else {
             utox_video_append_device((void *)p, 0, p + sizeof(void *), 0);
         }
@@ -219,19 +229,31 @@ static int alwaysRoundDown(int n, int multiple)
 static uint16_t video_x, video_y;
 
 bool native_video_init(void *handle) {
+
+    LOG_ERR("Video", "native_video_init:enter");
+
     if (isdesktop(handle)) {
+        LOG_ERR("Video", "native_video_init:isdesktop()");
         utox_v4l_fd = -1;
 
+#ifdef UTOX_USAGE__HQAV_APPLICATION
         // GRAB_POS grab = grab_pos();
         video_x      = 0; // MIN(grab.dn_x, grab.up_x);
         video_y      = 0; // MIN(grab.dn_y, grab.up_y);
         video_width  = default_screen->width; // MAX(grab.dn_x, grab.up_x) - MIN(grab.dn_x, grab.up_x);
         video_height = default_screen->height; // MAX(grab.dn_y, grab.up_y) - MIN(grab.dn_y, grab.up_y);
+#else
+        GRAB_POS grab = grab_pos();
+        video_x      = MIN(grab.dn_x, grab.up_x);
+        video_y      = MIN(grab.dn_y, grab.up_y);
+        video_width  = MAX(grab.dn_x, grab.up_x) - MIN(grab.dn_x, grab.up_x);
+        video_height = MAX(grab.dn_y, grab.up_y) - MIN(grab.dn_y, grab.up_y);
 
-        // ------ disable rounding screen window ------------------
-        // video_width = alwaysRoundDown(video_width + 10, 64);
-        // video_height = alwaysRoundDown(video_height + 10, 64);
-        // ------ disable rounding screen window ------------------
+        // ------ rounding screen window size ------------------
+        video_width = alwaysRoundDown(video_width + 10, 64);
+        video_height = alwaysRoundDown(video_height + 10, 64);
+        // ------ rounding screen window size ------------------
+#endif
         
         if (video_width > default_screen->width)
         {
@@ -281,6 +303,7 @@ bool native_video_init(void *handle) {
         return true;
     }
 
+    LOG_ERR("Video", "native_video_init:v4l_init()");
     return v4l_init(handle);
 }
 

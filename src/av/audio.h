@@ -46,11 +46,17 @@ enum {
     NOTIFY_TONE_FRIEND_REQUEST,
 };
 
+#ifdef UTOX_USAGE__HQAV_APPLICATION
 #define UTOX_DEFAULT_BITRATE_A 128
+#define UTOX_DEFAULT_AUDIO_CHANNELS 2
+#else
+#define UTOX_DEFAULT_BITRATE_A 64
+#define UTOX_DEFAULT_AUDIO_CHANNELS 1
+#endif
+
 #define UTOX_MIN_BITRATE_AUDIO UTOX_DEFAULT_BITRATE_A //TODO: Find out what the minimum bit rate should be
 #define UTOX_DEFAULT_FRAME_A 60
 #define UTOX_DEFAULT_SAMPLE_RATE_A 48000
-#define UTOX_DEFAULT_AUDIO_CHANNELS 2
 
 /* Check self */
 #define UTOX_SENDING_AUDIO(f_number) (!!(get_friend(f_number)->call_state_self & TOXAV_FRIEND_CALL_STATE_SENDING_A))
