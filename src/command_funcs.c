@@ -84,9 +84,24 @@ bool slash_topic(void *object, char *arg, int arg_length) {
 
 static int get_number_in_string(const char *str, int default_value)
 {
-    int number;
+    int number = default_value;
+    if (!str)
+    {
+        return default_value;
+    }
 
-    while (!(*str >= '0' && *str <= '9') && (*str != '-') && (*str != '+')) str++;
+    int len = strlen(str);
+    int pos = 0;
+
+    while (!(*str >= '0' && *str <= '9') && (*str != '-') && (*str != '+'))
+    {
+        if (pos >= len)
+        {
+            return default_value;
+        }
+        pos++;
+        str++;
+    }
 
     if (sscanf(str, "%d", &number) == 1)
     {
