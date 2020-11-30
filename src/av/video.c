@@ -42,8 +42,10 @@ static pthread_mutex_t video_thread_lock;
 static struct timeval tm_outgoing_video_frames;
 uint32_t global_video_out_fps;
 #define TIMESPAN_IN_MS_ELEMENTS 10
+#define SHOW_FPS_EVERY_X_FRAMES 200
 unsigned long long timspan_in_ms[TIMESPAN_IN_MS_ELEMENTS];
 uint16_t timspan_in_ms_cur_index = 0;
+int32_t showfps_cur_index = 0;
 uint32_t sleep_between_frames;
 
 #include <X11/X.h>
@@ -712,7 +714,12 @@ void utox_video_thread(void *args) {
                     timspan_in_ms_cur_index = 0;
                 }
 
-                // LOG_TRACE("uToxVideo", "outgoing fps=%d" , global_video_out_fps);
+                showfps_cur_index++;
+                if (showfps_cur_index > SHOW_FPS_EVERY_X_FRAMES)
+                {
+                    showfps_cur_index = 0;
+                    LOG_ERR("uToxVideo", "outgoing fps=%d" , global_video_out_fps);
+                }
 
                 __utimer_start(&tm_outgoing_video_frames);
                 // --- FPS ----
@@ -754,14 +761,14 @@ void utox_video_thread(void *args) {
                 //     (int)settings.video_fps, (int)sleep_between_frames, (int)timspan_current);
                 // fprintf(stderr, "outgoing fps=%d\n" , global_video_out_fps);
 
-                if (timspan_current != sleep_between_frames)
+                if (timspan_current != (int32_t)sleep_between_frames)
                 {
                     int32_t delta_ms = ((int32_t)timspan_current - (int32_t)sleep_between_frames);
 
                     // fprintf(stderr, "x:%d %d %d\n" ,
                     //     (int)delta_ms, (int)sleep_between_frames, (int)timspan_current);
 
-    #if 1
+#if 1
                     if (delta_ms < -20)
                     {
                        delta_ms = -20;
@@ -770,7 +777,7 @@ void utox_video_thread(void *args) {
                     {
                        delta_ms = 20;
                     }
-    #endif
+#endif
 
                     // fprintf(stderr, "0:%d %d\n" , (int)sleep_delay_corrected, (int)delta_ms);
                     sleep_delay_corrected = sleep_delay_corrected - delta_ms;
