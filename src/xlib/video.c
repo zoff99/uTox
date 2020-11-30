@@ -173,6 +173,7 @@ uint16_t native_video_detect(void) {
     // Indicate that we support desktop capturing.
 #ifdef UTOX_USAGE__HQAV_APPLICATION
     utox_video_append_device((void *)1, 1, (void *)STR_VIDEO_IN_DESKTOP, 1);
+    LOG_ERR("v4l", "**UTOX_USAGE__HQAV_APPLICATION**:STR_VIDEO_IN_DESKTOP");
 #else
     utox_video_append_device((void *)1, 1, (void *)STR_VIDEO_IN_DESKTOP, 0);
 #endif
@@ -203,6 +204,7 @@ uint16_t native_video_detect(void) {
             first = pp;
 #ifdef UTOX_USAGE__HQAV_APPLICATION
             utox_video_append_device((void *)p, 0, p + sizeof(void *), 0);
+            LOG_ERR("v4l", "**UTOX_USAGE__HQAV_APPLICATION**");
 #else
             utox_video_append_device((void *)p, 0, p + sizeof(void *), 1);
 #endif

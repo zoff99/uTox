@@ -354,8 +354,10 @@ static void init_video_devices(void) {
     // Add always-present null video input device.
 #ifdef UTOX_USAGE__HQAV_APPLICATION
     utox_video_append_device(NULL, 1, (void *)STR_VIDEO_IN_NONE, 0);
+    LOG_ERR("v4l", "**UTOX_USAGE__HQAV_APPLICATION**");
 #else
     utox_video_append_device(NULL, 1, (void *)STR_VIDEO_IN_NONE, 1);
+    LOG_ERR("v4l", "UTOX_USAGE normal");
 #endif
 
     // select a video device (autodectect)
