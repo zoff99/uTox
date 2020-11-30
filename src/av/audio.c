@@ -800,7 +800,7 @@ void utox_audio_thread(void *args) {
                     {
                         if ((res3 > 0) && (res3 < 1000))
                         {
-                            for (int jj=1;jj<res3;jj++)
+                            for (int jj=1;jj<(int)res3;jj++)
                             {
                                 // 0 --> thats us
                                 LOG_ERR("Audio", "Deleting source for peer %u in group %u", jj, (uint32_t)g->number);
