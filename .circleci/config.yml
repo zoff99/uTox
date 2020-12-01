@@ -8,6 +8,7 @@ workflows:
       - build
       - flatpak
       - appimage
+      - appimage_u
 
 jobs:
   build:
@@ -132,4 +133,40 @@ jobs:
       - store_artifacts:
           path: ~/work/.localrun/ubuntu_16.04_appimage/artefacts
           destination: artefacts_appimage_ubuntu_16_04
+
+  appimage_u:
+    working_directory: ~/work
+    machine:
+      image: ubuntu-1604:201903-01
+    steps:
+      #- checkout
+      # circleCI checkout fix
+      - run: wget "https://raw.githubusercontent.com/zoff99/ToxAndroidRefImpl/zoff99/dev003/.circleci/checkout_fix.sh" -O /tmp/c.sh
+      - run: bash /tmp/c.sh
+
+      - run: sudo pkill apt-get || echo dummy
+      - run: apt --version
+      - run: ls -al /etc/apt/sources.list.d/
+      - run: sudo rm /etc/apt/sources.list.d/heroku.list
+      - run: sudo rm /etc/apt/sources.list.d/google-chrome.list
+      - run: sudo apt update &&
+          sudo apt install -y --no-install-recommends apt apt-transport-https
+      - run: apt --version
+      - run: sudo apt update &&
+          sudo apt install -y --no-install-recommends
+            grep rsync xz-utils file git curl ssh
+            openssl ca-certificates git sudo bc wget rsync
+            binfmt-support unzip docker
+
+      - run: ls -al ~/work
+      - run: docker --version
+      - run: cd ~/work/.localrun ; bash ./appimage_it_upstream.sh
+
+      - store_artifacts:
+          path: ~/work/.localrun/ubuntu_18.04_appimage_upstream/artefacts
+          destination: artefacts_appimage_u_ubuntu_18_04
+
+      - store_artifacts:
+          path: ~/work/.localrun/ubuntu_16.04_appimage_upstream/artefacts
+          destination: artefacts_appimage_u_ubuntu_16_04
 
