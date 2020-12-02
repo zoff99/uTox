@@ -94,9 +94,21 @@ void draw_bitrate(int rate, int type)
     free(num_as_string);
 }
 
+#include <semaphore.h>
+static sem_t sem_draw_audio_bars;
+static int sem_draw_audio_bars_valid = 0;
+
 /* hack to draw audio bars in the top left corner of the utox window */
 void draw_audio_bars(int x, int y, int UNUSED(width), int UNUSED(height), int level, int level_med, int level_red, int level_max, int channels)
 {
+    if (sem_draw_audio_bars_valid == 0)
+    {
+        sem_init(&sem_draw_audio_bars, 0, 1);
+        sem_draw_audio_bars_valid = 1;
+    }
+
+    sem_wait(&sem_draw_audio_bars);
+
     // LOG_ERR("uTox", "draw_audio_bars:x=%d y=%d level=%d tid=%d", x, y, level, audio_get_tid());
 
     draw_audio_bars_every_cur++;
@@ -107,6 +119,7 @@ void draw_audio_bars(int x, int y, int UNUSED(width), int UNUSED(height), int le
     else
     {
         // do not draw audio bars on every update
+        sem_post(&sem_draw_audio_bars);
         return;
     }
 
@@ -183,12 +196,23 @@ void draw_audio_bars(int x, int y, int UNUSED(width), int UNUSED(height), int le
     }
 
     enddraw(x, y, x + SCALE(level_max), y + 3);
+
+    sem_post(&sem_draw_audio_bars);
+
     force_redraw_soft();
 }
 
 /* hack to draw audio bars in the top left corner of the utox window */
 void draw_audio_bars2(int x, int y, int UNUSED(width), int UNUSED(height), int level, int level_med, int level_red, int level_max)
 {
+    if (sem_draw_audio_bars_valid == 0)
+    {
+        sem_init(&sem_draw_audio_bars, 0, 1);
+        sem_draw_audio_bars_valid = 1;
+    }
+
+    sem_wait(&sem_draw_audio_bars);
+
     draw_audio_bars_every_cur++;
     if (draw_audio_bars_every_cur > draw_audio_bars_every)
     {
@@ -197,6 +221,7 @@ void draw_audio_bars2(int x, int y, int UNUSED(width), int UNUSED(height), int l
     else
     {
         // do not draw audio bars on every update
+        sem_post(&sem_draw_audio_bars);
         return;
     }
 
@@ -256,6 +281,9 @@ void draw_audio_bars2(int x, int y, int UNUSED(width), int UNUSED(height), int l
     }
 
     enddraw(0, 0, x + SCALE(level_max), y + 3);
+
+    sem_post(&sem_draw_audio_bars);
+
     force_redraw_soft();
 }
 
