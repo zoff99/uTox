@@ -97,7 +97,7 @@ void draw_bitrate(int rate, int type)
 /* hack to draw audio bars in the top left corner of the utox window */
 void draw_audio_bars(int x, int y, int UNUSED(width), int UNUSED(height), int level, int level_med, int level_red, int level_max, int channels)
 {
-    LOG_ERR("uTox", "draw_audio_bars:x=%d y=%d level=%d tid=%d", x, y, level, audio_get_tid());
+    // LOG_ERR("uTox", "draw_audio_bars:x=%d y=%d level=%d tid=%d", x, y, level, audio_get_tid());
 
     draw_audio_bars_every_cur++;
     if (draw_audio_bars_every_cur > draw_audio_bars_every)

@@ -44,7 +44,7 @@ void force_redraw(void) {
 
 void force_redraw_soft(void) {
 
-    LOG_ERR("Xlib drawing", "force_redraw_soft:tid=%d", audio_get_tid());
+    // LOG_ERR("Xlib drawing", "force_redraw_soft:tid=%d", audio_get_tid());
 
     XEvent ev = {
         .xclient = {
