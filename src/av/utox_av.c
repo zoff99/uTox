@@ -23,6 +23,8 @@ bool utox_av_ctrl_init = false;
 
 static bool toxav_thread_msg = 0;
 
+void draw_bitrate(int rate, int type);
+
 #include <pthread.h>
 static int audio_get_tid()
 {
@@ -537,6 +539,75 @@ static void utox_audio_friend_accepted(ToxAV *av, uint32_t friend_number, uint32
     postmessage_utox(AV_CALL_ACCEPTED, friend_number, 0, NULL);
 }
 
+static void utox_av_comm_cb(ToxAV *av, uint32_t friend_number, TOXAV_CALL_COMM_INFO comm_value,
+                                 int64_t comm_number, void *user_data)
+{
+    if (comm_value == TOXAV_CALL_COMM_DECODER_IN_USE_VP8)
+    {
+    }
+    else if (comm_value == TOXAV_CALL_COMM_DECODER_IN_USE_H264)
+    {
+    }
+    else if (comm_value == TOXAV_CALL_COMM_ENCODER_IN_USE_VP8)
+    {
+    }
+    else if (comm_value == TOXAV_CALL_COMM_ENCODER_IN_USE_H264)
+    {
+    }
+    else if (comm_value == TOXAV_CALL_COMM_ENCODER_IN_USE_H264_OMX_PI)
+    {
+    }
+    else if (comm_value == TOXAV_CALL_COMM_DECODER_CURRENT_BITRATE)
+    {
+        int decoder_video_bitrate = (uint32_t)comm_number;
+        draw_bitrate(decoder_video_bitrate, 0);
+    }
+    else if (comm_value == TOXAV_CALL_COMM_NETWORK_ROUND_TRIP_MS)
+    {
+        int network_round_trip_ms = (uint32_t)comm_number;
+    }
+    else if (comm_value == TOXAV_CALL_COMM_PLAY_DELAY)
+    {
+        int play_delay_ms = (int)comm_number;
+
+        if (play_delay_ms < 0)
+        {
+            play_delay_ms = 0;
+        }
+        else if (play_delay_ms > 20000)
+        {
+            play_delay_ms = 20000;
+        }
+    }
+    else if (comm_value == TOXAV_CALL_COMM_PLAY_BUFFER_ENTRIES)
+    {
+        int video_play_buffer_entries = (uint32_t)comm_number;
+    }
+    else if (comm_value == TOXAV_CALL_COMM_DECODER_H264_PROFILE)
+    {
+        int video_h264_incoming_profile = (uint32_t)comm_number;
+    }
+    else if (comm_value == TOXAV_CALL_COMM_DECODER_H264_LEVEL)
+    {
+        int video_h264_incoming_level = (uint32_t)comm_number;
+    }
+    else if (comm_value == TOXAV_CALL_COMM_PLAY_VIDEO_ORIENTATION)
+    {
+    }
+    else if (comm_value == TOXAV_CALL_COMM_ENCODER_CURRENT_BITRATE)
+    {
+        int encoder_video_bitrate = (uint32_t)comm_number;
+        draw_bitrate(encoder_video_bitrate, 1);
+    }
+    else if (comm_value == TOXAV_CALL_COMM_INCOMING_FPS)
+    {
+        int tox_video_incoming_fps = (uint32_t)comm_number;
+    }
+    else if (comm_value == TOXAV_CALL_COMM_REMOTE_RECORD_DELAY)
+    {
+    }
+}
+
 /** respond to a Audio Video state change call back from toxav */
 static void utox_callback_av_change_state(ToxAV *av, uint32_t friend_number, uint32_t state, void *UNUSED(userdata)) {
     FRIEND *f = get_friend(friend_number);
@@ -631,6 +702,8 @@ void set_av_callbacks(ToxAV *av) {
     /* Incoming data callbacks */
     toxav_callback_audio_receive_frame(av, &utox_av_incoming_frame_a, NULL);
     toxav_callback_video_receive_frame(av, &utox_av_incoming_frame_v, NULL);
+
+    toxav_callback_call_comm(av, &utox_av_comm_cb, NULL);
 
     /* Data type change callbacks. */
     // toxav_callback_video_bit_rate(av, &utox_incoming_video_rate_change, NULL);

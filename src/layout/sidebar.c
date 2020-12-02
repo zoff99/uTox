@@ -49,6 +49,51 @@ static void draw_background_sidebar(int x, int y, int width, int height) {
 static int draw_audio_bars_every_cur = 0;
 static int draw_audio_bars_every = 2;
 
+void draw_bitrate(int rate, int type)
+{
+    // LOG_ERR("uTox", "draw_bitrate:rate=%d type=%d tid=%d", rate, type, audio_get_tid());
+
+    if ((rate < 0) || (rate > 99000))
+    {
+        rate = -1;
+    }
+
+    char *num_as_string = calloc(1, 10);
+    if (!num_as_string)
+    {
+        return;
+    }
+
+    snprintf(num_as_string, 9, "%d", rate);
+
+    if (type == 0)
+    {
+        // clear area
+        draw_rect_fill(SCALE(1), SCALE(1), SCALE(50), SCALE(16), COLOR_STATUS_ONLINE);
+        // draw text
+        setcolor(COLOR_MENU_TEXT);
+        setfont(FONT_SELF_NAME);
+        drawtextwidth(SCALE(1), SCALE(50), SCALE(1), num_as_string, strlen(num_as_string));
+
+        enddraw(SCALE(1), SCALE(1), SCALE(50), SCALE(16));
+    }
+    else if (type == 1)
+    {
+        // clear area
+        draw_rect_fill(SCALE(1), SCALE(18), SCALE(50), SCALE(16), COLOR_STATUS_ONLINE);
+        // draw text
+        setcolor(COLOR_MENU_TEXT);
+        setfont(FONT_SELF_NAME);
+        drawtextwidth(SCALE(1), SCALE(50), SCALE(18), num_as_string, strlen(num_as_string));
+
+        enddraw(SCALE(1), SCALE(18), SCALE(50), SCALE(16));
+    }
+
+    force_redraw_soft();
+
+    free(num_as_string);
+}
+
 /* hack to draw audio bars in the top left corner of the utox window */
 void draw_audio_bars(int x, int y, int UNUSED(width), int UNUSED(height), int level, int level_med, int level_red, int level_max, int channels)
 {
