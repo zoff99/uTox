@@ -23,8 +23,18 @@ bool utox_av_ctrl_init = false;
 
 static bool toxav_thread_msg = 0;
 
+#include <pthread.h>
+static int audio_get_tid()
+{
+    pthread_t pid = pthread_self();
+    return (int)pid;
+}
+
 void postmessage_utoxav(uint8_t msg, uint32_t param1, uint32_t param2, void *data) {
-    int max_counter = 20;
+
+    LOG_ERR("uTox Audio", "postmessage_utoxav:enter:tid=%d", audio_get_tid());
+
+    int max_counter = 2000;
     int counter = 0;
     while (toxav_thread_msg && utox_av_ctrl_init) { /* I'm not convinced this is the best way */
         yieldcpu(1);
@@ -46,6 +56,8 @@ void postmessage_utoxav(uint8_t msg, uint32_t param1, uint32_t param2, void *dat
 
 void utox_av_ctrl_thread(void *UNUSED(args)) {
     ToxAV *av = NULL;
+
+    LOG_ERR("uTox Audio", "utox_av_ctrl_thread:enter:tid=%d", audio_get_tid());
 
     utox_av_ctrl_init = 1;
     LOG_TRACE("uToxAv", "Toxav thread init" );
@@ -303,8 +315,16 @@ void utox_av_ctrl_thread(void *UNUSED(args)) {
     postmessage_video(UTOXVIDEO_KILL, 0, 0, NULL);
 
     // Wait for all a/v threads to return 0
+    int max_counter = 2000;
+    int counter = 0;
     while (utox_audio_thread_init || utox_video_thread_init) {
         yieldcpu(1);
+        counter++;
+        if (counter > max_counter)
+        {
+            LOG_ERR("utox_av_ctrl_thread", "endless loos, caught!!");
+            break;
+        }
     }
 
     toxav_thread_msg  = false;
@@ -444,6 +464,9 @@ void utox_av_local_call_control(ToxAV *av, uint32_t friend_number, TOXAV_CALL_CO
 static void utox_av_incoming_frame_a(ToxAV *UNUSED(av), uint32_t friend_number, const int16_t *pcm, size_t sample_count,
                                      uint8_t channels, uint32_t sample_rate, void *UNUSED(userdata))
 {
+
+    LOG_ERR("uTox Audio", "utox_av_incoming_frame_a:enter:tid=%d", audio_get_tid());
+
     // LOG_TRACE("uToxAv", "Incoming audio frame for friend %u " , friend_number);
 #ifdef NATIVE_ANDROID_AUDIO
     audio_play(friend_number, pcm, sample_count, channels);

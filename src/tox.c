@@ -65,7 +65,7 @@ static void tox_thread_message(Tox *tox, ToxAV *av, uint64_t time, uint8_t msg, 
                                void *data);
 
 void postmessage_toxcore(uint8_t msg, uint32_t param1, uint32_t param2, void *data) {
-    int max_counter = 20;
+    int max_counter = 2000;
     int counter = 0;
     while (tox_thread_msg) {
         yieldcpu(1);
@@ -623,7 +623,7 @@ void toxcore_thread(void *UNUSED(args)) {
 
         postmessage_utoxav(UTOXAV_KILL, 0, 0, NULL);
 
-        int max_counter = 20;
+        int max_counter = 2000;
         int counter = 0;
         while (utox_av_ctrl_init) {
             yieldcpu(1);

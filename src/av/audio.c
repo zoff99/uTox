@@ -74,7 +74,17 @@ static ALuint ringtone, preview, notifytone;
 
 static ALuint RingBuffer, ToneBuffer;
 
+#include <pthread.h>
+static int audio_get_tid()
+{
+    pthread_t pid = pthread_self();
+    return (int)pid;
+}
+
 static bool audio_in_device_open(void) {
+
+    LOG_ERR("uTox Audio", "audio_in_device_open:enter:tid=%d", audio_get_tid());
+
     if (!audio_in_device) {
         return false;
     }
@@ -94,6 +104,8 @@ static bool audio_in_device_open(void) {
 }
 
 static bool audio_in_device_close(void) {
+    LOG_ERR("uTox Audio", "audio_in_device_close:enter:tid=%d", audio_get_tid());
+
     if (audio_in_handle) {
         if (audio_in_handle == (void *)1) {
             audio_in_handle = NULL;
@@ -111,10 +123,16 @@ static bool audio_in_device_close(void) {
 }
 
 static bool audio_in_listen(void) {
+
+    LOG_ERR("uTox Audio", "audio_in_listen:enter:tid=%d", audio_get_tid());
+
     if (microphone_on) {
         microphone_count++;
+        LOG_ERR("uTox Audio", "audio_in_listen:001:tid=%d microphone_count=%d", audio_get_tid(), microphone_count);
         return true;
     }
+    LOG_ERR("uTox Audio", "audio_in_listen:002:tid=%d microphone_count=%d", audio_get_tid(), microphone_count);
+
 
     if (audio_in_handle) {
         if (audio_in_device == (void *)1) {
@@ -145,6 +163,9 @@ static bool audio_in_listen(void) {
 }
 
 static bool audio_in_ignore(void) {
+
+    LOG_ERR("uTox Audio", "audio_in_ignore:enter:tid=%d", audio_get_tid());
+
     if (!microphone_on) {
         return false;
     }
@@ -169,6 +190,8 @@ static bool audio_in_ignore(void) {
 }
 
 bool utox_audio_in_device_set(ALCdevice *new_device) {
+    LOG_ERR("uTox Audio", "utox_audio_in_device_set:enter:tid=%d", audio_get_tid());
+
     if (microphone_on || microphone_count) {
         return false;
     }
@@ -195,6 +218,9 @@ ALCdevice *utox_audio_in_device_get(void) {
 static ALCcontext *context;
 
 static bool audio_out_device_open(void) {
+
+    LOG_ERR("uTox Audio", "audio_out_device_open:enter:tid=%d", audio_get_tid());
+
     if (speakers_on) {
         speakers_count++;
         LOG_ERR("uTox Audio", "speakers_count = %d", (int)speakers_count);
@@ -255,6 +281,9 @@ static bool audio_out_device_open(void) {
 }
 
 static bool audio_out_device_close(void) {
+
+    LOG_ERR("uTox Audio", "audio_out_device_close:enter:tid=%d", audio_get_tid());
+
     if (!audio_out_handle) {
         return false;
     }
@@ -288,6 +317,9 @@ static bool audio_out_device_close(void) {
 }
 
 bool utox_audio_out_device_set(ALCdevice *new_device) {
+
+    LOG_ERR("uTox Audio", "utox_audio_out_device_set:enter:tid=%d", audio_get_tid());
+
     if (new_device) {
         audio_out_device = new_device;
         LOG_ERR("uTox Audio", "Audio out device changed." );
@@ -407,6 +439,8 @@ void sourceplaybuffer(unsigned int f, const int16_t *data, int samples, uint8_t 
 }
 
 static void audio_in_init(void) {
+    LOG_ERR("uTox Audio", "audio_in_init:enter:tid=%d", audio_get_tid());
+
     const char *audio_in_device_list;
     audio_in_device_list = alcGetString(NULL, ALC_CAPTURE_DEVICE_SPECIFIER);
     if (audio_in_device_list) {
@@ -423,6 +457,8 @@ static void audio_in_init(void) {
 }
 
 static void audio_out_init(void) {
+    LOG_ERR("uTox Audio", "audio_out_init:enter:tid=%d", audio_get_tid());
+
     const char *audio_out_device_list;
     if (alcIsExtensionPresent(NULL, "ALC_ENUMERATE_ALL_EXT")) {
         audio_out_device_list = alcGetString(NULL, ALC_ALL_DEVICES_SPECIFIER);
@@ -478,6 +514,8 @@ static void audio_out_init(void) {
 }
 
 static bool audio_source_init(ALuint *source) {
+    LOG_ERR("uTox Audio", "audio_source_init:enter:tid=%d", audio_get_tid());
+
     ALint error;
     alGetError();
     LOG_ERR("uTox Audio", "alGenSources:006:audio_source_init");
@@ -490,6 +528,8 @@ static bool audio_source_init(ALuint *source) {
 }
 
 static void audio_source_raze(ALuint *source) {
+    LOG_ERR("uTox Audio", "audio_source_raze:enter:tid=%d", audio_get_tid());
+
     LOG_INFO("Audio", "Deleting source");
     LOG_ERR("uTox Audio", "alDeleteSources:004:source");
     alDeleteSources((ALuint)1, source);
@@ -654,8 +694,19 @@ static void generate_tone_friend_new_msg() { generate_melody(friend_new_msg, 1, 
 static void generate_tone_friend_request() { generate_melody(friend_request, 1, 8, &ToneBuffer); }
 
 void postmessage_audio(uint8_t msg, uint32_t param1, uint32_t param2, void *data) {
+
+    LOG_ERR("uTox Audio", "postmessage_audio:enter:tid=%d", audio_get_tid());
+
+    int max_counter = 2000;
+    int counter = 0;
     while (audio_thread_msg && utox_audio_thread_init) {
         yieldcpu(1);
+        counter++;
+        if (counter > max_counter)
+        {
+            LOG_ERR("postmessage_audio", "endless loos, caught!!");
+            break;
+        }
     }
 
     audio_msg.msg    = msg;
@@ -670,6 +721,8 @@ void postmessage_audio(uint8_t msg, uint32_t param1, uint32_t param2, void *data
 void utox_audio_thread(void *args) {
     time_t close_device_time = 0;
     ToxAV *av = args;
+
+    LOG_ERR("uTox Audio", "utox_audio_thread:enter:tid=%d", audio_get_tid());
 
     #ifdef AUDIO_FILTERING
     LOG_INFO("uTox Audio", "Audio Filtering"
@@ -737,7 +790,7 @@ void utox_audio_thread(void *args) {
                     break;
                 }
                 case UTOXAUDIO_START_FRIEND: {
-                    LOG_ERR("Audio", "Starting Friend Audio %u", m->param1);
+                    LOG_ERR("Audio", "Starting Friend Audio %u tid=%d", m->param1, audio_get_tid());
 
                     audio_out_device_open();
 
@@ -1285,6 +1338,9 @@ void callback_av_group_audio(void *UNUSED(tox), uint32_t groupnumber, uint32_t p
 }
 
 void group_av_peer_add(GROUPCHAT *g, int peernumber) {
+
+    LOG_ERR("uTox Audio", "group_av_peer_add:enter:tid=%d", audio_get_tid());
+
     if (!g || peernumber < 0) {
         LOG_ERR("uTox Audio", "Invalid groupchat or peer number");
         return;
@@ -1296,6 +1352,8 @@ void group_av_peer_add(GROUPCHAT *g, int peernumber) {
 }
 
 void group_av_peer_remove(GROUPCHAT *g, int peernumber) {
+    LOG_ERR("uTox Audio", "group_av_peer_remove:enter:tid=%d", audio_get_tid());
+
     if (!g || peernumber < 0) {
         LOG_ERR("uTox Audio", "Invalid groupchat or peer number");
         return;

@@ -12,6 +12,13 @@
 
 static uint32_t scolor;
 
+#include <pthread.h>
+static int audio_get_tid()
+{
+    pthread_t pid = pthread_self();
+    return (int)pid;
+}
+
 void redraw(void) {
     _redraw = 1;
 }
@@ -36,6 +43,9 @@ void force_redraw(void) {
 }
 
 void force_redraw_soft(void) {
+
+    LOG_ERR("Xlib drawing", "force_redraw_soft:tid=%d", audio_get_tid());
+
     XEvent ev = {
         .xclient = {
             .type         = ClientMessage,
