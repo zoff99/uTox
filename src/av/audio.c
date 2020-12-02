@@ -697,7 +697,7 @@ void postmessage_audio(uint8_t msg, uint32_t param1, uint32_t param2, void *data
 
     LOG_ERR("uTox Audio", "postmessage_audio:enter:tid=%d", audio_get_tid());
 
-    int max_counter = 2000;
+    int max_counter = 500;
     int counter = 0;
     while (audio_thread_msg && utox_audio_thread_init) {
         yieldcpu(1);

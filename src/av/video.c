@@ -340,7 +340,7 @@ bool utox_video_stop(bool UNUSED(preview)) {
 static TOX_MSG video_msg;
 void postmessage_video(uint8_t msg, uint32_t param1, uint32_t param2, void *data) {
 
-    int max_counter = 2000;
+    int max_counter = 500;
     int counter = 0;
     while (video_thread_msg) {
         yieldcpu(1);

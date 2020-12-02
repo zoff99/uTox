@@ -938,7 +938,7 @@ int main(int argc, char *argv[]) {
 
     // wait for tox_thread to exit
     LOG_ERR("shutdown", "wait for tox ...");
-    int max_counter = 2000;
+    int max_counter = 500;
     int counter = 0;
     while (tox_thread_init) {
         yieldcpu(1);
