@@ -55,14 +55,6 @@ static int draw_audio_bars_every = 2;
 
 void draw_bitrate(int rate, int type)
 {
-    if (sem_draw_audio_bars_valid == 0)
-    {
-        sem_init(&sem_draw_audio_bars, 0, 1);
-        sem_draw_audio_bars_valid = 1;
-    }
-
-    sem_wait(&sem_draw_audio_bars);
-
     // LOG_ERR("uTox", "draw_bitrate:rate=%d type=%d tid=%d", rate, type, audio_get_tid());
 
     if ((rate < 0) || (rate > 99000))
@@ -73,7 +65,6 @@ void draw_bitrate(int rate, int type)
     char *num_as_string = calloc(1, 10);
     if (!num_as_string)
     {
-        sem_post(&sem_draw_audio_bars);
         return;
     }
 
@@ -82,28 +73,27 @@ void draw_bitrate(int rate, int type)
     if (type == 0)
     {
         // clear area
-        draw_rect_fill(SCALE(1), SCALE(1), SCALE(50), SCALE(16), COLOR_STATUS_ONLINE);
+        draw_rect_fill(SCALE(1), SCALE(1), SCALE(40), SCALE(16), COLOR_STATUS_ONLINE);
         // draw text
         setcolor(COLOR_MENU_TEXT);
-        setfont(FONT_SELF_NAME);
-        drawtextwidth(SCALE(1), SCALE(50), SCALE(1), num_as_string, strlen(num_as_string));
+        setfont(FONT_STATUS);
+        drawtextwidth(SCALE(1), SCALE(40), SCALE(1), num_as_string, strlen(num_as_string));
 
-        enddraw(SCALE(1), SCALE(1), SCALE(50), SCALE(16));
+        enddraw(SCALE(1), SCALE(1), SCALE(40), SCALE(16));
     }
     else if (type == 1)
     {
         // clear area
-        draw_rect_fill(SCALE(1), SCALE(18), SCALE(50), SCALE(16), COLOR_STATUS_ONLINE);
+        draw_rect_fill(SCALE(1), SCALE(17), SCALE(40), SCALE(16), COLOR_STATUS_ONLINE);
         // draw text
         setcolor(COLOR_MENU_TEXT);
-        setfont(FONT_SELF_NAME);
-        drawtextwidth(SCALE(1), SCALE(50), SCALE(18), num_as_string, strlen(num_as_string));
+        setfont(FONT_STATUS);
+        drawtextwidth(SCALE(1), SCALE(40), SCALE(17), num_as_string, strlen(num_as_string));
 
-        enddraw(SCALE(1), SCALE(18), SCALE(50), SCALE(16));
+        enddraw(SCALE(1), SCALE(17), SCALE(40), SCALE(16));
     }
 
     force_redraw_soft();
-    sem_wait(&sem_draw_audio_bars);
 
     free(num_as_string);
 }
