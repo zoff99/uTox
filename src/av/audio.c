@@ -94,7 +94,12 @@ static bool audio_in_device_open(void) {
     }
 
     alGetError();
-    int _format_ = AL_FORMAT_STEREO16; // AL_FORMAT_MONO16
+
+#ifdef UTOX_USAGE__HQAV_APPLICATION
+    int _format_ = AL_FORMAT_STEREO16;
+#else
+    int _format_ = AL_FORMAT_MONO16;
+#endif
     audio_in_handle = alcCaptureOpenDevice(audio_in_device, UTOX_DEFAULT_SAMPLE_RATE_A, _format_,
                                            (UTOX_DEFAULT_FRAME_A * UTOX_DEFAULT_SAMPLE_RATE_A * 4) / 1000);
     if (alGetError() == AL_NO_ERROR) {
@@ -679,6 +684,7 @@ static void generate_melody(MELODY melody[], uint32_t seconds, uint32_t notes_pe
     }
 
     LOG_ERR("uTox Audio", "alBufferData:002");
+    // TODO: should this be AL_FORMAT_STEREO16 in some cases?
     alBufferData(*target, AL_FORMAT_MONO16, samples, buf_size, sample_rate);
     free(samples);
 }
