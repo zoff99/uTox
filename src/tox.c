@@ -1,3 +1,10 @@
+#ifndef DD__GNU_SOURCE
+#define DD__GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
+#include <pthread.h>
+
 #include "tox.h"
 
 #include "avatar.h"
@@ -45,6 +52,12 @@ bool tox_connected;
 
 static bool save_needed = true;
 
+#ifdef UTOX_USAGE__HQAV_APPLICATION
+    int global_iter_delay_ms = 2;
+#else
+    int global_iter_delay_ms = 5;
+#endif
+
 pthread_mutex_t save_file_write_lock;
 int global_shutdown = 0;
 
@@ -63,6 +76,57 @@ typedef struct {
 
 static void tox_thread_message(Tox *tox, ToxAV *av, uint64_t time, uint8_t msg, uint32_t param1, uint32_t param2,
                                void *data);
+
+static int get_policy(char p, int *policy)
+{
+    switch (p)
+    {
+        case 'f':
+            *policy = SCHED_FIFO;
+            return 1;
+
+        case 'r':
+            *policy = SCHED_RR;
+            return 1;
+
+        case 'b':
+            *policy = SCHED_BATCH;
+            return 1;
+
+        case 'o':
+            *policy = SCHED_OTHER;
+            return 1;
+
+        default:
+            return 0;
+    }
+}
+
+static void display_sched_attr(char *msg, int policy, struct sched_param *param)
+{
+    LOG_ERR("uToxVideo", "%s:policy=%s, priority=%d", msg,
+        (policy == SCHED_FIFO)  ? "SCHED_FIFO" :
+        (policy == SCHED_RR)    ? "SCHED_RR" :
+        (policy == SCHED_BATCH) ? "SCHED_BATCH" :
+        (policy == SCHED_OTHER) ? "SCHED_OTHER" :
+        "???",
+        param->sched_priority);
+}
+
+static void display_thread_sched_attr(char *msg)
+{
+    int policy, s;
+    struct sched_param param;
+    s = pthread_getschedparam(pthread_self(), &policy, &param);
+
+    if (s != 0)
+    {
+        LOG_ERR("uToxVideo", "error in display_thread_sched_attr");
+    }
+
+    display_sched_attr(msg, policy, &param);
+}
+
 
 void postmessage_toxcore(uint8_t msg, uint32_t param1, uint32_t param2, void *data) {
     int max_counter = 500;
@@ -480,6 +544,40 @@ static int init_toxcore(Tox **tox) {
     return 0;
 }
 
+static int do_tox_iterate = 0;
+
+void toxcore_iter_thread(void *UNUSED(args)) {
+    ToxAV *av = global_toxav;
+    Tox *tox = toxav_get_tox(av);
+
+#if 0
+    // ------ thread priority ------
+    struct sched_param param;
+    int policy;
+    int s;
+    display_thread_sched_attr("Scheduler attributes of [1]: toxcore_iter_thread");
+    get_policy('f', &policy);
+    param.sched_priority = strtol("80", NULL, 0);
+    s = pthread_setschedparam(pthread_self(), policy, &param);
+
+    if (s != 0)
+    {
+        LOG_ERR("uToxVideo", "Scheduler attributes of [2]: error setting scheduling attributes of toxcore_iter_thread");
+    }
+
+    display_thread_sched_attr("Scheduler attributes of [3]: toxcore_iter_thread");
+    // ------ thread priority ------
+#endif
+
+    pthread_setname_np(pthread_self(), "t_tc_iter");
+
+    do_tox_iterate = 1;
+    while (do_tox_iterate == 1)
+    {
+        tox_iterate(tox, NULL);
+        yieldcpu(global_iter_delay_ms);
+    }
+}
 
 /** void toxcore_thread(void)
  *
@@ -496,6 +594,8 @@ void toxcore_thread(void *UNUSED(args)) {
 // hack ----------------------
 	global_toxav = NULL;
 // hack ----
+
+    pthread_setname_np(pthread_self(), "t_tc_iter_cmd");
 
     while (reconfig) {
         reconfig = 0;
@@ -559,12 +659,14 @@ void toxcore_thread(void *UNUSED(args)) {
             postmessage_utoxav(UTOXAV_NEW_TOX_INSTANCE, 0, 0, av);
         }
 
+        thread(toxcore_iter_thread, NULL);
+
         bool     connected = 0;
         uint64_t last_save = get_time(), last_connection = get_time(), time;
 
         while (1) {
             // Put toxcore to work
-            tox_iterate(tox, NULL);
+            /////// tox_iterate(tox, NULL);
 
             // Check currents connection
             if (!!tox_self_get_connection_status(tox) != connected) {
@@ -609,12 +711,12 @@ void toxcore_thread(void *UNUSED(args)) {
                 utox_thread_work_for_typing_notifications(tox, time);
             }
 
-            /* Ask toxcore how many ms to wait, then wait at the most 20ms */
-            uint32_t interval = tox_iteration_interval(tox);
             // Zoff: !!!!!!!!!!!------------
-            yieldcpu((interval > 3) ? 3 : interval);
+            yieldcpu(4);
             // Zoff: !!!!!!!!!!!------------
         }
+
+        do_tox_iterate = 0;
 
         /* If for anyreason, we exit, write the save, and clear the password */
         LOG_ERR("write_save", "002");

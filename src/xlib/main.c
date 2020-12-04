@@ -1,3 +1,10 @@
+#ifndef DD__GNU_SOURCE
+#define DD__GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
+#include <pthread.h>
+
 #include "main.h"
 
 #include "dbus.h"
@@ -818,6 +825,8 @@ int main(int argc, char *argv[]) {
 
     XRenderColor xrcolor = { 0,0,0,0 };
     main_window.colorpic = XRenderCreateSolidFill(display, &xrcolor);
+
+    pthread_setname_np(pthread_self(), "utox_main");
 
     if (set_show_window) {
         if (set_show_window == 1) {

@@ -1,3 +1,8 @@
+#ifndef DD__GNU_SOURCE
+#define DD__GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
 #include "video.h"
 
 #include "utox_av.h"
@@ -14,6 +19,7 @@
 #include "../native/video.h"
 
 #include <pthread.h>
+#include <sched.h>
 #include <stdlib.h>
 #include <semaphore.h>
 #include <string.h>
@@ -23,6 +29,7 @@
 
 bool utox_video_thread_init = false;
 uint16_t video_width, video_height, max_video_width, max_video_height;
+static uint8_t video_send_t_num = 0;
 
 static void *   video_device[16]     = { NULL }; /* TODO; magic number */
 static int16_t  video_device_count   = 0;
@@ -71,6 +78,7 @@ struct video_play_thread_args {
     uint8_t *u;
     uint8_t *v;
     int type; // -99 = screen capture, 1 = camera
+    int thread_number;
 };
 
 
@@ -128,6 +136,55 @@ static uint64_t current_time_monotonic_default()
     return time;
 }
 
+static int get_policy(char p, int *policy)
+{
+    switch (p)
+    {
+        case 'f':
+            *policy = SCHED_FIFO;
+            return 1;
+
+        case 'r':
+            *policy = SCHED_RR;
+            return 1;
+
+        case 'b':
+            *policy = SCHED_BATCH;
+            return 1;
+
+        case 'o':
+            *policy = SCHED_OTHER;
+            return 1;
+
+        default:
+            return 0;
+    }
+}
+
+static void display_sched_attr(char *msg, int policy, struct sched_param *param)
+{
+    LOG_ERR("uToxVideo", "%s:policy=%s, priority=%d", msg,
+        (policy == SCHED_FIFO)  ? "SCHED_FIFO" :
+        (policy == SCHED_RR)    ? "SCHED_RR" :
+        (policy == SCHED_BATCH) ? "SCHED_BATCH" :
+        (policy == SCHED_OTHER) ? "SCHED_OTHER" :
+        "???",
+        param->sched_priority);
+}
+
+static void display_thread_sched_attr(char *msg)
+{
+    int policy, s;
+    struct sched_param param;
+    s = pthread_getschedparam(pthread_self(), &policy, &param);
+
+    if (s != 0)
+    {
+        LOG_ERR("uToxVideo", "error in display_thread_sched_attr");
+    }
+
+    display_sched_attr(msg, policy, &param);
+}
 
 static bool video_device_init(void *handle) {
 
@@ -386,9 +443,11 @@ static void init_video_devices(void) {
     }
 }
 
+// that's acutally the thread to send our video
 static void *video_play(void *video_frame_data)
 {
-    // LOG_ERR("uToxVideo:thread", "video play thread:start");
+    // LOG_ERR("uToxVideo:thread", "video SEND thread:start");
+    // display_thread_sched_attr("Scheduler attributes of [1]: video_play");
 
     struct video_play_thread_args* d = (struct video_play_thread_args*)video_frame_data;
     uint64_t timspan_in_ms2 = d->timspan_in_ms2;
@@ -399,6 +458,16 @@ static void *video_play(void *video_frame_data)
     utox_video_frame.w = d->w;
     utox_video_frame.h = d->h;
     int type = d->type;
+
+#if 0
+    int tnum = d->thread_number;
+    char* t_name_str[20];
+    memset(t_name_str, 0, 20);
+    snprintf(t_name_str, 19, "t_v_send:%d", tnum);
+    pthread_setname_np(pthread_self(), t_name_str);
+#else
+    pthread_setname_np(pthread_self(), "t_v_send");
+#endif
 
     if (type == -99)
     {
@@ -418,6 +487,15 @@ static void *video_play(void *video_frame_data)
             pthread_exit(0);
         }
     }
+
+    // ------ thread priority ------
+    struct sched_param param;
+    int policy;
+    int s;
+    get_policy('o', &policy);
+    param.sched_priority = strtol("0", NULL, 0);
+    s = pthread_setschedparam(pthread_self(), policy, &param);
+    // ------ thread priority ------
 
     if ((utox_video_frame.w < 10) || (utox_video_frame.w > 20000))
     {
@@ -481,7 +559,6 @@ static void *video_play(void *video_frame_data)
     }
     else
     {
-
         // resize into bounding box "w" x "h" if video is larger than that box (e.g. 4K video frame)
         UTOX_FRAME_PKG *frame = malloc(sizeof(UTOX_FRAME_PKG));
 
@@ -543,11 +620,23 @@ static void *video_play(void *video_frame_data)
         toxav_video_send_frame_age(av, get_friend(i)->number, frame->w, frame->h,
                                frame->img, u_start, v_start, &error, (int32_t)(current_time_monotonic_default() - timspan_in_ms2));
 
-        if (error) {
-            if (error == TOXAV_ERR_SEND_FRAME_SYNC) {
-                yieldcpu(1);
+        if (error == TOXAV_ERR_SEND_FRAME_SYNC)
+        {
+            int tries = 0;
+            for (tries=0;tries<10;tries++)
+            {
                 toxav_video_send_frame_age(av, get_friend(i)->number, frame->w, frame->h,
                                        frame->img, u_start, v_start, &error, (int32_t)(current_time_monotonic_default() - timspan_in_ms2));
+
+                if (error == TOXAV_ERR_SEND_FRAME_OK)
+                {
+                    break;
+                }
+            }
+
+            if (error != TOXAV_ERR_SEND_FRAME_OK)
+            {
+                LOG_ERR("uTox Audio", "toxav_video_send_frame_age:ERR:tries=%d", (int) tries);
             }
         }
 
@@ -568,9 +657,33 @@ static void *video_play(void *video_frame_data)
 void utox_video_thread(void *args) {
     ToxAV *av = args;
 
+    LOG_ERR("uToxVideo", "utox_video_thread: *********ENTER*********");
+    LOG_ERR("uToxVideo", "utox_video_thread: *********ENTER*********");
+    LOG_ERR("uToxVideo", "utox_video_thread: *********ENTER*********");
+    LOG_ERR("uToxVideo", "utox_video_thread: *********ENTER*********");
+
     pthread_mutex_init(&video_thread_lock, NULL);
 
     init_video_devices();
+
+    // ------ thread priority ------
+    struct sched_param param;
+    int policy;
+    int s;
+    display_thread_sched_attr("Scheduler attributes of [1]: utox_video_thread");
+    get_policy('f', &policy);
+    param.sched_priority = strtol("99", NULL, 0);
+    s = pthread_setschedparam(pthread_self(), policy, &param);
+
+    if (s != 0)
+    {
+        LOG_ERR("uToxVideo", "Scheduler attributes of [2]: error setting scheduling attributes of utox_video_thread");
+    }
+
+    display_thread_sched_attr("Scheduler attributes of [3]: utox_video_thread");
+    // ------ thread priority ------
+
+    pthread_setname_np(pthread_self(), "t_v_record");
 
     utox_video_thread_init = 1;
     int32_t sleep_delay_corrected = 24; // set to 24ms default sleep delay
@@ -657,6 +770,7 @@ void utox_video_thread(void *args) {
                             args2.y = utox_video_frame.y;
                             args2.u = utox_video_frame.u;
                             args2.v = utox_video_frame.v;
+                            args2.thread_number = video_send_t_num;
 
                             pthread_t video_play_thread;
                             int res_ = pthread_create(&video_play_thread, NULL, video_play, (void *)&args2);
@@ -672,12 +786,17 @@ void utox_video_thread(void *args) {
                                 {
                                     LOG_ERR("uToxVideo:thread", "error detaching video play thread");
                                 }
+                                else
+                                {
+                                    // LOG_ERR("uToxVideo:thread", "creating video play thread number: %d", video_send_t_num);
+                                    video_send_t_num++;
+                                }
                                 sem_wait(&video_play_lock_);
                                 sem_post(&video_play_lock_);
                             }
                         }
 
-
+#if 0
                         // LOG_TRACE("uToxVideo", "Sent video frame to friend %u" , i);
                         if (error) {
                             if (error == TOXAV_ERR_SEND_FRAME_SYNC) {
@@ -696,7 +815,9 @@ void utox_video_thread(void *args) {
                                 break;
                             }
                         }
+#endif
 
+#if 0
 #ifdef HAVE_TOXAV_OPTION_SET
                         TOXAV_ERR_OPTION_SET error2;
                         toxav_option_set(av, get_friend(i)->number,
@@ -704,7 +825,7 @@ void utox_video_thread(void *args) {
                                          (int32_t)(current_time_monotonic_default() - timspan_in_ms2),
                                          &error2);
 #endif
-
+#endif
                     }
                 }
                 // ----------- SEND to all friends -----------

@@ -1,3 +1,8 @@
+#ifndef DD__GNU_SOURCE
+#define DD__GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
 #include "audio.h"
 
 #include "utox_av.h"
@@ -729,6 +734,9 @@ void utox_audio_thread(void *args) {
     ToxAV *av = args;
 
     LOG_ERR("uTox Audio", "utox_audio_thread:enter:tid=%d", audio_get_tid());
+
+    pthread_setname_np(pthread_self(), "t_a_record");
+
 
     #ifdef AUDIO_FILTERING
     LOG_INFO("uTox Audio", "Audio Filtering"

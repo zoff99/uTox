@@ -155,6 +155,53 @@ bool slash_vbr(void *object, char *arg, int arg_length)
 	return true;
 }
 
+extern int global_iter_delay_ms;
+
+bool slash_iter(void *object, char *arg, int arg_length)
+{
+	FRIEND *f = object;
+
+	char arg1[300];
+	CLEAR(arg1);
+    snprintf(arg1, arg_length, "%s", arg);
+
+	LOG_ERR("slash_iter", "*arg=%s* len=%d" , arg1, arg_length);
+
+	int num_new = get_number_in_string(arg1, global_iter_delay_ms);
+
+	if ((num_new >= 0) && (num_new <= 3000))
+	{
+		LOG_ERR("slash_iter", "setting new value:%d", (int)num_new);
+        global_iter_delay_ms = num_new;
+	}
+
+	return true;
+}
+
+extern int global_aviter_delay_ms;
+
+bool slash_aviter(void *object, char *arg, int arg_length)
+{
+	FRIEND *f = object;
+
+	char arg1[300];
+	CLEAR(arg1);
+    snprintf(arg1, arg_length, "%s", arg);
+
+	LOG_ERR("slash_aviter", "*arg=%s* len=%d" , arg1, arg_length);
+
+	int num_new = get_number_in_string(arg1, global_aviter_delay_ms);
+
+	if ((num_new >= 0) && (num_new <= 3000))
+	{
+		LOG_ERR("slash_aviter", "setting new value:%d", (int)num_new);
+        global_aviter_delay_ms = num_new;
+	}
+
+	return true;
+}
+
+
 extern int global_show_mouse_cursor;
 
 bool slash_mou(void *object, char *arg, int arg_length)

@@ -1,3 +1,10 @@
+#ifndef DD__GNU_SOURCE
+#define DD__GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
+#include <pthread.h>
+
 #include "utox_av.h"
 
 #include "audio.h"
@@ -20,6 +27,12 @@
 #include <string.h>
 
 bool utox_av_ctrl_init = false;
+
+#ifdef UTOX_USAGE__HQAV_APPLICATION
+    int global_aviter_delay_ms = 2;
+#else
+    int global_aviter_delay_ms = 5;
+#endif
 
 static bool toxav_thread_msg = 0;
 
@@ -60,6 +73,8 @@ void utox_av_ctrl_thread(void *UNUSED(args)) {
     ToxAV *av = NULL;
 
     LOG_ERR("uTox Audio", "utox_av_ctrl_thread:enter:tid=%d", audio_get_tid());
+
+    pthread_setname_np(pthread_self(), "t_av_iter");
 
     utox_av_ctrl_init = 1;
     LOG_TRACE("uToxAv", "Toxav thread init" );
@@ -305,10 +320,10 @@ void utox_av_ctrl_thread(void *UNUSED(args)) {
             toxav_iterate(av);
             // Zoff: !!!!!!!!!!!------------
             // yieldcpu(toxav_iteration_interval(av));
-            yieldcpu(2);
+            yieldcpu(global_aviter_delay_ms);
             // Zoff: !!!!!!!!!!!------------
         } else {
-            yieldcpu(10);
+            yieldcpu(20);
         }
     }
 
