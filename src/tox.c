@@ -557,7 +557,7 @@ void toxcore_iter_thread(void *UNUSED(args)) {
     int s;
     display_thread_sched_attr("Scheduler attributes of [1]: toxcore_iter_thread");
     get_policy('f', &policy);
-    param.sched_priority = strtol("80", NULL, 0);
+    param.sched_priority = strtol("60", NULL, 0);
     s = pthread_setschedparam(pthread_self(), policy, &param);
 
     if (s != 0)
@@ -659,7 +659,10 @@ void toxcore_thread(void *UNUSED(args)) {
             postmessage_utoxav(UTOXAV_NEW_TOX_INSTANCE, 0, 0, av);
         }
 
+
+#ifdef UTOX_USAGE__HQAV_APPLICATION
         thread(toxcore_iter_thread, NULL);
+#endif
 
         bool     connected = 0;
         uint64_t last_save = get_time(), last_connection = get_time(), time;
@@ -711,9 +714,13 @@ void toxcore_thread(void *UNUSED(args)) {
                 utox_thread_work_for_typing_notifications(tox, time);
             }
 
-            // Zoff: !!!!!!!!!!!------------
+
+#ifdef UTOX_USAGE__HQAV_APPLICATION
             yieldcpu(4);
-            // Zoff: !!!!!!!!!!!------------
+#else
+            tox_iterate(tox, NULL);
+            yieldcpu(global_iter_delay_ms);
+#endif
         }
 
         do_tox_iterate = 0;

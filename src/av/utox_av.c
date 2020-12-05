@@ -34,6 +34,10 @@ bool utox_av_ctrl_init = false;
     int global_aviter_delay_ms = 5;
 #endif
 
+int global_decoder_video_bitrate = 0;
+int global_encoder_video_bitrate = 0;
+int global_network_round_trip_ms = 999;
+
 static bool toxav_thread_msg = 0;
 
 void draw_bitrate(int rate, int type);
@@ -574,12 +578,12 @@ static void utox_av_comm_cb(ToxAV *av, uint32_t friend_number, TOXAV_CALL_COMM_I
     }
     else if (comm_value == TOXAV_CALL_COMM_DECODER_CURRENT_BITRATE)
     {
-        int decoder_video_bitrate = (uint32_t)comm_number;
-        draw_bitrate(decoder_video_bitrate, 0);
+        global_decoder_video_bitrate = (uint32_t)comm_number;
+        // draw_bitrate(decoder_video_bitrate, 0);
     }
     else if (comm_value == TOXAV_CALL_COMM_NETWORK_ROUND_TRIP_MS)
     {
-        int network_round_trip_ms = (uint32_t)comm_number;
+        global_network_round_trip_ms = (uint32_t)comm_number;
     }
     else if (comm_value == TOXAV_CALL_COMM_PLAY_DELAY)
     {
@@ -611,8 +615,8 @@ static void utox_av_comm_cb(ToxAV *av, uint32_t friend_number, TOXAV_CALL_COMM_I
     }
     else if (comm_value == TOXAV_CALL_COMM_ENCODER_CURRENT_BITRATE)
     {
-        int encoder_video_bitrate = (uint32_t)comm_number;
-        draw_bitrate(encoder_video_bitrate, 1);
+        global_encoder_video_bitrate = (uint32_t)comm_number;
+        // draw_bitrate(encoder_video_bitrate, 1);
     }
     else if (comm_value == TOXAV_CALL_COMM_INCOMING_FPS)
     {

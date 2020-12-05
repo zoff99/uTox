@@ -51,7 +51,7 @@ static void draw_background_sidebar(int x, int y, int width, int height) {
 }
 
 static int draw_audio_bars_every_cur = 0;
-static int draw_audio_bars_every = 2;
+static int draw_audio_bars_every = 1;
 
 void draw_bitrate(int rate, int type)
 {

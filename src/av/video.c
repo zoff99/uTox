@@ -64,7 +64,7 @@ extern int global_utox_max_desktop_capture_height;
 
 sem_t count_video_play_threads;
 int count_video_play_threads_int;
-#define MAX_VIDEO_PLAY_THREADS 2
+#define MAX_VIDEO_PLAY_THREADS 5
 sem_t video_play_lock_;
 
 struct video_play_thread_args {
@@ -449,6 +449,10 @@ static void *video_play(void *video_frame_data)
     // LOG_ERR("uToxVideo:thread", "video SEND thread:start");
     // display_thread_sched_attr("Scheduler attributes of [1]: video_play");
 
+#ifdef VIDEO_SEND_DEBUG_LOGGING
+    uint64_t timspan_in_ms444 = current_time_monotonic_default();
+#endif
+
     struct video_play_thread_args* d = (struct video_play_thread_args*)video_frame_data;
     uint64_t timspan_in_ms2 = d->timspan_in_ms2;
     ToxAV *av = d->av;
@@ -459,15 +463,7 @@ static void *video_play(void *video_frame_data)
     utox_video_frame.h = d->h;
     int type = d->type;
 
-#if 0
-    int tnum = d->thread_number;
-    char* t_name_str[20];
-    memset(t_name_str, 0, 20);
-    snprintf(t_name_str, 19, "t_v_send:%d", tnum);
-    pthread_setname_np(pthread_self(), t_name_str);
-#else
     pthread_setname_np(pthread_self(), "t_v_send");
-#endif
 
     if (type == -99)
     {
@@ -535,6 +531,10 @@ static void *video_play(void *video_frame_data)
     }
 
     sem_post(&video_play_lock_);
+
+#ifdef VIDEO_SEND_DEBUG_LOGGING
+    LOG_ERR("uToxVideo", "video_send:1:time_spent=%d", (int)(current_time_monotonic_default() - timspan_in_ms444));
+#endif
 
     if (type == 1)
     {
@@ -651,6 +651,11 @@ static void *video_play(void *video_frame_data)
     }
 
     dec_video_t_counter();
+
+#ifdef VIDEO_SEND_DEBUG_LOGGING
+    LOG_ERR("uToxVideo", "video_send:2:time_spent=%d", (int)(current_time_monotonic_default() - timspan_in_ms444));
+#endif
+
     pthread_exit(0);
 }
 
@@ -712,14 +717,17 @@ void utox_video_thread(void *args) {
             static struct timeval tt1;
             __utimer_start(&tt1);
 
-            // fprintf(stderr, "REC:DELTA=%d\n", (int)(current_time_monotonic_default() - timspan_in_ms2));
+#ifdef VIDEO_SEND_DEBUG_LOGGING
+            LOG_ERR("uToxVideo", "REC:DELTA=%d", (int)(current_time_monotonic_default() - timspan_in_ms2));
+#endif
             timspan_in_ms2 = current_time_monotonic_default();
-
             // capturing is enabled, capture frames
             // LOG_ERR("uToxVideo", "native_video_getframe: START:w=%d h=%d", utox_video_frame.w, utox_video_frame.h);
             const int r = native_video_getframe(utox_video_frame.y, utox_video_frame.u, utox_video_frame.v,
                                                 utox_video_frame.w, utox_video_frame.h);
-            // LOG_ERR("uToxVideo", "native_video_getframe: DONE");
+#ifdef VIDEO_SEND_DEBUG_LOGGING
+            LOG_ERR("uToxVideo", "native_video_getframe: DONE : %d ms", (int)(current_time_monotonic_default() - timspan_in_ms2));
+#endif
 
             if ((r == 1) || (r == -99)) {
 
@@ -757,7 +765,14 @@ void utox_video_thread(void *args) {
                         if (get_video_t_counter() < MAX_VIDEO_PLAY_THREADS)
                         {
                             inc_video_t_counter();
+
+#ifdef VIDEO_SEND_DEBUG_LOGGING
+                            uint64_t timspan_in_ms44 = current_time_monotonic_default();
+#endif
                             sem_wait(&video_play_lock_);
+#ifdef VIDEO_SEND_DEBUG_LOGGING
+                            LOG_ERR("uToxVideo", "sem_wait=%d", (int)(current_time_monotonic_default() - timspan_in_ms44));
+#endif
 
                             struct video_play_thread_args args2;
                             args2.timspan_in_ms2 = timspan_in_ms2;
@@ -794,6 +809,12 @@ void utox_video_thread(void *args) {
                                 sem_wait(&video_play_lock_);
                                 sem_post(&video_play_lock_);
                             }
+                        }
+                        else
+                        {
+#ifdef VIDEO_SEND_DEBUG_LOGGING
+                            LOG_ERR("uToxVideo:thread", "error too many threads");
+#endif
                         }
 
 #if 0
