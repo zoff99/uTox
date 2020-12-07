@@ -67,10 +67,10 @@ void video_frame(uint16_t id, uint8_t *img_data, uint16_t width, uint16_t height
         if (size_hints)
         {
             size_hints->flags = PAspect;
-            size_hints->min_aspect.x=width;
-            size_hints->max_aspect.x=size_hints->min_aspect.x;
-            size_hints->min_aspect.y=height;
-            size_hints->max_aspect.y=size_hints->min_aspect.y;
+            size_hints->min_aspect.x = width;
+            size_hints->max_aspect.x = size_hints->min_aspect.x;
+            size_hints->min_aspect.y = height;
+            size_hints->max_aspect.y = size_hints->min_aspect.y;
             XSetWMNormalHints(display, *win, size_hints);
             XFree(size_hints);
         }
@@ -145,10 +145,10 @@ void video_begin(uint16_t id, char *name, uint16_t name_length, uint16_t width, 
     if (size_hints)
     {
         size_hints->flags = PAspect;
-        size_hints->min_aspect.x=width;
-        size_hints->max_aspect.x=size_hints->min_aspect.x;
-        size_hints->min_aspect.y=height;
-        size_hints->max_aspect.y=size_hints->min_aspect.y;
+        size_hints->min_aspect.x = width;
+        size_hints->max_aspect.x = size_hints->min_aspect.x;
+        size_hints->min_aspect.y = height;
+        size_hints->max_aspect.y = size_hints->min_aspect.y;
         XSetWMNormalHints(display, *win, size_hints);
         XFree(size_hints);
     }
