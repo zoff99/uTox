@@ -89,6 +89,7 @@ typedef struct utox_friend {
     /* Audio / Video */
     int32_t  call_state_self, call_state_friend;
     uint16_t video_width, video_height;
+    uint8_t  video_changed_size;
     ALuint   audio_dest;
     time_t call_started;
 

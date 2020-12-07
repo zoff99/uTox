@@ -62,6 +62,18 @@ void video_frame(uint16_t id, uint8_t *img_data, uint16_t width, uint16_t height
     if (resize) {
         XWindowChanges changes = {.width = width, .height = height };
         XConfigureWindow(display, *win, CWWidth | CWHeight, &changes);
+
+        XSizeHints *size_hints = XAllocSizeHints();
+        if (size_hints)
+        {
+            size_hints->flags = PAspect;
+            size_hints->min_aspect.x=width;
+            size_hints->max_aspect.x=size_hints->min_aspect.x;
+            size_hints->min_aspect.y=height;
+            size_hints->max_aspect.y=size_hints->min_aspect.y;
+            XSetWMNormalHints(display, *win, size_hints);
+            XFree(size_hints);
+        }
     }
 
     XWindowAttributes attrs;
@@ -132,7 +144,7 @@ void video_begin(uint16_t id, char *name, uint16_t name_length, uint16_t width, 
     XSizeHints *size_hints = XAllocSizeHints();
     if (size_hints)
     {
-        size_hints->flags = PAspect; // USPosition | PAspect | PMinSize | PMaxSize;
+        size_hints->flags = PAspect;
         size_hints->min_aspect.x=width;
         size_hints->max_aspect.x=size_hints->min_aspect.x;
         size_hints->min_aspect.y=height;
@@ -140,7 +152,6 @@ void video_begin(uint16_t id, char *name, uint16_t name_length, uint16_t width, 
         XSetWMNormalHints(display, *win, size_hints);
         XFree(size_hints);
     }
-
 
     /* set WM_CLASS */
     XClassHint hint = {.res_name = "utoxvideo", .res_class = "utoxvideo" };

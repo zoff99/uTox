@@ -508,6 +508,13 @@ static void utox_av_incoming_frame_v(ToxAV *UNUSED(toxAV), uint32_t friend_numbe
         LOG_ERR("uToxAV", "Incoming frame for a friend we don't know about! (%u)", friend_number);
         return;
     }
+
+    if ((f->video_width != width) || (f->video_height != height))
+    {
+        LOG_ERR("uToxAV", "Incoming frame with different width or height from friend %u", friend_number);
+        f->video_changed_size = 1;
+    }
+
     f->video_width  = width;
     f->video_height = height;
     size_t size     = width * height * 4;

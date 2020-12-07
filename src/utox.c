@@ -583,11 +583,21 @@ void utox_message_dispatch(UTOX_MSG utox_msg_id, uint16_t param1, uint16_t param
                param2: self preview frame for pending call.
                data: packaged frame data */
 
+            bool need_resize = 0;
+            FRIEND *f = get_friend(param1);
+            if (f) {
+                if (f->video_changed_size == 1)
+                {
+                    f->video_changed_size = 0;
+                    need_resize = 1;
+                }
+            }
+
             UTOX_FRAME_PKG *frame = data;
             STRING *s = SPTR(WINDOW_TITLE_VIDEO_PREVIEW);
             // TODO: Don't try to start a new video session every frame.
             video_begin(param1, s->str, s->length, frame->w, frame->h);
-            video_frame(param1, frame->img, frame->w, frame->h, 0);
+            video_frame(param1, frame->img, frame->w, frame->h, need_resize);
             free(frame->img);
             free(data);
             redraw();
