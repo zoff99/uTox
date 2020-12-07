@@ -744,6 +744,7 @@ void utox_video_thread(void *args) {
                                     utox_video_frame.v, utox_video_frame.w, (utox_video_frame.w / 2),
                                     (utox_video_frame.w / 2), frame->img);
 
+                        // TODO: if post messages keep piling up, dont post new frames!
                         postmessage_utox(AV_VIDEO_FRAME, UINT16_MAX, 1, (void *)frame);
                     }
                 }

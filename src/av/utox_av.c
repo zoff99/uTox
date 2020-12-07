@@ -542,10 +542,12 @@ static void utox_av_incoming_frame_v(ToxAV *UNUSED(toxAV), uint32_t friend_numbe
             LOG_ERR("uToxAV", "Error setting frame for inline video.");
         }
 
+        // TODO: if post messages keep piling up, dont post new frames!
         postmessage_utox(AV_INLINE_FRAME, friend_number, 0, NULL);
         free(frame->img);
         free(frame);
     } else {
+        // TODO: if post messages keep piling up, dont post new frames!
         postmessage_utox(AV_VIDEO_FRAME, friend_number, 0, (void *)frame);
     }
 }

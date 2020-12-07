@@ -50,7 +50,7 @@ void video_frame(uint16_t id, uint8_t *img_data, uint16_t width, uint16_t height
         // Preview window
         win = &preview;
     } else if (id >= MAX_VID_WINDOWS) {
-        LOG_TRACE("Video", "Window ID too large (>=%d)", MAX_VID_WINDOWS);
+        LOG_ERR("Video", "Window ID too large (>=%d)", MAX_VID_WINDOWS);
         return;
     }
 
@@ -74,6 +74,8 @@ void video_frame(uint16_t id, uint8_t *img_data, uint16_t width, uint16_t height
             XSetWMNormalHints(display, *win, size_hints);
             XFree(size_hints);
         }
+
+        return;
     }
 
     XWindowAttributes attrs;
@@ -97,7 +99,7 @@ void video_frame(uint16_t id, uint8_t *img_data, uint16_t width, uint16_t height
 
     /* scale image if needed */
     uint8_t *new_data = NULL;
-    if (attrs.width != width && attrs.height != height){
+    if (attrs.width != width || attrs.height != height){
         new_data = malloc(attrs.width * attrs.height * 4);
         if (!new_data) {
             LOG_FATAL_ERR(EXIT_MALLOC, "Video", "Could not allocate memory for scaled image.");
@@ -109,8 +111,40 @@ void video_frame(uint16_t id, uint8_t *img_data, uint16_t width, uint16_t height
 
     GC     default_gc = DefaultGC(display, def_screen_num);
     Pixmap pixmap     = XCreatePixmap(display, main_window.window, attrs.width, attrs.height, default_depth);
-    XPutImage(display, pixmap, default_gc, &image, 0, 0, 0, 0, attrs.width, attrs.height);
-    XCopyArea(display, pixmap, *win, default_gc, 0, 0, attrs.width, attrs.height, 0, 0);
+
+    LOG_TRACE("Video", "aspect %d %d %d %d", attrs.width, attrs.height, width, height);
+    if ((attrs.height != 0) && (height != 0))
+    {
+        int a1 = (int)(((double)attrs.width / (double)attrs.height) * 100000.0f);
+        int a2 = (int)(((double)width / (double)height) * 100000.0f);
+        int big_diff_aspect = abs(a1 - a2);
+        LOG_TRACE("Video", "window has different aspect ratio than video %d -> %d d=%d", (int)a1, (int)a2, big_diff_aspect);
+
+        if (big_diff_aspect > (11 * 1000))
+        {
+            if (a1 > a2)
+            {
+                // TODO: calculate correct attrs.width, attrs.height so that full screen is not distorted
+                XPutImage(display, pixmap, default_gc, &image, 0, 0, 0, 0, attrs.width, attrs.height);
+            }
+            else
+            {
+                // TODO: calculate correct attrs.width, attrs.height so that full screen is not distorted
+                XPutImage(display, pixmap, default_gc, &image, 0, 0, 0, 0, attrs.width, attrs.height);
+            }
+        }
+        else
+        {
+            XPutImage(display, pixmap, default_gc, &image, 0, 0, 0, 0, attrs.width, attrs.height);
+        }
+
+        XCopyArea(display, pixmap, *win, default_gc, 0, 0, attrs.width, attrs.height, 0, 0);
+    }
+    else
+    {
+        // do nothing
+    }
+
     XFreePixmap(display, pixmap);
 
     if (new_data) {
