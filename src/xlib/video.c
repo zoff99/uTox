@@ -129,13 +129,26 @@ void video_begin(uint16_t id, char *name, uint16_t name_length, uint16_t width, 
     XChangeProperty(display, *win, XA_NET_NAME, XA_UTF8_STRING, 8, PropModeReplace, (uint8_t *)name, name_length);
     XSetWMProtocols(display, *win, &wm_delete_window, 1);
 
+    XSizeHints *size_hints = XAllocSizeHints();
+    if (size_hints)
+    {
+        size_hints->flags = PAspect; // USPosition | PAspect | PMinSize | PMaxSize;
+        size_hints->min_aspect.x=width;
+        size_hints->max_aspect.x=size_hints->min_aspect.x;
+        size_hints->min_aspect.y=height;
+        size_hints->max_aspect.y=size_hints->min_aspect.y;
+        XSetWMNormalHints(display, *win, size_hints);
+        XFree(size_hints);
+    }
+
+
     /* set WM_CLASS */
     XClassHint hint = {.res_name = "utoxvideo", .res_class = "utoxvideo" };
 
     XSetClassHint(display, *win, &hint);
 
     XMapWindow(display, *win);
-    LOG_TRACE("Video", "new window %u" , id);
+    LOG_ERR("Video", "new window %u" , id);
 }
 
 void video_end(uint16_t id) {
