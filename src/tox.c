@@ -660,7 +660,7 @@ void toxcore_thread(void *UNUSED(args)) {
         }
 
 
-#ifdef XXXXUTOX_USAGE__HQAV_APPLICATION
+#ifdef UTOX_USAGE__HQAV_APPLICATION
         thread(toxcore_iter_thread, NULL);
 #endif
 
@@ -715,7 +715,7 @@ void toxcore_thread(void *UNUSED(args)) {
             }
 
 
-#ifdef XXXUTOX_USAGE__HQAV_APPLICATION
+#ifdef UTOX_USAGE__HQAV_APPLICATION
             yieldcpu(4);
 #else
             tox_iterate(tox, NULL);
