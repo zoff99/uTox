@@ -40,8 +40,7 @@ static int audio_get_tid()
 }
 
 #include <semaphore.h>
-static sem_t sem_draw_audio_bars;
-static int sem_draw_audio_bars_valid = 0;
+extern sem_t sem_draw_audio_bars;
 
 static void draw_background_sidebar(int x, int y, int width, int height) {
     /* Friend list (roster) background   */
@@ -101,12 +100,6 @@ void draw_bitrate(int rate, int type)
 /* hack to draw audio bars in the top left corner of the utox window */
 void draw_audio_bars(int x, int y, int UNUSED(width), int UNUSED(height), int level, int level_med, int level_red, int level_max, int channels)
 {
-    if (sem_draw_audio_bars_valid == 0)
-    {
-        sem_init(&sem_draw_audio_bars, 0, 1);
-        sem_draw_audio_bars_valid = 1;
-    }
-
     sem_wait(&sem_draw_audio_bars);
 
     // LOG_ERR("uTox", "draw_audio_bars:x=%d y=%d level=%d tid=%d", x, y, level, audio_get_tid());
@@ -205,12 +198,6 @@ void draw_audio_bars(int x, int y, int UNUSED(width), int UNUSED(height), int le
 /* hack to draw audio bars in the top left corner of the utox window */
 void draw_audio_bars2(int x, int y, int UNUSED(width), int UNUSED(height), int level, int level_med, int level_red, int level_max)
 {
-    if (sem_draw_audio_bars_valid == 0)
-    {
-        sem_init(&sem_draw_audio_bars, 0, 1);
-        sem_draw_audio_bars_valid = 1;
-    }
-
     sem_wait(&sem_draw_audio_bars);
 
     draw_audio_bars_every_cur++;

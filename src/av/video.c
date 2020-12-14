@@ -609,8 +609,8 @@ static void *video_play(void *video_frame_data)
         frame->w              = new_width;
         frame->h              = new_height;
         frame->img            = malloc(((new_width * new_height) * 3 / 2) + 1000 ); // YUV buffer
-        void* u_start         = frame->img + (new_width * new_height);
-        void* v_start         = frame->img + (new_width * new_height) + ((new_width / 2) * (new_height / 2));
+        void* u_start         = (uint8_t*)frame->img + (new_width * new_height);
+        void* v_start         = (uint8_t*)frame->img + (new_width * new_height) + ((new_width / 2) * (new_height / 2));
 
         scale_down_yuv420_image(utox_video_frame.y, utox_video_frame.u, utox_video_frame.v,
                                 utox_video_frame.w, utox_video_frame.h,

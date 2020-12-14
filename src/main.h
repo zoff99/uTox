@@ -31,8 +31,13 @@
 #endif
 
 /* Support for large files. */
+#ifndef _LARGEFILE_SOURCE
 #define _LARGEFILE_SOURCE
+#endif
+
+#ifndef _FILE_OFFSET_BITS
 #define _FILE_OFFSET_BITS 64
+#endif
 
 #if TOX_VERSION_MAJOR > 0
 #define ENABLE_MULTIDEVICE 1

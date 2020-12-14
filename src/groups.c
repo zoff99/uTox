@@ -373,12 +373,12 @@ void init_groups(Tox *tox) {
                         // TODO: check that there always a NULL byte at the end of those strings
                         if (sizeof(g->name) < MAX_STR_LEN_FOR_TITLE)
                         {
-                            snprintf((char *)g->name, sizeof(g->name), gr_title_string);
+                            snprintf((char *)g->name, sizeof(g->name), (const char *)gr_title_string);
                             g->name_length = strnlen(g->name, sizeof(g->name) - 1);
                         }
                         else
                         {
-                            snprintf((char *)g->name, MAX_STR_LEN_FOR_TITLE, gr_title_string);
+                            snprintf((char *)g->name, MAX_STR_LEN_FOR_TITLE, (const char *)gr_title_string);
                             g->name_length = strnlen(g->name, MAX_STR_LEN_FOR_TITLE - 1);
                         }
                     }

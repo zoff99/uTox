@@ -470,10 +470,10 @@ int native_video_getframe(uint8_t *y, uint8_t *u, uint8_t *v, uint16_t width, ui
                 {
 
                     left_top_bar_into_bgra_frame(screen_image->width, screen_image->height, screen_image->bytes_per_line,
-                                                 screen_image->data, mx, my, box_w, box_line_thikness, 255, 0, 0);
+                                                 (uint8_t*)screen_image->data, mx, my, box_w, box_line_thikness, 255, 0, 0);
 
                     left_top_bar_into_bgra_frame(screen_image->width, screen_image->height, screen_image->bytes_per_line,
-                                                 screen_image->data, mx, my, box_line_thikness, box_h, 255, 0, 0);
+                                                 (uint8_t*)screen_image->data, mx, my, box_line_thikness, box_h, 255, 0, 0);
                 }
             }
             // -----------------------------------------------

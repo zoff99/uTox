@@ -28,10 +28,14 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <semaphore.h>
 
 int global_show_mouse_cursor = 0;
 int global_utox_max_desktop_capture_width = 1920;
 int global_utox_max_desktop_capture_height = 1080;
+
+extern int count_video_frames_x11_messages;
+extern sem_t sem_video_frames_x11_msgs;
 
 /** Translates status code to text then sends back to the user */
 static void file_notify(FRIEND *f, MSG_HEADER *msg) {
@@ -601,6 +605,14 @@ void utox_message_dispatch(UTOX_MSG utox_msg_id, uint16_t param1, uint16_t param
             free(frame->img);
             free(data);
             redraw();
+
+            sem_wait(&sem_video_frames_x11_msgs);
+            if (count_video_frames_x11_messages > 0)
+            {
+                count_video_frames_x11_messages--;
+            }
+            sem_post(&sem_video_frames_x11_msgs);
+
             break;
         }
         case AV_INLINE_FRAME: {

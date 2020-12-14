@@ -25,6 +25,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <semaphore.h>
 
 bool utox_av_ctrl_init = false;
 
@@ -37,6 +38,10 @@ bool utox_av_ctrl_init = false;
 int global_decoder_video_bitrate = 0;
 int global_encoder_video_bitrate = 0;
 int global_network_round_trip_ms = 999;
+
+#define MAX_VIDEO_FRAMES_X11_MSGS 5
+extern int count_video_frames_x11_messages;
+extern sem_t sem_video_frames_x11_msgs;
 
 static bool toxav_thread_msg = 0;
 
@@ -547,8 +552,18 @@ static void utox_av_incoming_frame_v(ToxAV *UNUSED(toxAV), uint32_t friend_numbe
         free(frame->img);
         free(frame);
     } else {
-        // TODO: if post messages keep piling up, dont post new frames!
-        postmessage_utox(AV_VIDEO_FRAME, friend_number, 0, (void *)frame);
+        // if post messages keep piling up, dont post new frames!
+        sem_wait(&sem_video_frames_x11_msgs);
+        if (count_video_frames_x11_messages < MAX_VIDEO_FRAMES_X11_MSGS)
+        {
+            count_video_frames_x11_messages++;
+            sem_post(&sem_video_frames_x11_msgs);
+            postmessage_utox(AV_VIDEO_FRAME, friend_number, 0, (void *)frame);
+        }
+        else
+        {
+            sem_post(&sem_video_frames_x11_msgs);
+        }
     }
 }
 

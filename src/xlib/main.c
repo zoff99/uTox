@@ -46,12 +46,16 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
+#include <semaphore.h>
 #include <sys/wait.h>
 
 extern pthread_mutex_t save_file_write_lock;
 extern int global_shutdown;
 
+int count_video_frames_x11_messages = 0;
+sem_t sem_video_frames_x11_msgs;
 
+sem_t sem_draw_audio_bars;
 
 Atom wm_protocols, wm_delete_window;
 Atom XA_CLIPBOARD, XA_NET_NAME, XA_UTF8_STRING, targets, XA_INCR;
@@ -112,10 +116,15 @@ static Display *ptt_display;
 void init_ptt(void) {
     settings.push_to_talk = 1;
 
-    char path[UTOX_FILE_NAME_LENGTH];
-    snprintf(path, UTOX_FILE_NAME_LENGTH, "%s/.config/tox/ppt-kbd", getenv("HOME")); // TODO DRY
+    char *path = calloc(1, UTOX_FILE_NAME_LENGTH);
+    if (path)
+    {
+        snprintf(path, UTOX_FILE_NAME_LENGTH, "%s/.config/tox/ppt-kbd", getenv("HOME")); // TODO DRY
 
-    ptt_keyboard_handle = fopen((const char *)path, "r");
+        ptt_keyboard_handle = fopen((const char *)path, "r");
+        free(path);
+    }
+
     if (!ptt_keyboard_handle) {
         LOG_TRACE("XLIB", "Could not access ptt-kbd in data directory" );
         ptt_display = XOpenDisplay(0);
@@ -738,6 +747,15 @@ int main(int argc, char *argv[]) {
     // We need to parse_args before calling utox_init()
     utox_init();
 
+    if (sem_init(&sem_video_frames_x11_msgs, 0, 1))
+    {
+        LOG_ERR("uToxVideo", "Error in sem_init for sem_video_frames_x11_msgs");
+    }
+
+    if (sem_init(&sem_draw_audio_bars, 0, 1))
+    {
+        LOG_ERR("uToxVideo", "Error in sem_init for sem_draw_audio_bars");
+    }
 
     if (should_launch_at_startup == 1 || should_launch_at_startup == -1) {
         LOG_NOTE("XLIB", "Start on boot not supported on this OS, please use your distro suggested method!\n");
@@ -962,6 +980,10 @@ int main(int argc, char *argv[]) {
     pthread_mutex_lock(&save_file_write_lock);
     global_shutdown = 1;
     pthread_mutex_unlock(&save_file_write_lock);
+
+    sem_destroy(&sem_video_frames_x11_msgs);
+    sem_destroy(&sem_draw_audio_bars);
+
     LOG_ERR("shutdown", "wait for tox:DONE");
 
     return 0;
