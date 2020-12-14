@@ -14,6 +14,9 @@
 
 #define QR_BORDER_SIZE 4 /* unit: QR modules */
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wframe-larger-than="
+
 static bool generate_qr(const char *text, uint8_t *qrcode)
 {
     uint8_t temp_buffer[qrcodegen_BUFFER_LEN_MAX];
@@ -60,3 +63,6 @@ void qr_setup(const char *id_str, uint8_t **qr_data, int *qr_data_size, NATIVE_I
     uint16_t native_size = *qr_image_size;
     *qr_image = utox_image_to_native(*qr_data, *qr_data_size, &native_size, &native_size, false);
 }
+
+#pragma GCC diagnostic pop
+
