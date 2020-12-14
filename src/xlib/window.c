@@ -20,6 +20,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <pthread.h>
+
 
 Display *display;
 Screen  *default_screen;
@@ -288,11 +290,11 @@ UTOX_WINDOW *native_window_create_traypop(int x, int y, int w, int h, PANEL *pan
     return win;
 }
 
-static void notify_tween_thread(void *obj) {
+static void *notify_tween_thread(void *obj) {
     UTOX_WINDOW *target = obj;
 
     if (!target) {
-        return;
+        pthread_exit(0);
     }
 
     XEvent ev = {
@@ -316,6 +318,8 @@ static void notify_tween_thread(void *obj) {
         XFlush(display);
         yieldcpu(1);
     }
+
+    pthread_exit(0);
 }
 
 static UTOX_WINDOW *focus;

@@ -136,7 +136,7 @@ void tox_after_load(Tox *tox);
 
 /* toxcore thread
  */
-void toxcore_thread(void *args);
+void *toxcore_thread(void *args);
 
 /* send a message to the toxcore thread
  */

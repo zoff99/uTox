@@ -78,7 +78,7 @@ void postmessage_utoxav(uint8_t msg, uint32_t param1, uint32_t param2, void *dat
     toxav_thread_msg = 1;
 }
 
-void utox_av_ctrl_thread(void *UNUSED(args)) {
+void *utox_av_ctrl_thread(void *UNUSED(args)) {
     ToxAV *av = NULL;
 
     LOG_ERR("uTox Audio", "utox_av_ctrl_thread:enter:tid=%d", audio_get_tid());
@@ -358,7 +358,8 @@ void utox_av_ctrl_thread(void *UNUSED(args)) {
 
     toxav_kill(av);
     LOG_NOTE("UTOXAV", "Clean thread exit!");
-    return;
+
+    pthread_exit(0);
 }
 
 static void utox_av_incoming_call(ToxAV *UNUSED(av), uint32_t friend_number,

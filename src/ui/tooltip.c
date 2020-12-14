@@ -11,6 +11,9 @@
 #include "../native/thread.h"
 #include "../native/time.h"
 
+#include <pthread.h>
+
+
 static TOOLTIP tooltip;
 
 #define TOOLTIP_WIDTH SCALE(24)
@@ -150,7 +153,7 @@ void tooltip_show(void) {
 
 volatile bool reset_time;
 
-static void tooltip_thread(void *UNUSED(args)) {
+static void *tooltip_thread(void *UNUSED(args)) {
     uint64_t last_move_time = ~0;
     while (1) {
         if (kill_thread) {
@@ -171,6 +174,8 @@ static void tooltip_thread(void *UNUSED(args)) {
     }
 
     kill_thread = false;
+
+    pthread_exit(0);
 }
 
 // This is being called every time the mouse is moving above a button

@@ -545,7 +545,7 @@ static int init_toxcore(Tox **tox) {
 
 static int do_tox_iterate = 0;
 
-void toxcore_iter_thread(void *UNUSED(args)) {
+void *toxcore_iter_thread(void *UNUSED(args)) {
     ToxAV *av = global_toxav;
     Tox *tox = toxav_get_tox(av);
 
@@ -576,6 +576,8 @@ void toxcore_iter_thread(void *UNUSED(args)) {
         tox_iterate(tox, NULL);
         yieldcpu(global_iter_delay_ms);
     }
+
+    pthread_exit(0);
 }
 
 /** void toxcore_thread(void)
@@ -585,7 +587,7 @@ void toxcore_iter_thread(void *UNUSED(args)) {
  *
  * Accepts and returns nothing.
  */
-void toxcore_thread(void *UNUSED(args)) {
+void *toxcore_thread(void *UNUSED(args)) {
     ToxAV *av               = NULL;
     bool   reconfig         = 1;
     int    toxcore_init_err = 0;
@@ -756,6 +758,8 @@ void toxcore_thread(void *UNUSED(args)) {
     pthread_mutex_destroy(&save_file_write_lock);
 
     LOG_TRACE("Toxcore", "Tox thread:\tClean exit!");
+
+    pthread_exit(0);
 }
 
 /** General recommendations for working with threads in uTox

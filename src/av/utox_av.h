@@ -64,7 +64,7 @@ typedef struct groupchat GROUPCHAT;
  */
 void postmessage_utoxav(uint8_t msg, uint32_t param1, uint32_t param2, void *data);
 
-void utox_av_ctrl_thread(void *args);
+void *utox_av_ctrl_thread(void *args);
 
 void utox_av_local_disconnect(ToxAV *av, int32_t friend_number);
 

@@ -25,7 +25,7 @@ bool is_unity_running() {
 }
 
 // Runs the main event loop
-void run_mmloop() { g_main_loop_run(mmloop); }
+void *run_mmloop() { g_main_loop_run(mmloop); }
 
 // Function called once the user presses an entry in the MessagingMenu
 static void source_activated(MessagingMenuApp *mmapp_, const gchar *source_id, gpointer user_data) {

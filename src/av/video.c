@@ -659,7 +659,7 @@ static void *video_play(void *video_frame_data)
     pthread_exit(0);
 }
 
-void utox_video_thread(void *args) {
+void *utox_video_thread(void *args) {
     ToxAV *av = args;
 
     LOG_ERR("uToxVideo", "utox_video_thread: *********ENTER*********");
@@ -1011,6 +1011,8 @@ void utox_video_thread(void *args) {
     video_thread_msg       = 0;
     utox_video_thread_init = 0;
     LOG_TRACE("uToxVideo", "Clean thread exit!");
+
+    pthread_exit(0);
 }
 
 void yuv420tobgr(uint16_t width, uint16_t height, const uint8_t *y, const uint8_t *u, const uint8_t *v,

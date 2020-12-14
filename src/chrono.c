@@ -8,10 +8,12 @@
 #include <stdbool.h>
 
 #include "native/thread.h"
+#include <pthread.h>
+
 
 bool chrono_thread_init = false;
 
-static void chrono_thread(void *args) {
+static void *chrono_thread(void *args) {
     LOG_INFO("Chono", "Thread starting");
 
     CHRONO_INFO *info = args;
@@ -27,6 +29,8 @@ static void chrono_thread(void *args) {
     }
 
     LOG_INFO("Chrono", "Thread exited cleanly");
+
+    pthread_exit(0);
 }
 
 bool chrono_start(CHRONO_INFO *info) {

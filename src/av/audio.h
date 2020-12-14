@@ -92,6 +92,6 @@ void sourceplaybuffer(unsigned int i, const int16_t *data, int samples, uint8_t 
 /* send a message to the audio thread */
 void postmessage_audio(uint8_t msg, uint32_t param1, uint32_t param2, void *data);
 
-void utox_audio_thread(void *args);
+void *utox_audio_thread(void *args);
 
 #endif

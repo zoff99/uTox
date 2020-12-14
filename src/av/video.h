@@ -45,7 +45,7 @@ bool utox_video_change_device(uint16_t i);
 bool utox_video_start(bool preview);
 bool utox_video_stop(bool preview);
 
-void utox_video_thread(void *args);
+void *utox_video_thread(void *args);
 
 void postmessage_video(uint8_t msg, uint32_t param1, uint32_t param2, void *data);
 

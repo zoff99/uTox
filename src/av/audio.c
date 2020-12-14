@@ -728,7 +728,7 @@ void postmessage_audio(uint8_t msg, uint32_t param1, uint32_t param2, void *data
 }
 
 // TODO: This function is 300 lines long. Cut it up.
-void utox_audio_thread(void *args) {
+void *utox_audio_thread(void *args) {
     time_t close_device_time = 0;
     ToxAV *av = args;
 
@@ -766,7 +766,7 @@ void utox_audio_thread(void *args) {
     int16_t *preview_buffer = calloc(PREVIEW_BUFFER_SIZE, 2);
     if (!preview_buffer) {
         LOG_ERR("uTox Audio", "Unable to allocate memory for preview buffer.");
-        return;
+        pthread_exit(0);
     }
     unsigned int preview_buffer_index = 0;
     bool preview_on = false;
@@ -1244,6 +1244,8 @@ void utox_audio_thread(void *args) {
     utox_audio_thread_init = false;
     free(preview_buffer);
     LOG_TRACE("uTox Audio", "Clean thread exit!");
+
+    pthread_exit(0);
 }
 
 void callback_av_group_audio(void *UNUSED(tox), uint32_t groupnumber, uint32_t peernumber, const int16_t *pcm, unsigned int samples,
