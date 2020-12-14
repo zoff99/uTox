@@ -177,6 +177,29 @@ add_cflag("-fPIC")
 ## https://wiki.gentoo.org/wiki/Gcc_10_porting_notes/fno_common
 add_cflag("-fcommon")
 
+# all warnings are errors
+add_cflag("-Werror")
+
+add_cflag("-fdiagnostics-color=always")
+
+# we do not want large allocations and VLAs
+# add_cflag("-Wlarger-than=6000")
+add_cflag("-Wframe-larger-than=4112")
+# add_cflag("-Wvla")
+
+
+# we do not want to see those
+add_cflag("-Wno-unused-parameter")
+add_cflag("-Wno-unused-function")
+add_cflag("-Wno-unused-variable")
+add_cflag("-Wno-unused-but-set-variable")
+add_cflag("-Wno-sign-compare")
+# fix "implicit-fallthrough" at some point
+add_cflag("-Wno-implicit-fallthrough")
+
+add_cflag("-Wno-error=implicit-fallthrough")
+
+
 ## Optimization Flags
 
 # Fix GNU stack
