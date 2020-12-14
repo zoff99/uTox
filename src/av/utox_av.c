@@ -1,5 +1,5 @@
-#ifndef DD__GNU_SOURCE
-#define DD__GNU_SOURCE
+
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
 
@@ -51,7 +51,7 @@ void draw_bitrate(int rate, int type);
 static int audio_get_tid()
 {
     pthread_t pid = pthread_self();
-    return (int)pid;
+    return (int)(intptr_t)pid;
 }
 
 void postmessage_utoxav(uint8_t msg, uint32_t param1, uint32_t param2, void *data) {

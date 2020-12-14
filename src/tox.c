@@ -1,5 +1,4 @@
-#ifndef DD__GNU_SOURCE
-#define DD__GNU_SOURCE
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
 

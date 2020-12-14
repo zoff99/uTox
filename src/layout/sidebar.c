@@ -36,7 +36,7 @@ void force_redraw_soft(void);
 static int audio_get_tid()
 {
     pthread_t pid = pthread_self();
-    return (int)pid;
+    return (int)(intptr_t)pid;
 }
 
 #include <semaphore.h>

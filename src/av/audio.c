@@ -1,5 +1,4 @@
-#ifndef DD__GNU_SOURCE
-#define DD__GNU_SOURCE
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
 
@@ -83,7 +82,7 @@ static ALuint RingBuffer, ToneBuffer;
 static int audio_get_tid()
 {
     pthread_t pid = pthread_self();
-    return (int)pid;
+    return (int)(intptr_t)pid;
 }
 
 static bool audio_in_device_open(void) {

@@ -16,7 +16,7 @@ static uint32_t scolor;
 static int audio_get_tid()
 {
     pthread_t pid = pthread_self();
-    return (int)pid;
+    return (int)(intptr_t)pid;
 }
 
 void redraw(void) {
