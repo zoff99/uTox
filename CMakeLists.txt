@@ -198,6 +198,7 @@ add_cflag("-Wno-sign-compare")
 add_cflag("-Wno-implicit-fallthrough")
 
 add_cflag("-Wno-error=implicit-fallthrough")
+add_cflag("-Wno-error=enum-conversion")
 
 
 ## Optimization Flags
