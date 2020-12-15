@@ -563,7 +563,10 @@ static void utox_av_incoming_frame_v(ToxAV *UNUSED(toxAV), uint32_t friend_numbe
         }
         else
         {
+            free(frame->img);
+            free(frame);
             sem_post(&sem_video_frames_x11_msgs);
+            LOG_ERR("uToxVideo", "utox_av_incoming_frame_v: X11 msgs: incoming frames piling up");
         }
     }
 }

@@ -545,6 +545,10 @@ void utox_message_dispatch(UTOX_MSG utox_msg_id, uint16_t param1, uint16_t param
                 return;
             }
 
+            sem_wait(&sem_video_frames_x11_msgs);
+            count_video_frames_x11_messages = 0;
+            sem_post(&sem_video_frames_x11_msgs);
+
             call_notify(f, UTOX_AV_INVITE);
             redraw();
             break;
@@ -566,6 +570,10 @@ void utox_message_dispatch(UTOX_MSG utox_msg_id, uint16_t param1, uint16_t param
                 LOG_ERR("uTox", "Could not get friend with number: %u", param1);
                 return;
             }
+
+            sem_wait(&sem_video_frames_x11_msgs);
+            count_video_frames_x11_messages = 0;
+            sem_post(&sem_video_frames_x11_msgs);
 
             call_notify(f, UTOX_AV_STARTED);
             redraw();

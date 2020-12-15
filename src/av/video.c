@@ -27,6 +27,10 @@
 #include <vpx/vpx_codec.h>
 #include <vpx/vpx_image.h>
 
+#define MAX_VIDEO_FRAMES_X11_MSGS 5
+extern int count_video_frames_x11_messages;
+extern sem_t sem_video_frames_x11_msgs;
+
 bool utox_video_thread_init = false;
 uint16_t video_width, video_height, max_video_width, max_video_height;
 static uint8_t video_send_t_num = 0;
@@ -744,8 +748,21 @@ void *utox_video_thread(void *args) {
                                     utox_video_frame.v, utox_video_frame.w, (utox_video_frame.w / 2),
                                     (utox_video_frame.w / 2), frame->img);
 
-                        // TODO: if post messages keep piling up, dont post new frames!
-                        postmessage_utox(AV_VIDEO_FRAME, UINT16_MAX, 1, (void *)frame);
+                        // if post messages keep piling up, dont post new frames!
+                        sem_wait(&sem_video_frames_x11_msgs);
+                        if (count_video_frames_x11_messages < MAX_VIDEO_FRAMES_X11_MSGS)
+                        {
+                            count_video_frames_x11_messages++;
+                            sem_post(&sem_video_frames_x11_msgs);
+                            postmessage_utox(AV_VIDEO_FRAME, UINT16_MAX, 1, (void *)frame);
+                        }
+                        else
+                        {
+                            free(frame->img);
+                            free(frame);
+                            sem_post(&sem_video_frames_x11_msgs);
+                            LOG_ERR("uToxVideo", "native_video_getframe: X11 msgs: incoming preview frames piling up");
+                        }
                     }
                 }
 
