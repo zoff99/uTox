@@ -42,6 +42,11 @@ static int audio_get_tid()
 #include <semaphore.h>
 extern sem_t sem_draw_audio_bars;
 
+extern int global_decoder_video_bitrate;
+extern int global_encoder_video_bitrate;
+extern int global_network_round_trip_ms;
+
+
 static void draw_background_sidebar(int x, int y, int width, int height) {
     /* Friend list (roster) background   */
     drawrect(x, y, width, height, COLOR_BKGRND_LIST);
@@ -56,9 +61,37 @@ void draw_bitrate(int rate, int type)
 {
     // LOG_ERR("uTox", "draw_bitrate:rate=%d type=%d tid=%d", rate, type, audio_get_tid());
 
-    if ((rate < 0) || (rate > 99000))
+    if ((type < 0)|| (type > 2))
     {
-        rate = -1;
+        return;
+    }
+
+    if (type == 2)
+    {
+        if (rate == 999)
+        {
+            return;
+        }
+    }
+
+    if ((type == 0)||(type == 1))
+    {
+        if ((rate < 0) || (rate > 99000))
+        {
+            rate = 0;
+        }
+    }
+
+    if (type == 2)
+    {
+        if (rate < 0)
+        {
+            rate = 0;
+        }
+        else if (rate > 999)
+        {
+            rate = 999;
+        }
     }
 
     char *num_as_string = calloc(1, 10);
@@ -67,29 +100,54 @@ void draw_bitrate(int rate, int type)
         return;
     }
 
-    snprintf(num_as_string, 9, "%d", rate);
+    if (type == 0)
+    {
+        snprintf(num_as_string, 9, "i:%d", rate);
+    }
+    else if (type == 1)
+    {
+        snprintf(num_as_string, 9, "o:%d", rate);
+    }
+    else
+    {
+        snprintf(num_as_string, 9, "n:%d", rate);
+    }
+
+#define RATE_BAR_WIDTH_UNSCALED_ 50
+#define RATE_BAR_HEIGHT_UNSCALED_ 13
 
     if (type == 0)
     {
         // clear area
-        draw_rect_fill(SCALE(1), SCALE(1), SCALE(40), SCALE(16), COLOR_STATUS_ONLINE);
+        draw_rect_fill(SCALE(1+2+RATE_BAR_WIDTH_UNSCALED_), SCALE(1+RATE_BAR_HEIGHT_UNSCALED_), SCALE(RATE_BAR_WIDTH_UNSCALED_), SCALE(RATE_BAR_HEIGHT_UNSCALED_), COLOR_STATUS_ONLINE);
         // draw text
         setcolor(COLOR_MENU_TEXT);
-        setfont(FONT_STATUS);
-        drawtextwidth(SCALE(1), SCALE(40), SCALE(1), num_as_string, strlen(num_as_string));
+        setfont(FONT_MISC);
+        drawtextwidth(SCALE(1+2+RATE_BAR_WIDTH_UNSCALED_), SCALE(RATE_BAR_WIDTH_UNSCALED_), SCALE(1+RATE_BAR_HEIGHT_UNSCALED_), num_as_string, strlen(num_as_string));
 
-        enddraw(SCALE(1), SCALE(1), SCALE(40), SCALE(16));
+        enddraw(SCALE(1+2+RATE_BAR_WIDTH_UNSCALED_), SCALE(1+RATE_BAR_HEIGHT_UNSCALED_), SCALE(RATE_BAR_WIDTH_UNSCALED_), SCALE(RATE_BAR_HEIGHT_UNSCALED_));
     }
     else if (type == 1)
     {
         // clear area
-        draw_rect_fill(SCALE(1), SCALE(17), SCALE(40), SCALE(16), COLOR_STATUS_ONLINE);
+        draw_rect_fill(SCALE(1), SCALE(1+RATE_BAR_HEIGHT_UNSCALED_), SCALE(RATE_BAR_WIDTH_UNSCALED_), SCALE(RATE_BAR_HEIGHT_UNSCALED_), COLOR_STATUS_ONLINE);
         // draw text
         setcolor(COLOR_MENU_TEXT);
-        setfont(FONT_STATUS);
-        drawtextwidth(SCALE(1), SCALE(40), SCALE(17), num_as_string, strlen(num_as_string));
+        setfont(FONT_MISC);
+        drawtextwidth(SCALE(1), SCALE(RATE_BAR_WIDTH_UNSCALED_), SCALE(1+RATE_BAR_HEIGHT_UNSCALED_), num_as_string, strlen(num_as_string));
 
-        enddraw(SCALE(1), SCALE(17), SCALE(40), SCALE(16));
+        enddraw(SCALE(1), SCALE(1+RATE_BAR_HEIGHT_UNSCALED_), SCALE(RATE_BAR_WIDTH_UNSCALED_), SCALE(RATE_BAR_HEIGHT_UNSCALED_));
+    }
+    else
+    {
+        // clear area
+        draw_rect_fill(SCALE(1), SCALE(1+(2*RATE_BAR_HEIGHT_UNSCALED_)), SCALE(RATE_BAR_WIDTH_UNSCALED_), SCALE(RATE_BAR_HEIGHT_UNSCALED_), COLOR_STATUS_ONLINE);
+        // draw text
+        setcolor(COLOR_MENU_TEXT);
+        setfont(FONT_MISC);
+        drawtextwidth(SCALE(1), SCALE(RATE_BAR_WIDTH_UNSCALED_), SCALE(1+(2*RATE_BAR_HEIGHT_UNSCALED_)), num_as_string, strlen(num_as_string));
+
+        enddraw(SCALE(1), SCALE(1+(2*RATE_BAR_HEIGHT_UNSCALED_)), SCALE(RATE_BAR_WIDTH_UNSCALED_), SCALE(RATE_BAR_HEIGHT_UNSCALED_));
     }
 
     force_redraw_soft();
@@ -355,6 +413,21 @@ static void draw_user_badge(int x, int y, int width, int UNUSED(height)) {
                 y + SCALE(SIDEBAR_PADDING) + BM_STATUSAREA_HEIGHT / 2 - BM_STATUS_WIDTH / 2,
                 y + SCALE(SIDEBAR_PADDING) + BM_STATUSAREA_HEIGHT / 2 - BM_STATUS_WIDTH / 2 + BM_STATUSAREA_HEIGHT / 5,
                 status_color[connection_status_color]);
+        }
+
+        if (global_decoder_video_bitrate > 0)
+        {
+            draw_bitrate(global_decoder_video_bitrate, 0);
+        }
+
+        if (global_decoder_video_bitrate > 0)
+        {
+            draw_bitrate(global_encoder_video_bitrate, 1);
+        }
+
+        if (global_decoder_video_bitrate < 999)
+        {
+            draw_bitrate(global_network_round_trip_ms, 2);
         }
 
     } else {

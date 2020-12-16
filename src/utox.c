@@ -37,6 +37,11 @@ int global_utox_max_desktop_capture_height = 1080;
 extern int count_video_frames_x11_messages;
 extern sem_t sem_video_frames_x11_msgs;
 
+extern int global_decoder_video_bitrate;
+extern int global_encoder_video_bitrate;
+extern int global_network_round_trip_ms;
+
+
 /** Translates status code to text then sends back to the user */
 static void file_notify(FRIEND *f, MSG_HEADER *msg) {
     STRING *str;
@@ -580,6 +585,11 @@ void utox_message_dispatch(UTOX_MSG utox_msg_id, uint16_t param1, uint16_t param
             break;
         }
         case AV_CALL_DISCONNECTED: {
+
+            global_decoder_video_bitrate = 0;
+            global_encoder_video_bitrate = 0;
+            global_network_round_trip_ms = 999;
+
             FRIEND *f = get_friend(param1);
             if (!f) {
                 LOG_ERR("uTox", "Could not get friend with number: %u", param1);
