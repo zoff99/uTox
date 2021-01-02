@@ -207,6 +207,85 @@ static uint32_t message_add(MESSAGES *m, MSG_HEADER *msg) {
     return m->number;
 }
 
+
+static uint32_t message_add_g(MESSAGES *m, MSG_HEADER *msg) {
+    LOG_ERR("Messages", "message_add_g:enter");
+
+    if (m->number < UTOX_MAX_BACKLOG_MESSAGES) {
+        if (!m->data || m->extra <= 0) {
+            if (m->data) {
+                m->data = realloc(m->data, (m->number + 10) * sizeof(void *));
+                m->extra += 10;
+            } else {
+                m->number = 0;
+                m->data = calloc(20, sizeof(void *));
+                m->extra = 20;
+            }
+
+            if (!m->data) {
+                LOG_FATAL_ERR(EXIT_MALLOC, "Messages", "\n\n\nFATAL ERROR TRYING TO REALLOC FOR MESSAGES.\nTHIS IS A BUG, PLEASE REPORT!\n\n\n");
+            }
+        }
+        m->data[m->number++] = msg;
+        m->extra--;
+    } else {
+        m->height -= m->data[0]->height;
+        message_free(m->data[0]);
+        memmove(m->data, m->data + 1, (UTOX_MAX_BACKLOG_MESSAGES - 1) * sizeof(MSG_HEADER *));
+        m->data[UTOX_MAX_BACKLOG_MESSAGES - 1] = msg;
+
+        // Scroll selection up so that it stays over the same messages.
+        if (m->sel_start_msg != UINT32_MAX) {
+            if (0 < m->sel_start_msg) {
+                m->sel_start_msg--;
+            } else {
+                m->sel_start_position = 0;
+            }
+        }
+
+        if (m->sel_end_msg != UINT32_MAX) {
+            if (0 < m->sel_end_msg) {
+                m->sel_end_msg--;
+            } else {
+                m->sel_end_position = 0;
+            }
+        }
+
+        if (m->cursor_down_msg != UINT32_MAX) {
+            if (0 < m->cursor_down_msg) {
+                m->cursor_down_msg--;
+            } else {
+                m->cursor_down_position = 0;
+            }
+        }
+        if (m->cursor_over_msg != UINT32_MAX) {
+            if (0 < m->cursor_over_msg) {
+                m->cursor_over_msg--;
+            } else {
+                m->cursor_over_position = 0;
+            }
+        }
+    }
+
+    message_updateheight(m, msg);
+
+    if (m->is_groupchat) {
+        const GROUPCHAT *groupchat = flist_get_sel_group();
+        if (groupchat && groupchat == get_group(m->id)) {
+            m->panel.content_scroll->content_height = m->height;
+        }
+    } else {
+        const FRIEND *friend = flist_get_sel_friend();
+        if (friend && friend == get_friend(m->id)) {
+            m->panel.content_scroll->content_height = m->height;
+        }
+    }
+
+    return m->number;
+}
+
+
+
 static bool msg_add_day_notice(MESSAGES *m, time_t last, time_t next) {
     /* The tm struct is shared, we have to do it this way */
     int ltime_year = 0, ltime_mon = 0, ltime_day = 0;
@@ -254,7 +333,7 @@ static bool msg_add_day_notice(MESSAGES *m, time_t last, time_t next) {
 /* TODO leaving this here is a little hacky, but it was the fastest way
  * without considering if I should expose messages_add */
 uint32_t message_add_group(MESSAGES *m, MSG_HEADER *msg) {
-    return message_add(m, msg);
+    return message_add_g(m, msg);
 }
 
 /* TODO This function and message_add_type_action() are essentially pasta. */
@@ -520,7 +599,7 @@ bool messages_read_from_log(uint32_t friend_number) {
         return false;
     }
 
-    MSG_HEADER **data = utox_load_chatlog(f->id_str, &actual_count, UTOX_MAX_BACKLOG_MESSAGES, 0);
+    MSG_HEADER **data = utox_load_chatlog(f->id_str, &actual_count, UTOX_MAX_BACKLOG_MESSAGES, 0, false);
     if (!data) {
         if (actual_count > 0) {
             LOG_ERR("Messages", "uTox Logging:\tFound chat log entries, but couldn't get any data. This is a problem.");

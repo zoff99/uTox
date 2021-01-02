@@ -24,6 +24,8 @@
 
 static GROUPCHAT *group = NULL;
 
+#define UTOX_MAX_BACKLOG_GROUP_MESSAGES 256
+
 GROUPCHAT *get_group(uint32_t group_number) {
     if (group_number >= self.groups_list_size) {
         LOG_ERR("get_group", " index: %u is out of bounds." , group_number);
@@ -63,8 +65,8 @@ GROUPCHAT *group_create(uint32_t group_number, bool av_group, Tox *tox) {
 
     LOG_ERR("Groupchats", "group_create:av_group=%d", (int)av_group);
 
-    group_init(g, group_number, av_group);
     g->tox = tox;
+    group_init(g, group_number, av_group);
     return g;
 }
 
@@ -97,7 +99,7 @@ static bool group_message_log_to_disk(MESSAGES *m, MSG_HEADER *msg, char group_i
             header.time          = msg->time;
             header.author_length = author_length;
             header.msg_length    = msg->via.grp.length;
-            header.author        = msg->our_msg;
+            header.author        = msg->our_msg; // HINT: this save only 1 bit. the actual author name is never saved!!??!!
             header.receipt       = !!msg->receipt_time; // bool only
             header.msg_type      = msg->msg_type;
 
@@ -126,6 +128,52 @@ static bool group_message_log_to_disk(MESSAGES *m, MSG_HEADER *msg, char group_i
 
 }
 
+bool group_messages_read_from_log(Tox *tox, uint32_t group_number) {
+    size_t    actual_count = 0;
+
+    GROUPCHAT *g = get_group(group_number);
+    if (!g)
+    {
+        LOG_ERR("GroupMessages", "group not found:%d", group_number);
+        return false;
+    }
+
+    uint8_t group_id_bin[TOX_CONFERENCE_UID_SIZE];
+    memset(group_id_bin, 0, TOX_CONFERENCE_UID_SIZE);
+    bool res = tox_conference_get_id(tox, group_number, group_id_bin);
+    LOG_ERR("GroupMessages", "tox_conference_get_id:%d gid=%d", res, group_number);
+
+    char group_id_hexstr[(TOX_CONFERENCE_UID_SIZE * 2) + 1];
+    memset(group_id_hexstr, 0, ((TOX_CONFERENCE_UID_SIZE * 2) + 1));
+    to_hex(group_id_hexstr, group_id_bin, TOX_CONFERENCE_UID_SIZE);
+
+    MSG_HEADER **data = utox_load_chatlog(group_id_hexstr, &actual_count, UTOX_MAX_BACKLOG_GROUP_MESSAGES, 0, true);
+    if (!data) {
+        LOG_ERR("GroupMessages", "uTox Logging:\tsome error:004.");
+        if (actual_count > 0) {
+            LOG_ERR("GroupMessages", "uTox Logging:\tFound chat log entries, but couldn't get any data. This is a problem.");
+        }
+        return false;
+    }
+
+    MSG_HEADER **p = data;
+    MSG_HEADER *msg;
+    time_t last = 0;
+    while (actual_count--) {
+        msg = *p++;
+        if (!msg) {
+            continue;
+        }
+
+        MESSAGES *m = &g->msg;
+        LOG_ERR("GroupMessages", "%s", msg);
+        message_add_group(m, msg);
+    }
+
+    free(data);
+    return true;
+}
+
 void group_init(GROUPCHAT *g, uint32_t group_number, bool av_group) {
     pthread_mutex_lock(&messages_lock); /* make sure that messages has posted before we continue */
     if (!g->peer) {
@@ -152,6 +200,10 @@ void group_init(GROUPCHAT *g, uint32_t group_number, bool av_group) {
 
     g->number   = group_number;
     g->notify   = settings.group_notifications;
+
+    // Get the chat backlog
+    LOG_ERR("Groupchats", "group_init:tox=%p gid=%d", g->tox, g->number);
+    group_messages_read_from_log(g->tox, g->number);
 
     LOG_ERR("Groupchats", "group_init:av_group=%d", (int)av_group);
 

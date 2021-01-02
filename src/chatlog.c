@@ -8,6 +8,7 @@
 
 #include "native/filesys.h"
 
+#include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -83,12 +84,13 @@ static size_t utox_count_chatlog(char hex[TOX_PUBLIC_KEY_SIZE * 2]) {
  * theory we should be able to trim the start of the chatlog up to and including
  * the first \n char. We may have to do so multiple times, but once we find the
  * first valid message everything else should "work" */
-MSG_HEADER **utox_load_chatlog(char hex[TOX_PUBLIC_KEY_SIZE * 2], size_t *size, uint32_t count, uint32_t skip) {
+MSG_HEADER **utox_load_chatlog(char hex[TOX_PUBLIC_KEY_SIZE * 2], size_t *size, uint32_t count, uint32_t skip, bool group) {
     /* Because every platform is different, we have to ask them to open the file for us.
      * However once we have it, every platform does the same thing, this should prevent issues
      * from occurring on a single platform. */
 
     size_t records_count = utox_count_chatlog(hex);
+    LOG_ERR("Chatlog", "records_count=%d", records_count);
     if (skip >= records_count) {
         if (skip > 0) {
             LOG_ERR("Chatlog", "Error, skipped all records");
@@ -163,37 +165,91 @@ MSG_HEADER **utox_load_chatlog(char hex[TOX_PUBLIC_KEY_SIZE * 2], size_t *size, 
             msg->msg_type      = header.msg_type;
             msg->disk_offset   = file_offset;
 
-            msg->via.txt.length        = header.msg_length;
-            msg->via.txt.msg = calloc(1, msg->via.txt.length);
-            if (!msg->via.txt.msg) {
-                LOG_ERR("Chatlog", "Unable to malloc for via.txt.msg... sorry!");
-                free(start);
-                free(msg);
-                fclose(file);
-                return NULL;
+            if (group)
+            {
+                msg->via.grp.length        = header.msg_length;
+                msg->via.grp.msg = calloc(1, msg->via.grp.length);
+                if (!msg->via.grp.msg) {
+                    LOG_ERR("Chatlog", "Unable to malloc for via.grp.msg... sorry!");
+                    free(start);
+                    free(msg);
+                    fclose(file);
+                    return NULL;
+                }
+            }
+            else
+            {
+                msg->via.txt.length        = header.msg_length;
+                msg->via.txt.msg = calloc(1, msg->via.txt.length);
+                if (!msg->via.txt.msg) {
+                    LOG_ERR("Chatlog", "Unable to malloc for via.txt.msg... sorry!");
+                    free(start);
+                    free(msg);
+                    fclose(file);
+                    return NULL;
+                }
             }
 
-            msg->via.txt.author_length = header.author_length;
-            // TODO: msg->via.txt.author used to be allocated but left empty. Commented out for now.
-            // msg->via.txt.author = calloc(1, msg->via.txt.author_length);
-            // if (!msg->via.txt.author) {
-            //     LOG_ERR("Chatlog", "Unable to malloc for via.txt.author... sorry!");
-            //     free(msg->via.txt.msg);
-            //     free(msg);
-            //     fclose(file);
-            //     return NULL;
-            // }
+            if (group)
+            {
+                if (msg->our_msg)
+                {
+                    msg->via.grp.author_length = (strlen("self"));
+                    msg->via.grp.author = calloc(1, msg->via.grp.author_length + 2);
+                    snprintf(msg->via.grp.author, strlen("self "), "self ");
 
-            if (fread(msg->via.txt.msg, msg->via.txt.length, 1, file) != 1) {
-                LOG_ERR("Chatlog", "Log read:\tError reading record %u of length %u at offset %lu: stopping.",
-                            count, msg->via.txt.length, msg->disk_offset);
-                // free(msg->via.txt.author);
-                free(msg->via.txt.msg);
-                free(msg);
-                break;
+                    msg->via.grp.author_id = 0; // TODO: recover the real peer id by saving the peer pubkey
+
+                    if (fread(msg->via.grp.msg, msg->via.grp.length, 1, file) != 1) {
+                        LOG_ERR("Chatlog", "Log read:\tError reading record %u of length %u at offset %lu: stopping.",
+                                    count, msg->via.grp.length, msg->disk_offset);
+                        // free(msg->via.grp.author);
+                        free(msg->via.grp.msg);
+                        free(msg);
+                        break;
+                    }
+
+                    msg->via.grp.length = utf8_validate((uint8_t *)msg->via.grp.msg, msg->via.grp.length);
+                }
+                else
+                {                
+                    msg->via.grp.author_length = 1;
+                    msg->via.grp.author = calloc(1, 1 + 2);
+                    snprintf(msg->via.grp.author, 2, "X ");
+
+                    msg->via.grp.author_id = 0; // TODO: recover the real peer id by saving the peer pubkey
+
+                    if (fread(msg->via.grp.msg, msg->via.grp.length, 1, file) != 1) {
+                        LOG_ERR("Chatlog", "Log read:\tError reading record %u of length %u at offset %lu: stopping.",
+                                    count, msg->via.grp.length, msg->disk_offset);
+                        // free(msg->via.grp.author);
+                        free(msg->via.grp.msg);
+                        free(msg);
+                        break;
+                    }
+
+                    msg->via.grp.length = utf8_validate((uint8_t *)msg->via.grp.msg, msg->via.grp.length);
+                }
+            }
+            else
+            {
+                msg->via.txt.author_length = header.author_length;
+                LOG_ERR("Chatlog", "msg->via.txt.author_length=%d", msg->via.txt.author_length);
+
+                if (fread(msg->via.txt.msg, msg->via.txt.length, 1, file) != 1) {
+                    LOG_ERR("Chatlog", "Log read:\tError reading record %u of length %u at offset %lu: stopping.",
+                                count, msg->via.txt.length, msg->disk_offset);
+                    // free(msg->via.txt.author);
+                    free(msg->via.txt.msg);
+                    free(msg);
+                    break;
+                }
+
+                msg->via.txt.length = utf8_validate((uint8_t *)msg->via.txt.msg, msg->via.txt.length);
+
+                LOG_ERR("Chatlog", "msg->via.txt.length=%d", msg->via.txt.length);
             }
 
-            msg->via.txt.length = utf8_validate((uint8_t *)msg->via.txt.msg, msg->via.txt.length);
             *data++ = msg;
             --count;
             ++actual_count;
