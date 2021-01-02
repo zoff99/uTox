@@ -141,7 +141,6 @@ bool group_messages_read_from_log(Tox *tox, uint32_t group_number) {
     uint8_t group_id_bin[TOX_CONFERENCE_UID_SIZE];
     memset(group_id_bin, 0, TOX_CONFERENCE_UID_SIZE);
     bool res = tox_conference_get_id(tox, group_number, group_id_bin);
-    LOG_ERR("GroupMessages", "tox_conference_get_id:%d gid=%d", res, group_number);
 
     char group_id_hexstr[(TOX_CONFERENCE_UID_SIZE * 2) + 1];
     memset(group_id_hexstr, 0, ((TOX_CONFERENCE_UID_SIZE * 2) + 1));
@@ -166,7 +165,6 @@ bool group_messages_read_from_log(Tox *tox, uint32_t group_number) {
         }
 
         MESSAGES *m = &g->msg;
-        LOG_ERR("GroupMessages", "%s", msg);
         message_add_group(m, msg);
     }
 

@@ -5,6 +5,7 @@
 #include "debug.h"
 #include "messages.h"
 #include "text.h"
+#include "self.h"
 
 #include "native/filesys.h"
 
@@ -90,7 +91,15 @@ MSG_HEADER **utox_load_chatlog(char hex[TOX_PUBLIC_KEY_SIZE * 2], size_t *size, 
      * from occurring on a single platform. */
 
     size_t records_count = utox_count_chatlog(hex);
-    LOG_ERR("Chatlog", "records_count=%d", records_count);
+    if (group)
+    {
+        LOG_ERR("GroupChatlog", "records_count=%d", records_count);
+    }
+    else
+    {
+        LOG_ERR("Chatlog", "records_count=%d", records_count);
+    }
+
     if (skip >= records_count) {
         if (skip > 0) {
             LOG_ERR("Chatlog", "Error, skipped all records");
@@ -136,8 +145,12 @@ MSG_HEADER **utox_load_chatlog(char hex[TOX_PUBLIC_KEY_SIZE * 2], size_t *size, 
         }
 
         if (count) {
-            /* we have to skip the author name for now, it's left here for group chats support in the future */
-            fseeko(file, header.author_length, SEEK_CUR);
+
+            /* read the author name that is saved after the header, at the start of the actual message */
+            char saved_author_name[TOX_MAX_NAME_LENGTH + 1];
+            memset(saved_author_name, 0, (TOX_MAX_NAME_LENGTH + 1));
+            fread(saved_author_name, header.author_length, 1, file);
+
             if (header.msg_length > 1 << 16) {
                 LOG_ERR("Chatlog", "Can't malloc that much, you'll probably have to move or delete your"
                             " history for this peer.\n\t\tFriend number %.*s, count %u,"
@@ -194,9 +207,9 @@ MSG_HEADER **utox_load_chatlog(char hex[TOX_PUBLIC_KEY_SIZE * 2], size_t *size, 
             {
                 if (msg->our_msg)
                 {
-                    msg->via.grp.author_length = (strlen("self"));
-                    msg->via.grp.author = calloc(1, msg->via.grp.author_length + 2);
-                    snprintf(msg->via.grp.author, strlen("self "), "self ");
+                    msg->via.grp.author_length = header.author_length;
+                    msg->via.grp.author = calloc(1, header.author_length + 2);
+                    snprintf(msg->via.grp.author, (header.author_length + 1), "%s", saved_author_name);
 
                     msg->via.grp.author_id = 0; // TODO: recover the real peer id by saving the peer pubkey
 
@@ -213,9 +226,9 @@ MSG_HEADER **utox_load_chatlog(char hex[TOX_PUBLIC_KEY_SIZE * 2], size_t *size, 
                 }
                 else
                 {                
-                    msg->via.grp.author_length = 1;
-                    msg->via.grp.author = calloc(1, 1 + 2);
-                    snprintf(msg->via.grp.author, 2, "X ");
+                    msg->via.grp.author_length = header.author_length;
+                    msg->via.grp.author = calloc(1, header.author_length + 2);
+                    snprintf(msg->via.grp.author, (header.author_length + 1), "%s", saved_author_name);
 
                     msg->via.grp.author_id = 0; // TODO: recover the real peer id by saving the peer pubkey
 
@@ -234,7 +247,6 @@ MSG_HEADER **utox_load_chatlog(char hex[TOX_PUBLIC_KEY_SIZE * 2], size_t *size, 
             else
             {
                 msg->via.txt.author_length = header.author_length;
-                LOG_ERR("Chatlog", "msg->via.txt.author_length=%d", msg->via.txt.author_length);
 
                 if (fread(msg->via.txt.msg, msg->via.txt.length, 1, file) != 1) {
                     LOG_ERR("Chatlog", "Log read:\tError reading record %u of length %u at offset %lu: stopping.",
@@ -246,8 +258,6 @@ MSG_HEADER **utox_load_chatlog(char hex[TOX_PUBLIC_KEY_SIZE * 2], size_t *size, 
                 }
 
                 msg->via.txt.length = utf8_validate((uint8_t *)msg->via.txt.msg, msg->via.txt.length);
-
-                LOG_ERR("Chatlog", "msg->via.txt.length=%d", msg->via.txt.length);
             }
 
             *data++ = msg;

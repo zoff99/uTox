@@ -209,7 +209,6 @@ static uint32_t message_add(MESSAGES *m, MSG_HEADER *msg) {
 
 
 static uint32_t message_add_g(MESSAGES *m, MSG_HEADER *msg) {
-    LOG_ERR("Messages", "message_add_g:enter");
 
     if (m->number < UTOX_MAX_BACKLOG_MESSAGES) {
         if (!m->data || m->extra <= 0) {
