@@ -149,7 +149,7 @@ MSG_HEADER **utox_load_chatlog(char hex[TOX_PUBLIC_KEY_SIZE * 2], size_t *size, 
             /* read the author name that is saved after the header, at the start of the actual message */
             char saved_author_name[TOX_MAX_NAME_LENGTH + 1];
             memset(saved_author_name, 0, (TOX_MAX_NAME_LENGTH + 1));
-            fread(saved_author_name, header.author_length, 1, file);
+            size_t result = fread(saved_author_name, header.author_length, 1, file);
 
             if (header.msg_length > 1 << 16) {
                 LOG_ERR("Chatlog", "Can't malloc that much, you'll probably have to move or delete your"
