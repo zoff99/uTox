@@ -1,5 +1,6 @@
 #include "groups.h"
 
+#include "chatlog.h"
 #include "flist.h"
 #include "debug.h"
 #include "macros.h"
@@ -53,7 +54,7 @@ static GROUPCHAT *group_make(uint32_t group_number) {
     return &group[group_number];
 }
 
-GROUPCHAT *group_create(uint32_t group_number, bool av_group) {
+GROUPCHAT *group_create(uint32_t group_number, bool av_group, Tox *tox) {
     GROUPCHAT *g = group_make(group_number);
     if (!g) {
         LOG_ERR("Groupchats", "Could not get/create group %u", group_number);
@@ -63,7 +64,66 @@ GROUPCHAT *group_create(uint32_t group_number, bool av_group) {
     LOG_ERR("Groupchats", "group_create:av_group=%d", (int)av_group);
 
     group_init(g, group_number, av_group);
+    g->tox = tox;
     return g;
+}
+
+static bool group_message_log_to_disk(MESSAGES *m, MSG_HEADER *msg, char group_id_hexstr[(TOX_CONFERENCE_UID_SIZE * 2) + 1]) {
+
+    LOG_TRACE("Groupchats", "group_message_log_to_disk:001");
+
+    if (!settings.logging_enabled) {
+        return false;
+    }
+
+    LOG_FILE_MSG_HEADER header;
+    memset(&header, 0, sizeof(header));
+
+    switch (msg->msg_type) {
+        case MSG_TYPE_TEXT:
+        case MSG_TYPE_ACTION_TEXT: {
+
+            size_t author_length;
+            char   *author;
+            if (msg->our_msg) {
+                author_length = self.name_length;
+                author        = self.name;
+            } else {
+                author_length = msg->via.grp.author_length;
+                author        = msg->via.grp.author;
+            }
+
+            header.log_version   = LOGFILE_SAVE_VERSION;
+            header.time          = msg->time;
+            header.author_length = author_length;
+            header.msg_length    = msg->via.grp.length;
+            header.author        = msg->our_msg;
+            header.receipt       = !!msg->receipt_time; // bool only
+            header.msg_type      = msg->msg_type;
+
+            size_t length = sizeof(header) + msg->via.grp.length + author_length + 1; /* extra \n char*/
+            uint8_t *data = calloc(1, length);
+            if (!data) {
+                LOG_FATAL_ERR(EXIT_MALLOC, "GroupMessages", "Can't calloc for chat logging data. size:%lu", length);
+            }
+            memcpy(data, &header, sizeof(header));
+            memcpy(data + sizeof(header), author, author_length);
+            memcpy(data + sizeof(header) + author_length, msg->via.grp.msg, msg->via.grp.length);
+            strcpy2(data + length - 1, "\n");
+
+            LOG_TRACE("Groupchats", "group_message_log_to_disk:%s", group_id_hexstr);
+
+            msg->disk_offset = utox_save_chatlog(group_id_hexstr, data, length);
+
+            free(data);
+            return true;
+        }
+        default: {
+            LOG_NOTE("Messages", "uTox GroupLogging:\tUnsupported message type %i", msg->msg_type);
+        }
+    }
+    return false;
+
 }
 
 void group_init(GROUPCHAT *g, uint32_t group_number, bool av_group) {
@@ -100,7 +160,7 @@ void group_init(GROUPCHAT *g, uint32_t group_number, bool av_group) {
     self.groups_list_count++;
 }
 
-uint32_t group_add_message(GROUPCHAT *g, uint32_t peer_id, const uint8_t *message, size_t length, uint8_t m_type) {
+uint32_t group_add_message(GROUPCHAT *g, uint32_t peer_id, const uint8_t *message, size_t length, uint8_t m_type, uint8_t *group_id_bin) {
     pthread_mutex_lock(&messages_lock); /* make sure that messages has posted before we continue */
 
     if (peer_id >= UTOX_MAX_GROUP_PEERS) {
@@ -155,6 +215,13 @@ uint32_t group_add_message(GROUPCHAT *g, uint32_t peer_id, const uint8_t *messag
     pthread_mutex_unlock(&messages_lock);
 
     MESSAGES *m = &g->msg;
+
+    char group_id_hexstr[(TOX_CONFERENCE_UID_SIZE * 2) + 1];
+    memset(group_id_hexstr, 0, ((TOX_CONFERENCE_UID_SIZE * 2) + 1));
+    to_hex(group_id_hexstr, group_id_bin, TOX_CONFERENCE_UID_SIZE);
+
+    group_message_log_to_disk(m, msg, group_id_hexstr);
+
     return message_add_group(m, msg);
 }
 
@@ -192,7 +259,12 @@ void group_peer_add(GROUPCHAT *g, uint32_t peer_id, bool UNUSED(our_peer_number)
 }
 
 void group_peer_del(GROUPCHAT *g, uint32_t peer_id) {
-    group_add_message(g, peer_id, (uint8_t *)"<- has Quit!", 12, MSG_TYPE_NOTICE);
+
+    uint8_t group_id_bin[TOX_CONFERENCE_UID_SIZE];
+    memset(group_id_bin, 0, TOX_CONFERENCE_UID_SIZE);
+    bool res = tox_conference_get_id(g->tox, g->number, group_id_bin);
+
+    group_add_message(g, peer_id, (uint8_t *)"<- has Quit!", 12, MSG_TYPE_NOTICE, group_id_bin);
 
     pthread_mutex_lock(&messages_lock); /* make sure that messages has posted before we continue */
 
@@ -251,7 +323,12 @@ void group_peer_name_change(GROUPCHAT *g, uint32_t peer_id, const uint8_t *name,
 
         pthread_mutex_unlock(&messages_lock);
         size_t msg_length = strnlen(msg, sizeof(msg) - 1);
-        group_add_message(g, peer_id, (uint8_t *)msg, msg_length, MSG_TYPE_NOTICE);
+
+        uint8_t group_id_bin[TOX_CONFERENCE_UID_SIZE];
+        memset(group_id_bin, 0, TOX_CONFERENCE_UID_SIZE);
+        bool res = tox_conference_get_id(g->tox, g->number, group_id_bin);
+
+        group_add_message(g, peer_id, (uint8_t *)msg, msg_length, MSG_TYPE_NOTICE, group_id_bin);
         return;
     }
 
@@ -268,7 +345,12 @@ void group_peer_name_change(GROUPCHAT *g, uint32_t peer_id, const uint8_t *name,
     g->peer[peer_id] = peer;
 
     pthread_mutex_unlock(&messages_lock);
-    group_add_message(g, peer_id, (uint8_t *)"<- has joined the chat!", 23, MSG_TYPE_NOTICE);
+
+    uint8_t group_id_bin[TOX_CONFERENCE_UID_SIZE];
+    memset(group_id_bin, 0, TOX_CONFERENCE_UID_SIZE);
+    bool res = tox_conference_get_id(g->tox, g->number, group_id_bin);
+
+    group_add_message(g, peer_id, (uint8_t *)"<- has joined the chat!", 23, MSG_TYPE_NOTICE, group_id_bin);
 }
 
 void group_reset_peerlist(GROUPCHAT *g) {
@@ -344,11 +426,11 @@ void init_groups(Tox *tox) {
         TOX_CONFERENCE_TYPE type = tox_conference_get_type(tox, (uint32_t)groups[i], &error);
         if (type == TOX_CONFERENCE_TYPE_AV)
         {
-            group_create(groups[i], true);
+            group_create(groups[i], true, tox);
         }
         else
         {
-            group_create(groups[i], false);
+            group_create(groups[i], false, tox);
         }
 
         /* load conference titles */
@@ -413,3 +495,5 @@ void group_notify_msg(GROUPCHAT *g, const char *msg, size_t msg_length) {
         postmessage_audio(UTOXAUDIO_PLAY_NOTIFICATION, NOTIFY_TONE_FRIEND_NEW_MSG, 0, NULL);
     }
 }
+
+

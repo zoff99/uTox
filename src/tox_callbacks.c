@@ -188,7 +188,7 @@ static void callback_group_invite(Tox *tox, uint32_t fid, TOX_CONFERENCE_TYPE ty
     GROUPCHAT *g = get_group(gid);
     if (!g) {
         LOG_ERR("Tox Callbacks", "group_create type: %u", type);
-        group_create(gid, type == TOX_CONFERENCE_TYPE_AV ? true : false);
+        group_create(gid, type == TOX_CONFERENCE_TYPE_AV ? true : false, tox);
     } else {
         LOG_ERR("Tox Callbacks", "group_init type: %u", type);
         group_init(g, gid, type == TOX_CONFERENCE_TYPE_AV ? true : false);
@@ -198,19 +198,29 @@ static void callback_group_invite(Tox *tox, uint32_t fid, TOX_CONFERENCE_TYPE ty
     postmessage_utox(GROUP_ADD, gid, 0, tox);
 }
 
-static void callback_group_message(Tox *UNUSED(tox), uint32_t gid, uint32_t pid, TOX_MESSAGE_TYPE type,
+static void callback_group_message(Tox *tox, uint32_t gid, uint32_t pid, TOX_MESSAGE_TYPE type,
                                    const uint8_t *message, size_t length, void *UNUSED(userdata)) {
     GROUPCHAT *g = get_group(gid);
+
+    uint8_t group_id_bin[TOX_CONFERENCE_UID_SIZE];
+    memset(group_id_bin, 0, TOX_CONFERENCE_UID_SIZE);
+    bool res = tox_conference_get_id(tox, gid, group_id_bin);
+
+    if (!res)
+    {
+        LOG_INFO("Tox Callbacks", "some error (%u, %u): %.*s", gid, pid, (int)length, message);
+        return;
+    }
 
     switch (type) {
         case TOX_MESSAGE_TYPE_ACTION: {
             LOG_TRACE("Tox Callbacks", "Group Action (%u, %u): %.*s" , gid, pid, (int)length, message);
-            group_add_message(g, pid, message, length, MSG_TYPE_ACTION_TEXT);
+            group_add_message(g, pid, message, length, MSG_TYPE_ACTION_TEXT, group_id_bin);
             break;
         }
         case TOX_MESSAGE_TYPE_NORMAL: {
             LOG_INFO("Tox Callbacks", "Group Message (%u, %u): %.*s", gid, pid, (int)length, message);
-            group_add_message(g, pid, message, length, MSG_TYPE_TEXT);
+            group_add_message(g, pid, message, length, MSG_TYPE_TEXT, group_id_bin);
             break;
         }
     }
