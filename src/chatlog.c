@@ -6,6 +6,7 @@
 #include "messages.h"
 #include "text.h"
 #include "self.h"
+#include "ui.h"
 
 #include "native/filesys.h"
 
@@ -79,6 +80,44 @@ static size_t utox_count_chatlog(char hex[TOX_PUBLIC_KEY_SIZE * 2]) {
     return records_count;
 }
 
+static bool pkstring_to_pkbin(uint8_t *w, char *a) {
+    uint8_t *end = w + TOX_PUBLIC_KEY_SIZE;
+    while (w != end) {
+        char c, v;
+
+        c = *a++;
+        if (c >= '0' && c <= '9') {
+            v = (c - '0') << 4;
+        } else if (c >= 'A' && c <= 'F') {
+            v = (c - 'A' + 10) << 4;
+        } else if (c >= 'a' && c <= 'f') {
+            v = (c - 'a' + 10) << 4;
+        } else {
+            return false;
+        }
+
+        c = *a++;
+        if (c >= '0' && c <= '9') {
+            v |= (c - '0');
+        } else if (c >= 'A' && c <= 'F') {
+            v |= (c - 'A' + 10);
+        } else if (c >= 'a' && c <= 'f') {
+            v |= (c - 'a' + 10);
+        } else {
+            return false;
+        }
+
+        *w++ = v;
+    }
+
+    return true;
+}
+
+#define NUM_GROUP_CHAT_PEER_COLORS 5
+static int chat_peer_colors_r[NUM_GROUP_CHAT_PEER_COLORS] = { 0x66,0x00,0x80,0xf0,0x00 };
+static int chat_peer_colors_g[NUM_GROUP_CHAT_PEER_COLORS] = { 0x66,0x80,0x00,0x62,0xff };
+static int chat_peer_colors_b[NUM_GROUP_CHAT_PEER_COLORS] = { 0xff,0x00,0x00,0x69,0xff };
+
 /* TODO create fxn that will try to recover a corrupt chat history.
  *
  * In the majority of bug reports the corrupt message is often the first, so in
@@ -147,8 +186,8 @@ MSG_HEADER **utox_load_chatlog(char hex[TOX_PUBLIC_KEY_SIZE * 2], size_t *size, 
         if (count) {
 
             /* read the author name that is saved after the header, at the start of the actual message */
-            char saved_author_name[TOX_MAX_NAME_LENGTH + 1];
-            memset(saved_author_name, 0, (TOX_MAX_NAME_LENGTH + 1));
+            char saved_author_name[(TOX_PUBLIC_KEY_SIZE * 2) + TOX_MAX_NAME_LENGTH + 1];
+            memset(saved_author_name, 0, ((TOX_PUBLIC_KEY_SIZE * 2) + TOX_MAX_NAME_LENGTH + 1));
             size_t result = fread(saved_author_name, header.author_length, 1, file);
 
             if (header.msg_length > 1 << 16) {
@@ -207,9 +246,23 @@ MSG_HEADER **utox_load_chatlog(char hex[TOX_PUBLIC_KEY_SIZE * 2], size_t *size, 
             {
                 if (msg->our_msg)
                 {
-                    msg->via.grp.author_length = header.author_length;
-                    msg->via.grp.author = calloc(1, header.author_length + 2);
-                    snprintf(msg->via.grp.author, (header.author_length + 1), "%s", saved_author_name);
+                    msg->via.grp.author_length = header.author_length - (TOX_PUBLIC_KEY_SIZE * 2);
+                    msg->via.grp.author = calloc(1, msg->via.grp.author_length + 2);
+                    snprintf(msg->via.grp.author, (msg->via.grp.author_length + 1), "%s", (saved_author_name + (TOX_PUBLIC_KEY_SIZE * 2)));
+
+                    char pkey[TOX_PUBLIC_KEY_SIZE];
+                    bool res3 = pkstring_to_pkbin((uint8_t *)pkey, (char *)saved_author_name);
+
+                    uint64_t pkey_to_number = 0;
+                    for (int key_i = 0; key_i < 2; ++key_i) {
+                        pkey_to_number += (pkey[key_i] << (key_i * 8));
+                    }
+
+                    msg->via.grp.author_color = RGB(
+                        chat_peer_colors_r[pkey_to_number % NUM_GROUP_CHAT_PEER_COLORS],
+                        chat_peer_colors_g[pkey_to_number % NUM_GROUP_CHAT_PEER_COLORS],
+                        chat_peer_colors_b[pkey_to_number % NUM_GROUP_CHAT_PEER_COLORS]
+                        );
 
                     msg->via.grp.author_id = 0; // TODO: recover the real peer id by saving the peer pubkey
 
@@ -225,10 +278,24 @@ MSG_HEADER **utox_load_chatlog(char hex[TOX_PUBLIC_KEY_SIZE * 2], size_t *size, 
                     msg->via.grp.length = utf8_validate((uint8_t *)msg->via.grp.msg, msg->via.grp.length);
                 }
                 else
-                {                
-                    msg->via.grp.author_length = header.author_length;
-                    msg->via.grp.author = calloc(1, header.author_length + 2);
-                    snprintf(msg->via.grp.author, (header.author_length + 1), "%s", saved_author_name);
+                {
+                    msg->via.grp.author_length = header.author_length - (TOX_PUBLIC_KEY_SIZE * 2);
+                    msg->via.grp.author = calloc(1, msg->via.grp.author_length + 2);
+                    snprintf(msg->via.grp.author, (msg->via.grp.author_length + 1), "%s", (saved_author_name + (TOX_PUBLIC_KEY_SIZE * 2)));
+
+                    char pkey[TOX_PUBLIC_KEY_SIZE];
+                    bool res3 = pkstring_to_pkbin((uint8_t *)pkey, (char *)saved_author_name);
+
+                    uint64_t pkey_to_number = 0;
+                    for (int key_i = 0; key_i < 2; ++key_i) {
+                        pkey_to_number += (pkey[key_i] << (key_i * 8));
+                    }
+
+                    msg->via.grp.author_color = RGB(
+                        chat_peer_colors_r[pkey_to_number % NUM_GROUP_CHAT_PEER_COLORS],
+                        chat_peer_colors_g[pkey_to_number % NUM_GROUP_CHAT_PEER_COLORS],
+                        chat_peer_colors_b[pkey_to_number % NUM_GROUP_CHAT_PEER_COLORS]
+                        );
 
                     msg->via.grp.author_id = 0; // TODO: recover the real peer id by saving the peer pubkey
 

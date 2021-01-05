@@ -70,7 +70,7 @@ GROUPCHAT *group_create(uint32_t group_number, bool av_group, Tox *tox) {
     return g;
 }
 
-static bool group_message_log_to_disk(MESSAGES *m, MSG_HEADER *msg, char group_id_hexstr[(TOX_CONFERENCE_UID_SIZE * 2) + 1]) {
+static bool group_message_log_to_disk(MESSAGES *m, MSG_HEADER *msg, char group_id_hexstr[(TOX_CONFERENCE_UID_SIZE * 2) + 1], char peer_pubkey_hexstr[(TOX_PUBLIC_KEY_SIZE * 2) + 1]) {
 
     LOG_TRACE("Groupchats", "group_message_log_to_disk:001");
 
@@ -87,12 +87,20 @@ static bool group_message_log_to_disk(MESSAGES *m, MSG_HEADER *msg, char group_i
 
             size_t author_length;
             char   *author;
+            char   *author_pubkey_and_author;
+
             if (msg->our_msg) {
-                author_length = self.name_length;
+                author_length = (TOX_PUBLIC_KEY_SIZE * 2) + self.name_length;
                 author        = self.name;
+                author_pubkey_and_author = calloc(1, author_length);
+                memcpy(author_pubkey_and_author, peer_pubkey_hexstr, (TOX_PUBLIC_KEY_SIZE * 2));
+                memcpy(author_pubkey_and_author + (TOX_PUBLIC_KEY_SIZE * 2), author, self.name_length);
             } else {
-                author_length = msg->via.grp.author_length;
+                author_length = (TOX_PUBLIC_KEY_SIZE * 2) + msg->via.grp.author_length;
                 author        = msg->via.grp.author;
+                author_pubkey_and_author = calloc(1, author_length);
+                memcpy(author_pubkey_and_author, peer_pubkey_hexstr, (TOX_PUBLIC_KEY_SIZE * 2));
+                memcpy(author_pubkey_and_author + (TOX_PUBLIC_KEY_SIZE * 2), msg->via.grp.author, msg->via.grp.author_length);
             }
 
             header.log_version   = LOGFILE_SAVE_VERSION;
@@ -109,7 +117,7 @@ static bool group_message_log_to_disk(MESSAGES *m, MSG_HEADER *msg, char group_i
                 LOG_FATAL_ERR(EXIT_MALLOC, "GroupMessages", "Can't calloc for chat logging data. size:%lu", length);
             }
             memcpy(data, &header, sizeof(header));
-            memcpy(data + sizeof(header), author, author_length);
+            memcpy(data + sizeof(header), author_pubkey_and_author, author_length);
             memcpy(data + sizeof(header) + author_length, msg->via.grp.msg, msg->via.grp.length);
             strcpy2(data + length - 1, "\n");
 
@@ -118,6 +126,7 @@ static bool group_message_log_to_disk(MESSAGES *m, MSG_HEADER *msg, char group_i
             msg->disk_offset = utox_save_chatlog(group_id_hexstr, data, length);
 
             free(data);
+            free(author_pubkey_and_author);
             return true;
         }
         default: {
@@ -270,7 +279,16 @@ uint32_t group_add_message(GROUPCHAT *g, uint32_t peer_id, const uint8_t *messag
     memset(group_id_hexstr, 0, ((TOX_CONFERENCE_UID_SIZE * 2) + 1));
     to_hex(group_id_hexstr, group_id_bin, TOX_CONFERENCE_UID_SIZE);
 
-    group_message_log_to_disk(m, msg, group_id_hexstr);
+    uint8_t peer_pubkey_bin[TOX_PUBLIC_KEY_SIZE];
+    TOX_ERR_CONFERENCE_PEER_QUERY error;
+    bool res_peer_pk = tox_conference_peer_get_public_key(g->tox, g->number, peer_id,
+                                        peer_pubkey_bin, &error);
+
+    char peer_pubkey_hexstr[(TOX_PUBLIC_KEY_SIZE * 2) + 1];
+    memset(peer_pubkey_hexstr, 0, ((TOX_PUBLIC_KEY_SIZE * 2) + 1));
+    to_hex(peer_pubkey_hexstr, peer_pubkey_bin, TOX_PUBLIC_KEY_SIZE);
+
+    group_message_log_to_disk(m, msg, group_id_hexstr, peer_pubkey_hexstr);
 
     return message_add_group(m, msg);
 }
