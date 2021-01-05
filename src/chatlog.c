@@ -220,7 +220,7 @@ MSG_HEADER **utox_load_chatlog(char hex[TOX_PUBLIC_KEY_SIZE * 2], size_t *size, 
             if (group)
             {
                 msg->via.grp.length        = header.msg_length;
-                msg->via.grp.msg = calloc(1, msg->via.grp.length);
+                msg->via.grp.msg = calloc(1, msg->via.grp.length + 2); // TODO: there is some utf-8 buffer overflow
                 if (!msg->via.grp.msg) {
                     LOG_ERR("Chatlog", "Unable to malloc for via.grp.msg... sorry!");
                     free(start);
@@ -232,7 +232,7 @@ MSG_HEADER **utox_load_chatlog(char hex[TOX_PUBLIC_KEY_SIZE * 2], size_t *size, 
             else
             {
                 msg->via.txt.length        = header.msg_length;
-                msg->via.txt.msg = calloc(1, msg->via.txt.length);
+                msg->via.txt.msg = calloc(1, msg->via.txt.length + 2); // TODO: there is some utf-8 buffer overflow
                 if (!msg->via.txt.msg) {
                     LOG_ERR("Chatlog", "Unable to malloc for via.txt.msg... sorry!");
                     free(start);
@@ -247,7 +247,7 @@ MSG_HEADER **utox_load_chatlog(char hex[TOX_PUBLIC_KEY_SIZE * 2], size_t *size, 
                 if (msg->our_msg)
                 {
                     msg->via.grp.author_length = header.author_length - (TOX_PUBLIC_KEY_SIZE * 2);
-                    msg->via.grp.author = calloc(1, msg->via.grp.author_length + 2);
+                    msg->via.grp.author = calloc(1, msg->via.grp.author_length + 3);
                     snprintf(msg->via.grp.author, (msg->via.grp.author_length + 1), "%s", (saved_author_name + (TOX_PUBLIC_KEY_SIZE * 2)));
 
                     char pkey[TOX_PUBLIC_KEY_SIZE];
@@ -280,7 +280,7 @@ MSG_HEADER **utox_load_chatlog(char hex[TOX_PUBLIC_KEY_SIZE * 2], size_t *size, 
                 else
                 {
                     msg->via.grp.author_length = header.author_length - (TOX_PUBLIC_KEY_SIZE * 2);
-                    msg->via.grp.author = calloc(1, msg->via.grp.author_length + 2);
+                    msg->via.grp.author = calloc(1, msg->via.grp.author_length + 3);
                     snprintf(msg->via.grp.author, (msg->via.grp.author_length + 1), "%s", (saved_author_name + (TOX_PUBLIC_KEY_SIZE * 2)));
 
                     char pkey[TOX_PUBLIC_KEY_SIZE];
