@@ -26,12 +26,21 @@ int textwidth(const char *str, uint16_t length) {
     while (length) {
         uint32_t ch;
         const uint8_t len = utf8_len_read(str, &ch);
-        str += len;
-        length -= len;
 
-        const GLYPH *g = font_getglyph(sfont, ch);
-        if (g) {
-            x += g->xadvance;
+        if (len > length)
+        {
+            length = 0;
+            break;
+        }
+        else
+        {
+            str += len;
+            length -= len;
+
+            const GLYPH *g = font_getglyph(sfont, ch);
+            if (g) {
+                x += g->xadvance;
+            }
         }
     }
 

@@ -129,20 +129,29 @@ static int _drawtext(int x, int xmax, int y, const char *str, uint16_t length) {
     uint32_t ch;
     while (length) {
         len = utf8_len_read(str, &ch);
-        str += len;
-        length -= len;
 
-        g = font_getglyph(sfont, ch);
-        if (g) {
-            if (x + g->xadvance + SCALE(10) > xmax && length) {
-                return -x;
-            }
+        if (len > length)
+        {
+            length = 0;
+            break;
+        }
+        else
+        {
+            str += len;
+            length -= len;
 
-            if (g->pic) {
-                XRenderComposite(display, PictOpOver, curr->colorpic, g->pic, curr->renderpic, 0, 0, 0, 0, x + g->x, y + g->y,
-                                 g->width, g->height);
+            g = font_getglyph(sfont, ch);
+            if (g) {
+                if (x + g->xadvance + SCALE(10) > xmax && length) {
+                    return -x;
+                }
+
+                if (g->pic) {
+                    XRenderComposite(display, PictOpOver, curr->colorpic, g->pic, curr->renderpic, 0, 0, 0, 0, x + g->x, y + g->y,
+                                     g->width, g->height);
+                }
+                x += g->xadvance;
             }
-            x += g->xadvance;
         }
     }
 
