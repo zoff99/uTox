@@ -255,6 +255,7 @@ bool v4l_init(char *dev_name) {
         LOG_FATAL_ERR(EXIT_MALLOC, "v4l", "Insufficient buffer memory on %s", dev_name);
     }
 
+    // TODO: this seems to leak sometimes! please fix me!
     buffers = calloc(req.count, sizeof(*buffers));
 
     for (n_buffers = 0; n_buffers < req.count; ++n_buffers) {
@@ -308,6 +309,9 @@ void v4l_close(void) {
             LOG_TRACE("v4l", "munmap error" );
         }
     }
+
+    free(buffers);
+    buffers = NULL;
 
     close(utox_v4l_fd);
 }
