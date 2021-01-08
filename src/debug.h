@@ -31,15 +31,15 @@ void debug(const char *fmt, ...);
 
 #define VERB(x) (utox_verbosity() >= LOG_LVL_##x)
 
-#define LOG_FATAL_ERR(ex, file, str, ...) debug("\n\n%-14s:" str "\n\n", file ": ", ## __VA_ARGS__ ); exit(ex)
+#define LOG_FATAL_ERR(ex, file, str, ...) debug("\n\n%s:" str "\n\n", file ": ", ## __VA_ARGS__ ); exit(ex)
 
-#define LOG_ERR(file, str, ...)       (VERB(ERROR)     ? debug("%-14s" str "\n", file ": ", ## __VA_ARGS__ ) : ((void)(0)))
-#define LOG_WARN(file, str, ...)      (VERB(WARNING)   ? debug("%-14s" str "\n", file ": ", ## __VA_ARGS__ ) : ((void)(0)))
-#define LOG_NOTE(file, str, ...)      (VERB(NOTICE)    ? debug("%-14s" str "\n", file ": ", ## __VA_ARGS__ ) : ((void)(0)))
-#define LOG_INFO(file, str, ...)      (VERB(INFO)      ? debug("%-14s" str "\n", file ": ", ## __VA_ARGS__ ) : ((void)(0)))
-#define LOG_DEBUG(file, str, ...)     (VERB(DEBUG)     ? debug("%-14s" str "\n", file ": ", ## __VA_ARGS__ ) : ((void)(0)))
-#define LOG_TRACE(file, str, ...)     (VERB(TRACE)     ? debug("%-14s" str "\n", file ": ", ## __VA_ARGS__ ) : ((void)(0)))
-#define LOG_NET_TRACE(file, str, ...) (VERB(NET_TRACE) ? debug("%-14s" str "\n", file ": ", ## __VA_ARGS__ ) : ((void)(0)))
+#define LOG_ERR(file, str, ...)       (VERB(ERROR)     ? debug("%s:%s" str "\n", __func__, file ":", ## __VA_ARGS__ ) : ((void)(0)))
+#define LOG_WARN(file, str, ...)      (VERB(WARNING)   ? debug("%s:%s" str "\n", __func__, file ":", ## __VA_ARGS__ ) : ((void)(0)))
+#define LOG_NOTE(file, str, ...)      (VERB(NOTICE)    ? debug("%s:%s" str "\n", __func__, file ":", ## __VA_ARGS__ ) : ((void)(0)))
+#define LOG_INFO(file, str, ...)      (VERB(INFO)      ? debug("%s:%s" str "\n", __func__, file ":", ## __VA_ARGS__ ) : ((void)(0)))
+#define LOG_DEBUG(file, str, ...)     (VERB(DEBUG)     ? debug("%s:%s" str "\n", __func__, file ":", ## __VA_ARGS__ ) : ((void)(0)))
+#define LOG_TRACE(file, str, ...)     (VERB(TRACE)     ? debug("%s:%s" str "\n", __func__, file ":", ## __VA_ARGS__ ) : ((void)(0)))
+#define LOG_NET_TRACE(file, str, ...) (VERB(NET_TRACE) ? debug("%s:%s" str "\n", __func__, file ":", ## __VA_ARGS__ ) : ((void)(0)))
 
 // User requested
 #define LOG_NORM(...)       (VERB(OFF) ? debug(__VA_ARGS__ ) : ((void)(0)))
