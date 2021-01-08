@@ -360,7 +360,7 @@ static void font_info_open(FONT_INFO *i, FcPattern *pattern) {
         return;
     }
 
-    // LOG_TRACE("Freetype", "Loaded font %s %u %i %i" , filename, id, PIXELS(i->face->ascender), PIXELS(i->face->descender));
+    LOG_ERR("Freetype", "Loaded font %s %u %i %i" , filename, id, PIXELS(i->face->ascender), PIXELS(i->face->descender));
 }
 
 static bool font_open(FONT *a_font, ...) {
