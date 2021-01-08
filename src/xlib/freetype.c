@@ -342,25 +342,27 @@ static void font_info_open(FONT_INFO *i, FcPattern *pattern) {
     FcPatternGetInteger(pattern, FC_INDEX, 0, &id);
     FcPatternGetCharSet(pattern, FC_CHARSET, 0, &i->cs);
     if (FcPatternGetMatrix(pattern, FC_MATRIX, 0, &font_matrix) == FcResultMatch) {
-        LOG_TRACE("Freetype", "has a matrix" );
+        LOG_ERR("Freetype", "has a matrix" );
     }
 
     FcPatternGetDouble(pattern, FC_PIXEL_SIZE, 0, &size);
 
+    LOG_ERR("Freetype", "font %s size %f" , filename, (float)size);
+
     int ft_error = FT_New_Face(ftlib, (char *)filename, id, &i->face);
 
     if (ft_error != 0) {
-        LOG_TRACE("Freetype", "Freetype error %u %s %i" , ft_error, filename, id);
+        LOG_ERR("Freetype", "Freetype error %u %s %i" , ft_error, filename, id);
         return;
     }
 
     ft_error = FT_Set_Char_Size(i->face, (size * 64.0 + 0.5), (size * 64.0 + 0.5), 0, 0);
     if (ft_error != 0) {
-        LOG_TRACE("Freetype", "Freetype error %u %lf" , ft_error, size);
+        LOG_ERR("Freetype", "Freetype error %u %lf" , ft_error, size);
         return;
     }
 
-    LOG_ERR("Freetype", "Loaded font %s %u %i %i" , filename, id, PIXELS(i->face->ascender), PIXELS(i->face->descender));
+    LOG_ERR("Freetype", "Loaded font %s %u %i %i %f" , filename, id, PIXELS(i->face->ascender), PIXELS(i->face->descender), (float)size);
 }
 
 static bool font_open(FONT *a_font, ...) {
