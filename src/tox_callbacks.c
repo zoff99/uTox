@@ -8,6 +8,7 @@
 #include "macros.h"
 #include "settings.h"
 #include "text.h"
+#include "tox.h"
 #include "utox.h"
 #include "ui.h"
 #include "self.h"
@@ -152,6 +153,48 @@ void callback_self_connection_status(Tox *tox, TOX_CONNECTION connection_status,
     postmessage_utox(REDRAW, 0, 0, NULL);
 }
 
+#define __CONTROL_PROXY_MESSAGE_TYPE_PROXY_PUBKEY_FOR_FRIEND 176
+
+void callback_friend_lossless_packet(Tox *tox, uint32_t friend_number, const uint8_t *data, size_t length, void *user_data)
+{
+    if (data)
+    {
+        LOG_ERR("Tox Callbacks", "callback_friend_lossless_packet: %d len=%d", (int)data[0], length);
+
+        if (length == (TOX_PUBLIC_KEY_SIZE + 1))
+        {
+            if (data[0] == __CONTROL_PROXY_MESSAGE_TYPE_PROXY_PUBKEY_FOR_FRIEND)
+            {
+                char data_bin[1000];
+                memset(data_bin, 0, 1000);
+                memcpy(data_bin, data, (TOX_PUBLIC_KEY_SIZE + 1));
+
+                char data_hexstr[(TOX_PUBLIC_KEY_SIZE * 2) + 1];
+                memset(data_hexstr, 0, ((TOX_PUBLIC_KEY_SIZE * 2) + 1));
+                to_hex(data_hexstr, (uint8_t *)(data_bin + 1), TOX_PUBLIC_KEY_SIZE);
+
+                LOG_ERR("Tox Callbacks", "callback_friend_lossless_packet: %s", data_hexstr);
+
+#if 1
+                tox_friend_add_norequest(tox, (const uint8_t *)(data_bin + 1), NULL);
+#else
+                // TODO: this crashes with free after use.
+                //       probably missing to draw a friend line in the UI?
+                uint8_t *data_cpy = calloc(1, TOX_PUBLIC_KEY_SIZE);
+                if (!data_cpy) {
+                    LOG_ERR("Tox Callbacks", "Memory allocation failed!");
+                    return;
+                }
+
+                memcpy(data_cpy, (const uint8_t *)(data_bin + 1), TOX_PUBLIC_KEY_SIZE);
+                postmessage_toxcore(TOX_FRIEND_NEW_NO_REQ, TOX_PUBLIC_KEY_SIZE, 0, data_cpy);
+#endif
+            }
+        }
+    }
+}
+
+
 void utox_set_callbacks_friends(Tox *tox) {
     tox_callback_friend_request(tox, callback_friend_request);
     tox_callback_friend_message(tox, callback_friend_message);
@@ -161,8 +204,9 @@ void utox_set_callbacks_friends(Tox *tox) {
     tox_callback_friend_typing(tox, callback_typing_change);
     tox_callback_friend_read_receipt(tox, callback_read_receipt);
     tox_callback_friend_connection_status(tox, callback_connection_status);
-    
+
     tox_callback_self_connection_status(tox, callback_self_connection_status);
+    tox_callback_friend_lossless_packet(tox, callback_friend_lossless_packet);
 }
 
 void callback_av_group_audio(void *tox, uint32_t groupnumber, uint32_t peernumber, const int16_t *pcm, unsigned int samples,
