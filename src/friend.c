@@ -313,6 +313,12 @@ void utox_friend_list_init(Tox *tox) {
 }
 
 void friend_setname(FRIEND *f, uint8_t *name, size_t length) {
+
+    if (!f)
+    {
+        return;
+    }
+
     if (f->name && f->name_length) {
         char *p;
         size_t p_size = sizeof(" is now known as ") + f->name_length + length;
