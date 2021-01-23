@@ -375,7 +375,10 @@ void utox_message_dispatch(UTOX_MSG utox_msg_id, uint16_t param1, uint16_t param
          * param2: connection_status */
         case FRIEND_ONLINE: {
             FRIEND *f = get_friend(param1);
-            friend_set_online(f, param2);
+            if (f)
+            {
+                friend_set_online(f, param2);
+            }
 
             redraw();
             messages_send_from_queue(&f->msg, param1);
@@ -383,7 +386,10 @@ void utox_message_dispatch(UTOX_MSG utox_msg_id, uint16_t param1, uint16_t param
         }
         case FRIEND_NAME: {
             FRIEND *f = get_friend(param1);
-            friend_setname(f, data, param2);
+            if (f)
+            {
+                friend_setname(f, data, param2);
+            }
 
             redraw();
             free(data);
@@ -403,7 +409,10 @@ void utox_message_dispatch(UTOX_MSG utox_msg_id, uint16_t param1, uint16_t param
         }
         case FRIEND_STATE: {
             FRIEND *f = get_friend(param1);
-            f->status = param2;
+            if (f)
+            {
+                f->status = param2;
+            }
             redraw();
             break;
         }
@@ -412,11 +421,14 @@ void utox_message_dispatch(UTOX_MSG utox_msg_id, uint16_t param1, uint16_t param
              * param2: png size
              * data: png data    */
             FRIEND *f = get_friend(param1);
-            uint8_t *avatar = data;
-            size_t   size   = param2;
+            if (f)
+            {
+                uint8_t *avatar = data;
+                size_t   size   = param2;
 
-            avatar_set(f->avatar, avatar, size);
-            avatar_save(f->id_str, avatar, size);
+                avatar_set(f->avatar, avatar, size);
+                avatar_save(f->id_str, avatar, size);
+            }
 
             free(avatar);
             redraw();
@@ -424,9 +436,12 @@ void utox_message_dispatch(UTOX_MSG utox_msg_id, uint16_t param1, uint16_t param
         }
         case FRIEND_AVATAR_UNSET: {
             FRIEND *f = get_friend(param1);
-            avatar_unset(f->avatar);
-            // remove avatar from disk
-            avatar_delete(f->id_str);
+            if (f)
+            {
+                avatar_unset(f->avatar);
+                // remove avatar from disk
+                avatar_delete(f->id_str);
+            }
 
             redraw();
             break;
@@ -434,7 +449,10 @@ void utox_message_dispatch(UTOX_MSG utox_msg_id, uint16_t param1, uint16_t param
         /* Interactions */
         case FRIEND_TYPING: {
             FRIEND *f = get_friend(param1);
-            friend_set_typing(f, param2);
+            if (f)
+            {
+                friend_set_typing(f, param2);
+            }
             redraw();
             break;
         }
@@ -543,7 +561,10 @@ void utox_message_dispatch(UTOX_MSG utox_msg_id, uint16_t param1, uint16_t param
             // char cid[TOX_PUBLIC_KEY_SIZE * 2];
             // cid_to_string(cid, f->cid);
             // delete_saved_avatar(friend_number);
-            friend_free(f);
+            if (f)
+            {
+                friend_free(f);
+            }
             break;
         }
 
