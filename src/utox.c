@@ -391,9 +391,13 @@ void utox_message_dispatch(UTOX_MSG utox_msg_id, uint16_t param1, uint16_t param
         }
         case FRIEND_STATUS_MESSAGE: {
             FRIEND *f = get_friend(param1);
-            free(f->status_message);
-            f->status_length  = param2;
-            f->status_message = data;
+            if (f)
+            {
+                free(f->status_message);
+                f->status_message = NULL;
+                f->status_length  = param2;
+                f->status_message = data;
+            }
             redraw();
             break;
         }
