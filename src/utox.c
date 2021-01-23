@@ -420,12 +420,12 @@ void utox_message_dispatch(UTOX_MSG utox_msg_id, uint16_t param1, uint16_t param
             /* param1: friend id
              * param2: png size
              * data: png data    */
+            uint8_t *avatar = data;
+            size_t   size   = param2;
+
             FRIEND *f = get_friend(param1);
             if (f)
             {
-                uint8_t *avatar = data;
-                size_t   size   = param2;
-
                 avatar_set(f->avatar, avatar, size);
                 avatar_save(f->id_str, avatar, size);
             }
