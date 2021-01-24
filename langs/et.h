@@ -15,16 +15,15 @@ msgid(SPLASH_TITLE)
 msgstr("Tere tulemast uuemasse uTox-i!")
 
 msgid(SPLASH_TEXT)
-msgstr("Te olete uuendanud versioonile 0.16.1! Väljalaske nimi: No capes!")
+msgstr("Te olete uuendanud versioonile 0.18.1! Väljalaske nimi: 👑🎉.1")
 
 msgid(CHANGE_LOG_TITLE)
-msgstr("Muutused v0.16.1 versioonis (Vaadake meie uut veebilehte, utox.io)")
+msgstr("Muutused v0.18.1 versioonis")
 
 
 /******************************************************************************
  *** MISC & UNSORTED                                                        ***
  ******************************************************************************/
-
 msgid(REQ_SENT)
 msgstr("Sõbra kutse saadetud. Sinu sõber ilmub nähtavale kui ta võtab sõbrataotluse vastu.")
 
@@ -208,6 +207,7 @@ msgstr("Väljas")
 msgid(GROUP_TOPIC)
 msgstr("Sisesta grupi teema")
 
+
 /******************************************************************************
  *** Settings / Profile Strings                                             ***
  ******************************************************************************/
@@ -228,9 +228,6 @@ msgstr("Täpsemalt")
 
 msgid(NOTIFICATIONS_BUTTON)
 msgstr("Teated")
-
-msgid(AUTO_UPDATE)
-msgstr("Automaatselt uuenda uTox-i")
 
 msgid(PROFILE_SETTINGS)
 msgstr("Profiili sätted")
@@ -261,8 +258,6 @@ msgstr("Ühendatud seadmete arv")
 
 /******************************************************************************
  *** UNSORTED STRINGS                                                       ***
- *** TODO:                                                                  ***
- *** FIXME:                                                                 ***
  ******************************************************************************/
 msgid(ADDFRIENDS)
 msgstr("Lisa uusi kontakte")
@@ -406,12 +401,6 @@ msgstr("Keel")
 
 msgid(NETWORK)
 msgstr("Võrk")
-
-msgid(IPV6)
-msgstr("IPv6:")
-
-msgid(UDP)
-msgstr("UDP:")
 
 msgid(PROXY)
 msgstr("Puhverserver (SOCKS 5)")
