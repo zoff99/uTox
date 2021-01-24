@@ -352,7 +352,7 @@ static uint16_t edit_change_do(EDIT *edit, EDIT_CHANGE *c) {
 }
 
 void edit_do(EDIT *edit, uint16_t start, uint16_t length, bool remove) {
-    EDIT_CHANGE *new_change;
+    EDIT_CHANGE *new, **history;
 
     if (edit->history_cur != edit->history_length) {
         uint16_t i = edit->history_cur;
@@ -361,22 +361,24 @@ void edit_do(EDIT *edit, uint16_t start, uint16_t length, bool remove) {
         }
     }
 
-    edit->history = realloc(edit->history, (edit->history_cur + 1) * sizeof(void *));
-    if (!edit->history) {
+    history = realloc(edit->history, (edit->history_cur + 1) * sizeof(void *));
+    if (!history) {
         LOG_FATAL_ERR(EXIT_MALLOC, "UI Edit", "Unable to realloc for edit history, this should never happen!");
     }
+    edit->history = history;
 
-    new_change = calloc(1, sizeof(EDIT_CHANGE) + length);
-    if (!new_change) {
+    new = calloc(1, sizeof(EDIT_CHANGE) + length);
+    if (!new) {
         LOG_FATAL_ERR(EXIT_MALLOC, "UI Edit", "Unable to calloc for new EDIT_CHANGE, this should never happen!");
     }
 
-    new_change->remove = remove;
-    new_change->start  = start;
-    new_change->length = length;
-    memcpy(new_change->data, edit->data + start, length);
+    new->remove = remove;
+    new->start  = start;
+    new->length = length;
+    memcpy(new->data, edit->data + start, length);
 
-    edit->history[edit->history_cur] = new_change;
+    history[edit->history_cur] = new;
+
     edit->history_cur++;
     edit->history_length = edit->history_cur;
 }
