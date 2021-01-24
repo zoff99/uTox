@@ -232,7 +232,7 @@ void image_set_filter(NATIVE_IMAGE *image, uint8_t filter) {
     }
 }
 
-void thread(void *func, void *args) {
+void thread(void *func(void *), void *args) {
     pthread_t      thread_temp;
     pthread_attr_t attr;
     pthread_attr_init(&attr);
