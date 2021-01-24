@@ -2,7 +2,7 @@
 Version=1.0
 Type=Application
 Name=uTox
-StartupWMClass=utoxmain
+StartupWMClass=normal_utox
 Comment=A lightweight Tox client
 TryExec=utox
 Exec=utox

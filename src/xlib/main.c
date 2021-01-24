@@ -831,12 +831,12 @@ int main(int argc, char *argv[]) {
     /* set WM_CLASS */
     if (settings.portable_mode)
     {
-        XClassHint hint = {.res_name = "portable_utoxmain", .res_class = "portable_utoxmain" };
+        XClassHint hint = {.res_name = "portable_utox", .res_class = "portable_utox" };
         XSetClassHint(display, main_window.window, &hint);
     }
     else
     {
-        XClassHint hint = {.res_name = "utoxmain", .res_class = "utoxmain" };
+        XClassHint hint = {.res_name = "normal_utox", .res_class = "normal_utox" };
         XSetClassHint(display, main_window.window, &hint);
     }
 
