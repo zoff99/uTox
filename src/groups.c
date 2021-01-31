@@ -425,10 +425,14 @@ void group_reset_peerlist(GROUPCHAT *g) {
     /* ARE YOU KIDDING... WHO THOUGHT THIS API WAS OKAY?! */
     for (size_t i = 0; i < g->peer_count; ++i) {
         if (g->peer[i]) {
-            free(g->peer[i]);
+            void *p = g->peer[i];
+            g->peer[i] = NULL;
+            free(p);
         }
     }
-    free(g->peer);
+    void *p2 = g->peer;
+    g->peer = NULL;
+    free(p2);
 }
 
 void group_free(GROUPCHAT *g) {
