@@ -174,13 +174,15 @@ void video_begin(uint16_t id, char *name, uint16_t name_length, uint16_t width, 
     if (id == UINT16_MAX) {
         // Preview window
         XStoreName(display, *win, "Video Preview");
+        // UTF-8 name for those WMs that can display it.
+        XChangeProperty(display, *win, XA_NET_NAME, XA_UTF8_STRING, 8, PropModeReplace, (uint8_t *)"Video Preview", strlen("Video Preview"));
     } else {
         // Normal Video
         XStoreName(display, *win, "Video");
+        // UTF-8 name for those WMs that can display it.
+        XChangeProperty(display, *win, XA_NET_NAME, XA_UTF8_STRING, 8, PropModeReplace, (uint8_t *)"Video", strlen("Video"));
     }
 
-    // UTF-8 name for those WMs that can display it.
-    XChangeProperty(display, *win, XA_NET_NAME, XA_UTF8_STRING, 8, PropModeReplace, (uint8_t *)name, name_length);
     XSetWMProtocols(display, *win, &wm_delete_window, 1);
 
     XSizeHints *size_hints = XAllocSizeHints();
