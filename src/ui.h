@@ -185,7 +185,7 @@ extern double ui_scale;
 
 /* Global UI size settings... */
 #define SCROLL_WIDTH 8 // must be divisible by 2
-#define FILE_TRANSFER_BOX_HEIGHT 28
+#define FILE_TRANSFER_BOX_HEIGHT 50 // 28
 
 
 /* Main panel defines */
